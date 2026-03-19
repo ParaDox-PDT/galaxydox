@@ -1,0 +1,123 @@
+# GalaxyDox
+
+GalaxyDox is a premium NASA explorer built with Flutter. This first delivery sets up the production-minded foundation for a cinematic mobile app with clean architecture, centralized NASA API configuration, Riverpod state management, GoRouter navigation, and a polished editorial-style home screen.
+
+## Concept
+
+The product is designed to feel like a high-end space documentary companion:
+
+- editorial home experience with immersive NASA imagery
+- dark, layered interface with refined motion and glass surfaces
+- scalable feature-first architecture for APOD, Mars Rover, NEO, and media search
+- centralized config so the NASA API key can be replaced without touching feature code
+
+## Dependencies
+
+- `flutter_riverpod`: application state management and dependency injection
+- `go_router`: declarative routing with a scalable route tree
+- `dio`: centralized API client and interceptors
+- `cached_network_image`: performant image loading and caching
+- `google_fonts`: stronger typography for a more premium visual system
+- `intl`: date and number formatting for NASA data
+- `freezed_annotation` and `json_annotation`: future-ready model generation
+- `shared_preferences`: groundwork for favorites and simple local persistence
+- `connectivity_plus`: connectivity awareness for offline handling
+- `shimmer`: polished loading states
+- `flutter_animate`: subtle motion and smoother perceived performance
+- `build_runner`, `freezed`, `json_serializable`: code generation pipeline for upcoming feature models
+
+## Folder Structure
+
+```text
+lib/
+  app/
+    app.dart
+    router/
+      app_router.dart
+      app_routes.dart
+  core/
+    config/
+      app_config.dart
+    constants/
+      app_constants.dart
+    errors/
+      app_exception.dart
+      result.dart
+    network/
+      dio_provider.dart
+      nasa_api_client.dart
+    theme/
+      app_colors.dart
+      app_gradients.dart
+      app_theme.dart
+  features/
+    apod/
+      data/
+      domain/
+      presentation/
+        pages/
+          apod_page.dart
+    home/
+      data/
+      domain/
+      presentation/
+        pages/
+          home_page.dart
+        providers/
+          home_preview_provider.dart
+        widgets/
+          hero_feature_card.dart
+          home_feature_card.dart
+    mars_rover/
+      data/
+      domain/
+      presentation/
+        pages/
+          mars_rover_page.dart
+    nasa_search/
+      data/
+      domain/
+      presentation/
+        pages/
+          nasa_search_page.dart
+    neo/
+      data/
+      domain/
+      presentation/
+        pages/
+          neo_page.dart
+    settings/
+      data/
+      domain/
+      presentation/
+        pages/
+          settings_page.dart
+    splash/
+      presentation/
+        pages/
+          splash_page.dart
+  shared/
+    widgets/
+      ambient_space_background.dart
+      coming_soon_page.dart
+      frosted_panel.dart
+      premium_network_image.dart
+      section_heading.dart
+      space_scaffold.dart
+  main.dart
+```
+
+## API Key Setup
+
+GalaxyDox reads the NASA key from:
+
+1. `const String.fromEnvironment('NASA_API_KEY')`
+2. a single fallback dev key inside `AppConfig`
+
+Run with an override:
+
+```bash
+flutter run --dart-define=NASA_API_KEY=your_nasa_key_here
+```
+
+If no value is supplied, the app uses the local development fallback key for quick testing.
