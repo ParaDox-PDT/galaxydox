@@ -204,11 +204,19 @@ class _TopBar extends StatelessWidget {
       children: [
         _PanelIconButton(
           icon: Icons.travel_explore_rounded,
+          tooltip: 'Search',
           onPressed: () => context.pushNamed(AppRoutes.searchName),
         ),
         const SizedBox(width: 12),
         _PanelIconButton(
+          icon: Icons.auto_awesome_motion_rounded,
+          tooltip: 'Aurora demo',
+          onPressed: () => context.pushNamed(AppRoutes.auroraDemoName),
+        ),
+        const SizedBox(width: 12),
+        _PanelIconButton(
           icon: Icons.tune_rounded,
+          tooltip: 'Settings',
           onPressed: () => context.pushNamed(AppRoutes.settingsName),
         ),
       ],
@@ -232,10 +240,15 @@ class _TopBar extends StatelessWidget {
 }
 
 class _PanelIconButton extends StatelessWidget {
-  const _PanelIconButton({required this.icon, required this.onPressed});
+  const _PanelIconButton({
+    required this.icon,
+    required this.onPressed,
+    this.tooltip,
+  });
 
   final IconData icon;
   final VoidCallback onPressed;
+  final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -246,11 +259,14 @@ class _PanelIconButton extends StatelessWidget {
         padding: EdgeInsets.zero,
         radius: AppConstants.radiusSmall,
         child: Center(
-          child: IconButton(
-            onPressed: onPressed,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 56, height: 56),
-            icon: Icon(icon),
+          child: Tooltip(
+            message: tooltip ?? '',
+            child: IconButton(
+              onPressed: onPressed,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 56, height: 56),
+              icon: Icon(icon),
+            ),
           ),
         ),
       ),

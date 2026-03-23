@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../features/apod/presentation/pages/apod_page.dart';
+import '../../features/demo/presentation/pages/aurora_demo_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/mars_rover/presentation/pages/mars_rover_page.dart';
 import '../../features/nasa_search/presentation/pages/nasa_search_page.dart';
@@ -69,6 +70,11 @@ final List<RouteBase> _routes = [
     path: AppRoutes.searchPath,
     name: AppRoutes.searchName,
     child: const NasaSearchPage(),
+  ),
+  _appRoute(
+    path: AppRoutes.auroraDemoPath,
+    name: AppRoutes.auroraDemoName,
+    child: const AuroraDemoPage(),
   ),
   _appRoute(
     path: AppRoutes.settingsPath,
