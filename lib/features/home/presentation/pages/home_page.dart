@@ -25,139 +25,112 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final preview = ref.watch(homePreviewProvider);
-    final isCompact = MediaQuery.sizeOf(context).width < 430;
-    final topBarHeight = isCompact ? 132.0 : 88.0;
 
     return SpaceScaffold(
       bottomSafeArea: true,
       body: PremiumRefreshIndicator(
         onRefresh: () => _refresh(ref),
-        child: Stack(
-          children: [
-            CustomScrollView(
-              physics: const BouncingScrollPhysics(
-                parent: AlwaysScrollableScrollPhysics(),
-              ),
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxWidth: AppConstants.contentMaxWidth,
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          AppConstants.pagePadding,
-                          topBarHeight + 20,
-                          AppConstants.pagePadding,
-                          42,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const _EditorialLead()
-                                .animate()
-                                .fadeIn(delay: 120.ms, duration: 480.ms)
-                                .slideY(begin: 0.04, end: 0),
-                            const SizedBox(height: 26),
-                            HeroFeatureCard(hero: preview.hero)
-                                .animate()
-                                .fadeIn(delay: 180.ms, duration: 560.ms)
-                                .slideY(begin: 0.06, end: 0),
-                            const SizedBox(height: AppConstants.sectionGap),
-                            const _OrbitSummary()
-                                .animate()
-                                .fadeIn(delay: 260.ms, duration: 500.ms)
-                                .slideY(begin: 0.06, end: 0),
-                            const SizedBox(height: AppConstants.sectionGap),
-                            SectionHeading(
-                                  eyebrow: 'Mission lanes',
-                                  title: 'Explore the archive in focused modes',
-                                  subtitle:
-                                      'Each lane is designed to feel editorial and calm, whether you are reading the story of the day or scanning dense telemetry.',
-                                  actionLabel: 'Preferences',
-                                  onActionPressed: () =>
-                                      context.pushNamed(AppRoutes.settingsName),
-                                )
-                                .animate()
-                                .fadeIn(delay: 340.ms, duration: 500.ms)
-                                .slideY(begin: 0.05, end: 0),
-                            const SizedBox(height: 20),
-                            LayoutBuilder(
-                              builder: (context, constraints) {
-                                final isWide = constraints.maxWidth >= 980;
-                                final spacing = 20.0;
-                                final width = isWide
-                                    ? (constraints.maxWidth - spacing) / 2
-                                    : constraints.maxWidth;
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: AppConstants.contentMaxWidth,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppConstants.pagePadding,
+                      12,
+                      AppConstants.pagePadding,
+                      42,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const _TopBar()
+                            .animate()
+                            .fadeIn(duration: 420.ms)
+                            .slideY(begin: -0.06, end: 0),
+                        const SizedBox(height: 22),
+                        const _EditorialLead()
+                            .animate()
+                            .fadeIn(delay: 120.ms, duration: 480.ms)
+                            .slideY(begin: 0.04, end: 0),
+                        const SizedBox(height: 26),
+                        HeroFeatureCard(hero: preview.hero)
+                            .animate()
+                            .fadeIn(delay: 180.ms, duration: 560.ms)
+                            .slideY(begin: 0.06, end: 0),
+                        const SizedBox(height: AppConstants.sectionGap),
+                        const _OrbitSummary()
+                            .animate()
+                            .fadeIn(delay: 260.ms, duration: 500.ms)
+                            .slideY(begin: 0.06, end: 0),
+                        const SizedBox(height: AppConstants.sectionGap),
+                        SectionHeading(
+                              eyebrow: 'Mission lanes',
+                              title: 'Explore the archive in focused modes',
+                              subtitle:
+                                  'Each lane is designed to feel editorial and calm, whether you are reading the story of the day or scanning dense telemetry.',
+                              actionLabel: 'Preferences',
+                              onActionPressed: () =>
+                                  context.pushNamed(AppRoutes.settingsName),
+                            )
+                            .animate()
+                            .fadeIn(delay: 340.ms, duration: 500.ms)
+                            .slideY(begin: 0.05, end: 0),
+                        const SizedBox(height: 20),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isWide = constraints.maxWidth >= 980;
+                            final spacing = 20.0;
+                            final width = isWide
+                                ? (constraints.maxWidth - spacing) / 2
+                                : constraints.maxWidth;
 
-                                return Wrap(
-                                  spacing: spacing,
-                                  runSpacing: spacing,
-                                  children: [
-                                    for (
-                                      var index = 0;
-                                      index < preview.sections.length;
-                                      index++
-                                    )
-                                      SizedBox(
-                                        width: width,
-                                        child:
-                                            HomeFeatureCard(
-                                                  feature:
-                                                      preview.sections[index],
-                                                )
-                                                .animate()
-                                                .fadeIn(
-                                                  delay: Duration(
-                                                    milliseconds:
-                                                        400 + (index * 90),
-                                                  ),
-                                                  duration: 520.ms,
-                                                )
-                                                .slideY(begin: 0.06, end: 0),
-                                      ),
-                                  ],
-                                );
-                              },
-                            ),
-                            const SizedBox(height: AppConstants.sectionGap),
-                            const _DiscoveryDeck()
-                                .animate()
-                                .fadeIn(delay: 720.ms, duration: 520.ms)
-                                .slideY(begin: 0.06, end: 0),
-                          ],
+                            return Wrap(
+                              spacing: spacing,
+                              runSpacing: spacing,
+                              children: [
+                                for (
+                                  var index = 0;
+                                  index < preview.sections.length;
+                                  index++
+                                )
+                                  SizedBox(
+                                    width: width,
+                                    child:
+                                        HomeFeatureCard(
+                                              feature: preview.sections[index],
+                                            )
+                                            .animate()
+                                            .fadeIn(
+                                              delay: Duration(
+                                                milliseconds:
+                                                    400 + (index * 90),
+                                              ),
+                                              duration: 520.ms,
+                                            )
+                                            .slideY(begin: 0.06, end: 0),
+                                  ),
+                              ],
+                            );
+                          },
                         ),
-                      ),
+                        const SizedBox(height: AppConstants.sectionGap),
+                        const _DiscoveryDeck()
+                            .animate()
+                            .fadeIn(delay: 720.ms, duration: 520.ms)
+                            .slideY(begin: 0.06, end: 0),
+                      ],
                     ),
                   ),
                 ),
-              ],
-            ),
-            Align(
-              alignment: Alignment.topCenter,
-              child: IgnorePointer(
-                ignoring: true,
-                child: Container(
-                  color: Colors.transparent,
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxWidth: AppConstants.contentMaxWidth,
-                      ),
-                      child: const Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          AppConstants.pagePadding,
-                          12,
-                          AppConstants.pagePadding,
-                          12,
-                        ),
-                        child: _TopBar(),
-                      ),
-                    ),
-                  ),
-                ),
-              ).animate().fadeIn(duration: 420.ms).slideY(begin: -0.06, end: 0),
+              ),
             ),
           ],
         ),
