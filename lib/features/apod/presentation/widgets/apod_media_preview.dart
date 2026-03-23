@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_gradients.dart';
+import '../../../../core/utils/trusted_external_url.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
 import '../../domain/entities/apod_item.dart';
@@ -260,13 +260,16 @@ class _ApodVideoPreview extends StatelessWidget {
   }
 
   Future<void> _launchVideo(BuildContext context) async {
-    final uri = Uri.tryParse(item.url);
+    final uri = sanitizeTrustedExternalUri(
+      item.url,
+      allowedHosts: TrustedHostSets.nasaAndVideoHosts,
+    );
     if (uri == null) {
       _showLaunchError(context);
       return;
     }
 
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    final launched = await launchExternalUri(uri);
 
     if (!launched && context.mounted) {
       _showLaunchError(context);

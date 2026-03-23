@@ -2,6 +2,13 @@
 
 GalaxyDox is a premium NASA explorer built with Flutter. This first delivery sets up the production-minded foundation for a cinematic mobile app with clean architecture, centralized NASA API configuration, Riverpod state management, GoRouter navigation, and a polished editorial-style home screen.
 
+## Release And Safety Highlights
+
+- release builds require an injected `NASA_API_KEY`
+- debug builds fall back to NASA's public `DEMO_KEY` only
+- external links are restricted to trusted HTTPS hosts
+- privacy notice, security policy, CI, and store metadata templates live in the repo for public GitHub maintenance
+
 ## Concept
 
 The product is designed to feel like a high-end space documentary companion:
@@ -112,7 +119,7 @@ lib/
 GalaxyDox reads the NASA key from:
 
 1. `const String.fromEnvironment('NASA_API_KEY')`
-2. a single fallback dev key inside `AppConfig`
+2. `DEMO_KEY` only for non-release debugging
 
 Run with an override:
 
@@ -120,4 +127,22 @@ Run with an override:
 flutter run --dart-define=NASA_API_KEY=your_nasa_key_here
 ```
 
-If no value is supplied, the app uses the local development fallback key for quick testing.
+Recommended release defines:
+
+```bash
+flutter build appbundle --release ^
+  --dart-define=NASA_API_KEY=your_nasa_key_here ^
+  --dart-define=PRIVACY_POLICY_URL=https://your-domain.example/privacy ^
+  --dart-define=SUPPORT_URL=https://your-domain.example/support ^
+  --dart-define=SOURCE_CODE_URL=https://github.com/your-org/galaxydox
+```
+
+If no `NASA_API_KEY` is supplied, debug builds use NASA's public `DEMO_KEY` for quick testing. Release builds show a configuration-required screen instead of shipping with an embedded secret.
+
+## Release Docs
+
+- `docs/privacy-policy.md`
+- `docs/store/release-checklist.md`
+- `docs/store/play-data-safety.md`
+- `docs/store/app-store-privacy.md`
+- `SECURITY.md`

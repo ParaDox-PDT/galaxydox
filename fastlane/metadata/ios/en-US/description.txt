@@ -1,0 +1,17 @@
+GalaxyDox is a premium NASA explorer that turns public space data into a clean, immersive mobile experience.
+
+Discover:
+
+- Astronomy Picture of the Day with context-rich reading
+- Mars rover photography in a gallery-first layout
+- Near-Earth Object tracking with readable mission telemetry
+- NASA media archive search for images and historical discoveries
+
+Built for repeat discovery:
+
+- fast, focused browsing across core NASA content
+- local bookmarks saved on-device
+- polished presentation for both editorial reading and dense data
+- no ads and no account setup in the current app experience
+
+GalaxyDox is made for people who want to explore astronomy, NASA missions, space imagery, nebulae, galaxies, rover photography, and asteroid approach data from one elegant surface.

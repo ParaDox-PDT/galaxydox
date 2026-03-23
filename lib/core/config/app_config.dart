@@ -1,7 +1,8 @@
-enum ApiKeySource { dartDefine, developmentFallback }
+enum ApiKeySource { dartDefine, debugDemoKey, missing }
 
 abstract final class AppConfig {
   static const String clientName = 'GalaxyDox';
+  static const bool isReleaseBuild = bool.fromEnvironment('dart.vm.product');
 
   static const String nasaApiBaseUrl = 'https://api.nasa.gov';
   static const String nasaMediaBaseUrl = 'https://images-api.nasa.gov';
@@ -16,23 +17,65 @@ abstract final class AppConfig {
   };
 
   static const String _envApiKey = String.fromEnvironment('NASA_API_KEY');
-  static const String _devFallbackApiKey =
-      'sTk3HV2cdO9ySYqQ5Gmc3ScwkLhKaPSxlp9AIxka';
+  static const String _debugFallbackApiKey = 'DEMO_KEY';
+  static const String supportUrl = String.fromEnvironment('SUPPORT_URL');
+  static const String privacyPolicyUrl = String.fromEnvironment(
+    'PRIVACY_POLICY_URL',
+  );
+  static const String marketingUrl = String.fromEnvironment('MARKETING_URL');
+  static const String sourceCodeUrl = String.fromEnvironment('SOURCE_CODE_URL');
 
-  static String get nasaApiKey =>
-      _envApiKey.isEmpty ? _devFallbackApiKey : _envApiKey;
+  static String? get nasaApiKey {
+    if (_envApiKey.isNotEmpty) {
+      return _envApiKey;
+    }
 
-  static ApiKeySource get apiKeySource => _envApiKey.isEmpty
-      ? ApiKeySource.developmentFallback
-      : ApiKeySource.dartDefine;
+    if (!isReleaseBuild) {
+      return _debugFallbackApiKey;
+    }
 
-  static bool get isUsingFallbackApiKey =>
-      apiKeySource == ApiKeySource.developmentFallback;
+    return null;
+  }
+
+  static ApiKeySource get apiKeySource {
+    if (_envApiKey.isNotEmpty) {
+      return ApiKeySource.dartDefine;
+    }
+
+    if (!isReleaseBuild) {
+      return ApiKeySource.debugDemoKey;
+    }
+
+    return ApiKeySource.missing;
+  }
+
+  static bool get hasConfiguredNasaApiKey => _envApiKey.isNotEmpty;
+  static bool get requiresProductionConfiguration =>
+      isReleaseBuild && !hasConfiguredNasaApiKey;
 
   static String get apiKeySourceLabel => switch (apiKeySource) {
     ApiKeySource.dartDefine => 'Injected with --dart-define',
-    ApiKeySource.developmentFallback => 'Local development fallback',
+    ApiKeySource.debugDemoKey => 'Debug DEMO_KEY fallback',
+    ApiKeySource.missing => 'Missing production API key',
   };
+
+  static Uri? get supportUri => _parseHttpsUri(supportUrl);
+  static Uri? get privacyPolicyUri => _parseHttpsUri(privacyPolicyUrl);
+  static Uri? get marketingUri => _parseHttpsUri(marketingUrl);
+  static Uri? get sourceCodeUri => _parseHttpsUri(sourceCodeUrl);
+
+  static Uri? _parseHttpsUri(String value) {
+    if (value.isEmpty) {
+      return null;
+    }
+
+    final uri = Uri.tryParse(value);
+    if (uri == null || uri.scheme != 'https') {
+      return null;
+    }
+
+    return uri;
+  }
 }
 
 abstract final class RequestExtras {

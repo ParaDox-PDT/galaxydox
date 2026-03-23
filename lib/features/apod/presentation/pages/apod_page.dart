@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/trusted_external_url.dart';
 import '../../../../shared/widgets/app_chip.dart';
 import '../../../../shared/widgets/bookmark_button.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
@@ -323,7 +325,7 @@ class _ApodContent extends StatelessWidget {
               Text('Reader notes', style: theme.textTheme.titleLarge),
               const SizedBox(height: 12),
               Text(
-                'This refinement pass introduces reusable state panels, shared motion and spacing tokens, and bookmark persistence so the screen feels more production-ready.',
+                'APOD is strongest when it balances wonder with context. GalaxyDox keeps the narrative front and center while still surfacing the media format, date, and attribution details that matter.',
                 style: theme.textTheme.bodyLarge,
               ),
             ],
@@ -397,13 +399,7 @@ class _ActionPanel extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Share flow placeholder for now.'),
-                      ),
-                    );
-                  },
+                  onPressed: () => _shareApod(context),
                   icon: const Icon(Icons.ios_share_rounded),
                   label: const Text('Share'),
                 ),
@@ -416,15 +412,9 @@ class _ActionPanel extends StatelessWidget {
               children: [
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('HD download can be added next.'),
-                        ),
-                      );
-                    },
+                    onPressed: () => _openHdImage(context),
                     icon: const Icon(Icons.hd_rounded),
-                    label: const Text('HD ready'),
+                    label: const Text('Open HD'),
                   ),
                 ),
               ],
@@ -432,6 +422,53 @@ class _ActionPanel extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+
+  Future<void> _shareApod(BuildContext context) async {
+    final shareUri = sanitizeTrustedExternalUri(
+      item.isImage ? item.preferredImageUrl : item.url,
+      allowedHosts: TrustedHostSets.nasaAndVideoHosts,
+    );
+    final explanation = item.explanation.trim();
+    final shortExplanation = explanation.length > 180
+        ? '${explanation.substring(0, 177)}...'
+        : explanation;
+
+    final buffer = StringBuffer()
+      ..writeln(item.title)
+      ..writeln(DateFormat.yMMMMd().format(item.date))
+      ..writeln()
+      ..writeln(shortExplanation);
+
+    if (shareUri != null) {
+      buffer
+        ..writeln()
+        ..write(shareUri.toString());
+    }
+
+    await SharePlus.instance.share(ShareParams(text: buffer.toString().trim()));
+  }
+
+  Future<void> _openHdImage(BuildContext context) async {
+    final uri = sanitizeTrustedExternalUri(
+      item.hdUrl ?? item.preferredImageUrl,
+      allowedHosts: TrustedHostSets.nasaHosts,
+    );
+    if (uri == null) {
+      _showLaunchError(context);
+      return;
+    }
+
+    final launched = await launchExternalUri(uri);
+    if (!launched && context.mounted) {
+      _showLaunchError(context);
+    }
+  }
+
+  void _showLaunchError(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Unable to open the NASA media link.')),
     );
   }
 }

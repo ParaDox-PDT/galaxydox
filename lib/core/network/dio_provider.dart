@@ -29,10 +29,16 @@ Dio _buildDio({required String baseUrl, required bool attachApiKeyByDefault}) {
 
         if (shouldAttachApiKey &&
             !options.queryParameters.containsKey('api_key')) {
+          final apiKey = AppConfig.nasaApiKey;
+          if (apiKey == null || apiKey.isEmpty) {
+            handler.next(options);
+            return;
+          }
+
           final queryParameters = Map<String, dynamic>.from(
             options.queryParameters,
           );
-          queryParameters['api_key'] = AppConfig.nasaApiKey;
+          queryParameters['api_key'] = apiKey;
           options.queryParameters = queryParameters;
         }
 

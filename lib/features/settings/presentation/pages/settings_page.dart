@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/utils/trusted_external_url.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
+import 'privacy_notice_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -27,7 +29,7 @@ class SettingsPage extends StatelessWidget {
                 Text('Settings', style: theme.textTheme.displayMedium),
                 const SizedBox(height: 10),
                 Text(
-                  'Configuration is centralized from day one so API credentials and service endpoints can change without touching feature code.',
+                  'GalaxyDox keeps privacy, external links, and release configuration visible so public-repo maintenance and store review stay predictable.',
                   style: theme.textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 24),
@@ -35,8 +37,10 @@ class SettingsPage extends StatelessWidget {
                   child: Column(
                     children: [
                       _SettingRow(
-                        label: 'NASA API key source',
-                        value: AppConfig.apiKeySourceLabel,
+                        label: 'Release configuration',
+                        value: AppConfig.requiresProductionConfiguration
+                            ? 'NASA_API_KEY is required for production'
+                            : AppConfig.apiKeySourceLabel,
                       ),
                       const Divider(),
                       const _SettingRow(
@@ -48,6 +52,13 @@ class SettingsPage extends StatelessWidget {
                         label: 'NASA media search API',
                         value: AppConfig.nasaMediaBaseUrl,
                       ),
+                      const Divider(),
+                      _SettingRow(
+                        label: 'Privacy policy URL',
+                        value:
+                            AppConfig.privacyPolicyUri?.toString() ??
+                            'Configure with --dart-define=PRIVACY_POLICY_URL=https://...',
+                      ),
                     ],
                   ),
                 ),
@@ -56,11 +67,60 @@ class SettingsPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Next additions', style: theme.textTheme.titleLarge),
+                      Text(
+                        'Privacy at a glance',
+                        style: theme.textTheme.titleLarge,
+                      ),
                       const SizedBox(height: 10),
                       Text(
-                        'Favorites, offline feedback, notification preferences, and theme accents will expand from this screen in the next iteration.',
+                        'The app stores bookmarks only on-device, sends NASA search and content requests directly to NASA services, and does not include ads, analytics SDKs, or account sign-in.',
                         style: theme.textTheme.bodyLarge,
+                      ),
+                      const SizedBox(height: 18),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          FilledButton.icon(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute<void>(
+                                  builder: (context) =>
+                                      const PrivacyNoticePage(),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.privacy_tip_outlined),
+                            label: const Text('Privacy notice'),
+                          ),
+                          if (AppConfig.privacyPolicyUri != null)
+                            OutlinedButton.icon(
+                              onPressed: () => _openConfiguredUri(
+                                context,
+                                AppConfig.privacyPolicyUri!,
+                              ),
+                              icon: const Icon(Icons.open_in_new_rounded),
+                              label: const Text('Open privacy URL'),
+                            ),
+                          if (AppConfig.supportUri != null)
+                            OutlinedButton.icon(
+                              onPressed: () => _openConfiguredUri(
+                                context,
+                                AppConfig.supportUri!,
+                              ),
+                              icon: const Icon(Icons.support_agent_rounded),
+                              label: const Text('Support'),
+                            ),
+                          if (AppConfig.sourceCodeUri != null)
+                            OutlinedButton.icon(
+                              onPressed: () => _openConfiguredUri(
+                                context,
+                                AppConfig.sourceCodeUri!,
+                              ),
+                              icon: const Icon(Icons.code_rounded),
+                              label: const Text('Source'),
+                            ),
+                        ],
                       ),
                     ],
                   ),
@@ -89,6 +149,15 @@ class SettingsPage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+Future<void> _openConfiguredUri(BuildContext context, Uri uri) async {
+  final launched = await launchExternalUri(uri);
+  if (!launched && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Unable to open that link right now.')),
     );
   }
 }

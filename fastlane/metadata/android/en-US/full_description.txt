@@ -1,0 +1,20 @@
+GalaxyDox is a cinematic NASA explorer built for people who want space discovery to feel immersive, readable, and fast.
+
+Browse NASA's most compelling content in focused exploration lanes:
+
+- Astronomy Picture of the Day with rich context
+- Mars rover photography with image-first browsing
+- Near-Earth Object tracking with readable asteroid telemetry
+- NASA media search for deep archive discovery
+
+Why GalaxyDox stands out:
+
+- Story-first design that keeps space imagery front and center
+- Calm layouts for dense NASA mission data
+- Fast search across NASA image archives
+- Local bookmarks saved on your device
+- No ads, no sign-in, and no analytics SDKs in the current build
+
+GalaxyDox is designed for astronomy fans, NASA followers, students, educators, and anyone who wants a premium way to explore space images, mission stories, Mars rover photography, APOD highlights, asteroid flyby data, and NASA archive media from one place.
+
+If you love NASA, astronomy, the James Webb Space Telescope, rover missions, nebula photography, galaxies, and space discovery, GalaxyDox gives you a polished mobile home for exploration.

@@ -209,12 +209,6 @@ class _TopBar extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         _PanelIconButton(
-          icon: Icons.auto_awesome_motion_rounded,
-          tooltip: 'Aurora demo',
-          onPressed: () => context.pushNamed(AppRoutes.auroraDemoName),
-        ),
-        const SizedBox(width: 12),
-        _PanelIconButton(
           icon: Icons.tune_rounded,
           tooltip: 'Settings',
           onPressed: () => context.pushNamed(AppRoutes.settingsName),
