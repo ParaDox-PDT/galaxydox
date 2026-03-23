@@ -37,128 +37,128 @@ class _GridCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow.withValues(alpha: 0.24),
-            blurRadius: 34,
-            offset: const Offset(0, 22),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onTap,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.surfaceElevated.withValues(alpha: 0.92),
-                    AppColors.surface.withValues(alpha: 0.98),
-                  ],
-                ),
-                border: Border.all(color: AppColors.outlineSoft),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 220;
+
+        return Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.shadow.withValues(alpha: 0.24),
+                blurRadius: 34,
+                offset: const Offset(0, 22),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 6,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        PremiumNetworkImage(
-                          imageUrl: item.previewUrl,
-                          fit: BoxFit.cover,
-                        ),
-                        Positioned(
-                          left: 16,
-                          top: 16,
-                          child: _TypePill(type: item.mediaType),
-                        ),
-                        Positioned(
-                          right: 16,
-                          bottom: 16,
-                          child: FrostedPanel(
-                            radius: 16,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            backgroundColor: AppColors.surfaceElevated
-                                .withValues(alpha: 0.36),
-                            child: Text(
-                              item.center,
-                              style: theme.textTheme.labelMedium,
-                            ),
-                          ),
-                        ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(30),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onTap,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.surfaceElevated.withValues(alpha: 0.92),
+                        AppColors.surface.withValues(alpha: 0.98),
                       ],
                     ),
+                    border: Border.all(color: AppColors.outlineSoft),
                   ),
-                  Expanded(
-                    flex: 5,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _buildSubtitle(item),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            item.description,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: AppColors.textSecondary,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: compact ? 5 : 6,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            PremiumNetworkImage(
+                              imageUrl: item.previewUrl,
+                              fit: BoxFit.cover,
                             ),
-                          ),
-                          const Spacer(),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  'Open details',
-                                  style: theme.textTheme.labelLarge?.copyWith(
-                                    color: AppColors.secondary,
+                            Positioned(
+                              left: 16,
+                              top: 16,
+                              child: _TypePill(type: item.mediaType),
+                            ),
+                            Positioned(
+                              right: 16,
+                              bottom: 16,
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  maxWidth: constraints.maxWidth * 0.52,
+                                ),
+                                child: FrostedPanel(
+                                  radius: 16,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
+                                  backgroundColor: AppColors.surfaceElevated
+                                      .withValues(alpha: 0.36),
+                                  child: Text(
+                                    item.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.labelMedium,
                                   ),
                                 ),
                               ),
-                              const Icon(
-                                Icons.arrow_outward_rounded,
-                                color: AppColors.secondary,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        flex: compact ? 6 : 5,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.title,
+                                maxLines: compact ? 1 : 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleLarge,
                               ),
+                              const SizedBox(height: 8),
+                              Text(
+                                _buildSubtitle(item),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.bodyMedium,
+                              ),
+                              const SizedBox(height: 12),
+                              Expanded(
+                                child: Text(
+                                  item.description,
+                                  maxLines: compact ? 2 : 3,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              _OpenDetailsRow(theme: theme),
                             ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -255,6 +255,8 @@ class _ListCard extends StatelessWidget {
                               color: AppColors.textSecondary,
                             ),
                           ),
+                          const SizedBox(height: 14),
+                          _OpenDetailsRow(theme: theme),
                         ],
                       ),
                     );
@@ -280,6 +282,35 @@ class _ListCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _OpenDetailsRow extends StatelessWidget {
+  const _OpenDetailsRow({required this.theme});
+
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            'Open details',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelLarge?.copyWith(
+              color: AppColors.secondary,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        const Icon(
+          Icons.arrow_outward_rounded,
+          color: AppColors.secondary,
+        ),
+      ],
     );
   }
 }

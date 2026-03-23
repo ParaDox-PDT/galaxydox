@@ -150,6 +150,7 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
   }
 
   Future<void> _submitSearch(NasaSearchController controller) async {
+    FocusManager.instance.primaryFocus?.unfocus();
     HapticFeedback.selectionClick();
     await controller.search(query: _searchController.text);
   }
@@ -411,9 +412,16 @@ class _SearchResults extends StatelessWidget {
             builder: (context, constraints) {
               final crossAxisCount = constraints.maxWidth >= 1100
                   ? 3
-                  : constraints.maxWidth >= 720
+                  : constraints.maxWidth >= 640
+                  ? 2
+                  : constraints.maxWidth >= 340
                   ? 2
                   : 1;
+              final childAspectRatio = switch (crossAxisCount) {
+                3 => 0.76,
+                2 => constraints.maxWidth >= 640 ? 0.74 : 0.62,
+                _ => 0.96,
+              };
               return GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -422,7 +430,7 @@ class _SearchResults extends StatelessWidget {
                   crossAxisCount: crossAxisCount,
                   mainAxisSpacing: 18,
                   crossAxisSpacing: 18,
-                  childAspectRatio: crossAxisCount == 1 ? 1.05 : 0.78,
+                  childAspectRatio: childAspectRatio,
                 ),
                 itemBuilder: (context, index) {
                   final item = state.results[index];
