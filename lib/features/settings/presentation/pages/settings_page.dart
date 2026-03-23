@@ -70,7 +70,14 @@ class SettingsPage extends StatelessWidget {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => context.goNamed(AppRoutes.homeName),
+                        onPressed: () {
+                          if (Navigator.of(context).canPop()) {
+                            Navigator.of(context).maybePop();
+                            return;
+                          }
+
+                          context.goNamed(AppRoutes.homeName);
+                        },
                         icon: const Icon(Icons.arrow_back_rounded),
                         label: const Text('Return to Home'),
                       ),

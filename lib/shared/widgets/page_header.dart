@@ -15,6 +15,14 @@ class PageHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final canPop = Navigator.of(context).canPop();
+    final backButton = canPop
+        ? OutlinedButton.icon(
+            onPressed: () => Navigator.of(context).maybePop(),
+            icon: const Icon(Icons.arrow_back_rounded),
+            label: const Text('Back'),
+          )
+        : null;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -35,6 +43,10 @@ class PageHeader extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (backButton != null) ...[
+                backButton,
+                const SizedBox(height: 16),
+              ],
               info,
               if (actions.isNotEmpty) ...[const SizedBox(height: 16), trailing],
             ],
@@ -43,6 +55,7 @@ class PageHeader extends StatelessWidget {
 
         return Row(
           children: [
+            if (backButton != null) ...[backButton, const SizedBox(width: 16)],
             Expanded(child: info),
             if (actions.isNotEmpty) ...[const SizedBox(width: 16), trailing],
           ],

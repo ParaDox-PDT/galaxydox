@@ -25,112 +25,139 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final preview = ref.watch(homePreviewProvider);
+    final isCompact = MediaQuery.sizeOf(context).width < 430;
+    final topBarHeight = isCompact ? 132.0 : 88.0;
 
     return SpaceScaffold(
       bottomSafeArea: true,
       body: PremiumRefreshIndicator(
         onRefresh: () => _refresh(ref),
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
-          slivers: [
-            SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: AppConstants.contentMaxWidth,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppConstants.pagePadding,
-                      12,
-                      AppConstants.pagePadding,
-                      42,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const _TopBar()
-                            .animate()
-                            .fadeIn(duration: 420.ms)
-                            .slideY(begin: -0.06, end: 0),
-                        const SizedBox(height: 22),
-                        const _EditorialLead()
-                            .animate()
-                            .fadeIn(delay: 80.ms, duration: 480.ms)
-                            .slideY(begin: 0.04, end: 0),
-                        const SizedBox(height: 26),
-                        HeroFeatureCard(hero: preview.hero)
-                            .animate()
-                            .fadeIn(delay: 140.ms, duration: 560.ms)
-                            .slideY(begin: 0.06, end: 0),
-                        const SizedBox(height: AppConstants.sectionGap),
-                        const _OrbitSummary()
-                            .animate()
-                            .fadeIn(delay: 220.ms, duration: 500.ms)
-                            .slideY(begin: 0.06, end: 0),
-                        const SizedBox(height: AppConstants.sectionGap),
-                        SectionHeading(
-                              eyebrow: 'Mission lanes',
-                              title: 'Explore the archive in focused modes',
-                              subtitle:
-                                  'Each lane is designed to feel editorial and calm, whether you are reading the story of the day or scanning dense telemetry.',
-                              actionLabel: 'Preferences',
-                              onActionPressed: () =>
-                                  context.goNamed(AppRoutes.settingsName),
-                            )
-                            .animate()
-                            .fadeIn(delay: 300.ms, duration: 500.ms)
-                            .slideY(begin: 0.05, end: 0),
-                        const SizedBox(height: 20),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final isWide = constraints.maxWidth >= 980;
-                            final spacing = 20.0;
-                            final width = isWide
-                                ? (constraints.maxWidth - spacing) / 2
-                                : constraints.maxWidth;
-
-                            return Wrap(
-                              spacing: spacing,
-                              runSpacing: spacing,
-                              children: [
-                                for (
-                                  var index = 0;
-                                  index < preview.sections.length;
-                                  index++
-                                )
-                                  SizedBox(
-                                    width: width,
-                                    child:
-                                        HomeFeatureCard(
-                                              feature: preview.sections[index],
-                                            )
-                                            .animate()
-                                            .fadeIn(
-                                              delay: Duration(
-                                                milliseconds:
-                                                    360 + (index * 90),
-                                              ),
-                                              duration: 520.ms,
-                                            )
-                                            .slideY(begin: 0.06, end: 0),
-                                  ),
-                              ],
-                            );
-                          },
+        child: Stack(
+          children: [
+            CustomScrollView(
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: AppConstants.contentMaxWidth,
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          AppConstants.pagePadding,
+                          topBarHeight + 20,
+                          AppConstants.pagePadding,
+                          42,
                         ),
-                        const SizedBox(height: AppConstants.sectionGap),
-                        const _DiscoveryDeck()
-                            .animate()
-                            .fadeIn(delay: 680.ms, duration: 520.ms)
-                            .slideY(begin: 0.06, end: 0),
-                      ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const _EditorialLead()
+                                .animate()
+                                .fadeIn(delay: 120.ms, duration: 480.ms)
+                                .slideY(begin: 0.04, end: 0),
+                            const SizedBox(height: 26),
+                            HeroFeatureCard(hero: preview.hero)
+                                .animate()
+                                .fadeIn(delay: 180.ms, duration: 560.ms)
+                                .slideY(begin: 0.06, end: 0),
+                            const SizedBox(height: AppConstants.sectionGap),
+                            const _OrbitSummary()
+                                .animate()
+                                .fadeIn(delay: 260.ms, duration: 500.ms)
+                                .slideY(begin: 0.06, end: 0),
+                            const SizedBox(height: AppConstants.sectionGap),
+                            SectionHeading(
+                                  eyebrow: 'Mission lanes',
+                                  title: 'Explore the archive in focused modes',
+                                  subtitle:
+                                      'Each lane is designed to feel editorial and calm, whether you are reading the story of the day or scanning dense telemetry.',
+                                  actionLabel: 'Preferences',
+                                  onActionPressed: () =>
+                                      context.pushNamed(AppRoutes.settingsName),
+                                )
+                                .animate()
+                                .fadeIn(delay: 340.ms, duration: 500.ms)
+                                .slideY(begin: 0.05, end: 0),
+                            const SizedBox(height: 20),
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                final isWide = constraints.maxWidth >= 980;
+                                final spacing = 20.0;
+                                final width = isWide
+                                    ? (constraints.maxWidth - spacing) / 2
+                                    : constraints.maxWidth;
+
+                                return Wrap(
+                                  spacing: spacing,
+                                  runSpacing: spacing,
+                                  children: [
+                                    for (
+                                      var index = 0;
+                                      index < preview.sections.length;
+                                      index++
+                                    )
+                                      SizedBox(
+                                        width: width,
+                                        child:
+                                            HomeFeatureCard(
+                                                  feature:
+                                                      preview.sections[index],
+                                                )
+                                                .animate()
+                                                .fadeIn(
+                                                  delay: Duration(
+                                                    milliseconds:
+                                                        400 + (index * 90),
+                                                  ),
+                                                  duration: 520.ms,
+                                                )
+                                                .slideY(begin: 0.06, end: 0),
+                                      ),
+                                  ],
+                                );
+                              },
+                            ),
+                            const SizedBox(height: AppConstants.sectionGap),
+                            const _DiscoveryDeck()
+                                .animate()
+                                .fadeIn(delay: 720.ms, duration: 520.ms)
+                                .slideY(begin: 0.06, end: 0),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
+            ),
+            Align(
+              alignment: Alignment.topCenter,
+              child: IgnorePointer(
+                ignoring: true,
+                child: Container(
+                  color: Colors.transparent,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: AppConstants.contentMaxWidth,
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          AppConstants.pagePadding,
+                          12,
+                          AppConstants.pagePadding,
+                          12,
+                        ),
+                        child: _TopBar(),
+                      ),
+                    ),
+                  ),
+                ),
+              ).animate().fadeIn(duration: 420.ms).slideY(begin: -0.06, end: 0),
             ),
           ],
         ),
@@ -145,62 +172,87 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isCompact = MediaQuery.sizeOf(context).width < 430;
 
-    return Row(
+    final brand = Row(
       children: [
-        Expanded(
-          child: Row(
-            children: [
-              Container(
-                width: 58,
-                height: 58,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(
-                    AppConstants.radiusMedium,
-                  ),
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.primary, AppColors.tertiary],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primaryStrong.withValues(alpha: 0.28),
-                      blurRadius: 26,
-                      offset: const Offset(0, 14),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.rocket_launch_rounded,
-                  color: AppColors.backgroundDeep,
-                ),
+        Container(
+          width: isCompact ? 52 : 58,
+          height: isCompact ? 52 : 58,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.primary, AppColors.tertiary],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryStrong.withValues(alpha: 0.28),
+                blurRadius: 26,
+                offset: const Offset(0, 14),
               ),
-              const SizedBox(width: 14),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(AppConstants.appName, style: theme.textTheme.titleLarge),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Editorial-grade NASA explorer',
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                ],
+            ],
+          ),
+          child: Icon(
+            Icons.rocket_launch_rounded,
+            color: AppColors.backgroundDeep,
+            size: isCompact ? 24 : 28,
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppConstants.appName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: isCompact
+                    ? theme.textTheme.titleMedium
+                    : theme.textTheme.titleLarge,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Editorial-grade NASA explorer',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyMedium,
               ),
             ],
           ),
         ),
-        const SizedBox(width: 12),
+      ],
+    );
+
+    final actions = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
         _PanelIconButton(
           icon: Icons.travel_explore_rounded,
-          onPressed: () => context.goNamed(AppRoutes.searchName),
+          onPressed: () => context.pushNamed(AppRoutes.searchName),
         ),
         const SizedBox(width: 12),
         _PanelIconButton(
           icon: Icons.tune_rounded,
-          onPressed: () => context.goNamed(AppRoutes.settingsName),
+          onPressed: () => context.pushNamed(AppRoutes.settingsName),
         ),
+      ],
+    );
+
+    if (isCompact) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [brand, const SizedBox(height: 16), actions],
+      );
+    }
+
+    return Row(
+      children: [
+        Expanded(child: brand),
+        const SizedBox(width: 12),
+        actions,
       ],
     );
   }
@@ -220,7 +272,14 @@ class _PanelIconButton extends StatelessWidget {
       child: FrostedPanel(
         padding: EdgeInsets.zero,
         radius: AppConstants.radiusSmall,
-        child: IconButton(onPressed: onPressed, icon: Icon(icon)),
+        child: Center(
+          child: IconButton(
+            onPressed: onPressed,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints.tightFor(width: 56, height: 56),
+            icon: Icon(icon),
+          ),
+        ),
       ),
     );
   }

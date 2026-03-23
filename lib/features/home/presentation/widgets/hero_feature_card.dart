@@ -19,11 +19,26 @@ class HeroFeatureCard extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final isCompact = width < 420;
+        final isMedium = width < 700;
         final showCapsule = constraints.maxWidth >= 960;
         final contentWidth = showCapsule ? constraints.maxWidth - 340 : null;
+        final cardHeight = showCapsule
+            ? AppConstants.heroHeight
+            : isCompact
+            ? 780.0
+            : isMedium
+            ? 660.0
+            : 600.0;
+        final visibleMetrics = showCapsule
+            ? hero.metrics
+            : isCompact
+            ? hero.metrics.take(2).toList(growable: false)
+            : hero.metrics;
 
         return Container(
-          height: AppConstants.heroHeight,
+          height: cardHeight,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(36),
             boxShadow: [
@@ -70,17 +85,18 @@ class HeroFeatureCard extends StatelessWidget {
                     ),
                   ),
                 Padding(
-                  padding: const EdgeInsets.all(30),
+                  padding: EdgeInsets.all(isCompact ? 22 : 30),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
                         children: [
                           _TopBadge(
                             label: hero.eyebrow,
                             color: AppColors.primary,
                           ),
-                          const SizedBox(width: 10),
                           const _TopBadge(
                             label: 'NASA Open APIs',
                             color: AppColors.secondary,
@@ -94,7 +110,13 @@ class HeroFeatureCard extends StatelessWidget {
                         ),
                         child: Text(
                           hero.title,
-                          style: theme.textTheme.displayMedium,
+                          maxLines: isCompact ? 5 : 6,
+                          overflow: TextOverflow.ellipsis,
+                          style: isCompact
+                              ? theme.textTheme.headlineLarge
+                              : isMedium
+                              ? theme.textTheme.displaySmall
+                              : theme.textTheme.displayMedium,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -104,6 +126,8 @@ class HeroFeatureCard extends StatelessWidget {
                         ),
                         child: Text(
                           hero.description,
+                          maxLines: isCompact ? 4 : 5,
+                          overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodyLarge?.copyWith(
                             color: AppColors.textPrimary.withValues(
                               alpha: 0.86,
@@ -116,7 +140,7 @@ class HeroFeatureCard extends StatelessWidget {
                         spacing: 10,
                         runSpacing: 10,
                         children: [
-                          for (final metric in hero.metrics)
+                          for (final metric in visibleMetrics)
                             _MetricPill(metric: metric),
                         ],
                       ),
@@ -127,13 +151,13 @@ class HeroFeatureCard extends StatelessWidget {
                         children: [
                           FilledButton.icon(
                             onPressed: () =>
-                                context.goNamed(hero.primaryRouteName),
+                                context.pushNamed(hero.primaryRouteName),
                             icon: const Icon(Icons.open_in_full_rounded),
                             label: Text(hero.primaryLabel),
                           ),
                           OutlinedButton.icon(
                             onPressed: () =>
-                                context.goNamed(hero.secondaryRouteName),
+                                context.pushNamed(hero.secondaryRouteName),
                             icon: const Icon(Icons.travel_explore_rounded),
                             label: Text(hero.secondaryLabel),
                           ),
@@ -164,6 +188,52 @@ class _CapsulePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isCompact = MediaQuery.sizeOf(context).width < 420;
+
+    if (compact && isCompact) {
+      return FrostedPanel(
+        radius: 28,
+        padding: const EdgeInsets.all(16),
+        backgroundColor: AppColors.surface.withValues(alpha: 0.36),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              hero.capsuleTitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              hero.capsuleDescription,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Designed for discovery first.',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final visibleTags = compact && isCompact
+        ? hero.tags.take(2).toList(growable: false)
+        : hero.tags;
+    final visibleMetrics = compact && isCompact
+        ? hero.metrics.take(1).toList(growable: false)
+        : compact
+        ? hero.metrics.take(2).toList(growable: false)
+        : hero.metrics;
 
     return FrostedPanel(
       radius: 28,
@@ -180,7 +250,7 @@ class _CapsulePanel extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              for (final tag in hero.tags)
+              for (final tag in visibleTags)
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
@@ -205,7 +275,7 @@ class _CapsulePanel extends StatelessWidget {
               spacing: 12,
               runSpacing: 12,
               children: [
-                for (final metric in hero.metrics.take(2))
+                for (final metric in visibleMetrics)
                   _MiniMetric(metric: metric),
               ],
             )

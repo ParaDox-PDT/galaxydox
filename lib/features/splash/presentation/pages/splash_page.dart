@@ -58,28 +58,14 @@ class _SplashPageState extends State<SplashPage> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Container(
+                          SizedBox(
                             width: 104,
                             height: 104,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: const LinearGradient(
-                                colors: [AppColors.primary, AppColors.tertiary],
+                            child: ClipOval(
+                              child: Image.asset(
+                                'assets/images/galaxydox.png',
+                                fit: BoxFit.cover,
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.primary.withValues(
-                                    alpha: 0.32,
-                                  ),
-                                  blurRadius: 36,
-                                  offset: const Offset(0, 18),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.language_rounded,
-                              size: 44,
-                              color: AppColors.background,
                             ),
                           ),
                           const SizedBox(height: 24),
