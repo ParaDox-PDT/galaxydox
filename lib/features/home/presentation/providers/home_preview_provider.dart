@@ -8,19 +8,24 @@ import '../../../../core/theme/app_colors.dart';
 final homePreviewProvider = Provider<HomePreviewData>((ref) {
   return const HomePreviewData(
     hero: HomeHeroContent(
-      eyebrow: 'Tonight\'s Briefing',
-      title: 'Explore the cosmos through NASA\'s most cinematic archives.',
+      eyebrow: 'Featured orbit',
+      title:
+          'A premium NASA field guide for tonight\'s most compelling stories.',
       description:
-          'GalaxyDox brings together APOD storytelling, Mars rover imagery, asteroid intelligence, and NASA\'s vast media vault in a premium editorial experience.',
+          'Move from the daily APOD narrative to rover imagery, asteroid intelligence, and NASA\'s media vault inside one calm cinematic mobile experience.',
       imageUrl: AppConstants.homeHeroImage,
-      primaryLabel: 'Open APOD',
+      primaryLabel: 'Enter APOD',
       primaryRouteName: AppRoutes.apodName,
-      secondaryLabel: 'Search Media',
+      secondaryLabel: 'Search archive',
       secondaryRouteName: AppRoutes.searchName,
+      capsuleTitle: 'Mission capsule',
+      capsuleDescription:
+          'Designed for discovery first, with clean architecture and live NASA data lanes ready to plug in.',
+      tags: ['NASA Open APIs', 'Editorial discovery', 'Dark cinematic UI'],
       metrics: [
-        FeatureMetric(label: 'Daily focus', value: 'APOD'),
-        FeatureMetric(label: 'Rover archive', value: 'Mars surface'),
-        FeatureMetric(label: 'Asteroid watch', value: 'NEO feed'),
+        FeatureMetric(label: 'Daily story', value: 'APOD'),
+        FeatureMetric(label: 'Surface gallery', value: 'Mars rovers'),
+        FeatureMetric(label: 'Deep scan', value: 'Near-Earth objects'),
       ],
     ),
     sections: [
@@ -29,29 +34,29 @@ final homePreviewProvider = Provider<HomePreviewData>((ref) {
         kicker: 'Daily editorial',
         title: 'Astronomy Picture of the Day',
         description:
-            'Today\'s image or video, expanded into a rich story with HD viewing and elegant long-form reading.',
+            'Today\'s image or video, expanded into a full-screen story with elegant long-form context and HD-ready presentation.',
         imageUrl: AppConstants.apodPreviewImage,
         accentColor: AppColors.primary,
         icon: Icons.auto_awesome_rounded,
-        ctaLabel: 'View today',
+        ctaLabel: 'Open today\'s story',
         metrics: [
-          FeatureMetric(label: 'Content', value: 'Image or video'),
-          FeatureMetric(label: 'Depth', value: 'Explanation'),
+          FeatureMetric(label: 'Format', value: 'Image or video'),
+          FeatureMetric(label: 'Experience', value: 'HD detail'),
         ],
       ),
       HomeFeaturePreview(
         routeName: AppRoutes.marsRoverName,
-        kicker: 'Surface imagery',
+        kicker: 'Surface archive',
         title: 'Mars Rover Gallery',
         description:
-            'Jump into rover archives with cinematic grids, date filters, and detailed camera metadata for every frame.',
+            'Browse rover photography with date filters, camera metadata, and an image-first layout tuned for long scrolling sessions.',
         imageUrl: AppConstants.marsPreviewImage,
         accentColor: AppColors.secondary,
         icon: Icons.rocket_launch_rounded,
-        ctaLabel: 'Browse rovers',
+        ctaLabel: 'Browse rover frames',
         metrics: [
           FeatureMetric(label: 'Filters', value: 'Rover and date'),
-          FeatureMetric(label: 'Detail', value: 'Camera metadata'),
+          FeatureMetric(label: 'Metadata', value: 'Camera and status'),
         ],
       ),
       HomeFeaturePreview(
@@ -59,26 +64,26 @@ final homePreviewProvider = Provider<HomePreviewData>((ref) {
         kicker: 'Risk intelligence',
         title: 'Near-Earth Object Watch',
         description:
-            'Scan asteroid flybys with hazard indicators, key dimensions, miss distance, and velocity in a calm readable layout.',
+            'Track asteroid flybys with hazard indicators, miss distance, size, and velocity presented with calm readable density.',
         imageUrl: AppConstants.neoPreviewImage,
         accentColor: AppColors.warning,
         icon: Icons.track_changes_rounded,
-        ctaLabel: 'Track asteroids',
+        ctaLabel: 'Track asteroid flow',
         metrics: [
           FeatureMetric(label: 'Signals', value: 'Hazard status'),
-          FeatureMetric(label: 'Data', value: 'Velocity and size'),
+          FeatureMetric(label: 'Telemetry', value: 'Velocity and size'),
         ],
       ),
       HomeFeaturePreview(
         routeName: AppRoutes.searchName,
-        kicker: 'NASA media vault',
+        kicker: 'Media vault',
         title: 'Image and Video Search',
         description:
-            'Search NASA imagery and video collections with a fast visual browser built for discovery, not just utility.',
+            'Search NASA imagery and video collections with a discovery-first interface built for browsing, not just retrieval.',
         imageUrl: AppConstants.searchPreviewImage,
         accentColor: AppColors.tertiary,
         icon: Icons.grid_view_rounded,
-        ctaLabel: 'Search archive',
+        ctaLabel: 'Search the archive',
         metrics: [
           FeatureMetric(label: 'Mode', value: 'Grid or list'),
           FeatureMetric(label: 'Scope', value: 'Image and video'),
@@ -105,6 +110,9 @@ class HomeHeroContent {
     required this.primaryRouteName,
     required this.secondaryLabel,
     required this.secondaryRouteName,
+    required this.capsuleTitle,
+    required this.capsuleDescription,
+    required this.tags,
     required this.metrics,
   });
 
@@ -116,6 +124,9 @@ class HomeHeroContent {
   final String primaryRouteName;
   final String secondaryLabel;
   final String secondaryRouteName;
+  final String capsuleTitle;
+  final String capsuleDescription;
+  final List<String> tags;
   final List<FeatureMetric> metrics;
 }
 

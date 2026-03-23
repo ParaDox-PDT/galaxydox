@@ -29,16 +29,27 @@ class SectionHeading extends StatelessWidget {
         final headingContent = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              eyebrow.toUpperCase(),
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: AppColors.primary,
-                letterSpacing: 1.6,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 34,
+                  height: 1,
+                  color: AppColors.primaryStrong.withValues(alpha: 0.72),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  eyebrow.toUpperCase(),
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: AppColors.primary,
+                    letterSpacing: 1.8,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(title, style: theme.textTheme.headlineMedium),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Text(subtitle, style: theme.textTheme.bodyLarge),
           ],
         );
@@ -51,7 +62,7 @@ class SectionHeading extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(child: headingContent),
-            const SizedBox(width: 16),
+            const SizedBox(width: 18),
             OutlinedButton(
               onPressed: onActionPressed,
               child: Text(actionLabel!),

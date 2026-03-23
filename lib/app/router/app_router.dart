@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../features/apod/presentation/pages/apod_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/mars_rover/presentation/pages/mars_rover_page.dart';
@@ -12,53 +13,15 @@ import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../shared/widgets/coming_soon_page.dart';
 import 'app_routes.dart';
 
+final _rootNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'rootNavigator',
+);
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.splashPath,
-    routes: [
-      GoRoute(
-        path: AppRoutes.splashPath,
-        name: AppRoutes.splashName,
-        pageBuilder: (context, state) =>
-            _buildPage(state: state, child: const SplashPage()),
-      ),
-      GoRoute(
-        path: AppRoutes.homePath,
-        name: AppRoutes.homeName,
-        pageBuilder: (context, state) =>
-            _buildPage(state: state, child: const HomePage()),
-      ),
-      GoRoute(
-        path: AppRoutes.apodPath,
-        name: AppRoutes.apodName,
-        pageBuilder: (context, state) =>
-            _buildPage(state: state, child: const ApodPage()),
-      ),
-      GoRoute(
-        path: AppRoutes.marsRoverPath,
-        name: AppRoutes.marsRoverName,
-        pageBuilder: (context, state) =>
-            _buildPage(state: state, child: const MarsRoverPage()),
-      ),
-      GoRoute(
-        path: AppRoutes.neoPath,
-        name: AppRoutes.neoName,
-        pageBuilder: (context, state) =>
-            _buildPage(state: state, child: const NeoPage()),
-      ),
-      GoRoute(
-        path: AppRoutes.searchPath,
-        name: AppRoutes.searchName,
-        pageBuilder: (context, state) =>
-            _buildPage(state: state, child: const NasaSearchPage()),
-      ),
-      GoRoute(
-        path: AppRoutes.settingsPath,
-        name: AppRoutes.settingsName,
-        pageBuilder: (context, state) =>
-            _buildPage(state: state, child: const SettingsPage()),
-      ),
-    ],
+    routes: _routes,
     errorPageBuilder: (context, state) => _buildPage(
       state: state,
       child: const ComingSoonPage(
@@ -76,28 +39,85 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
+final List<RouteBase> _routes = [
+  _appRoute(
+    path: AppRoutes.splashPath,
+    name: AppRoutes.splashName,
+    child: const SplashPage(),
+  ),
+  _appRoute(
+    path: AppRoutes.homePath,
+    name: AppRoutes.homeName,
+    child: const HomePage(),
+  ),
+  _appRoute(
+    path: AppRoutes.apodPath,
+    name: AppRoutes.apodName,
+    child: const ApodPage(),
+  ),
+  _appRoute(
+    path: AppRoutes.marsRoverPath,
+    name: AppRoutes.marsRoverName,
+    child: const MarsRoverPage(),
+  ),
+  _appRoute(
+    path: AppRoutes.neoPath,
+    name: AppRoutes.neoName,
+    child: const NeoPage(),
+  ),
+  _appRoute(
+    path: AppRoutes.searchPath,
+    name: AppRoutes.searchName,
+    child: const NasaSearchPage(),
+  ),
+  _appRoute(
+    path: AppRoutes.settingsPath,
+    name: AppRoutes.settingsName,
+    child: const SettingsPage(),
+  ),
+];
+
+GoRoute _appRoute({
+  required String path,
+  required String name,
+  required Widget child,
+}) {
+  return GoRoute(
+    path: path,
+    name: name,
+    pageBuilder: (context, state) => _buildPage(state: state, child: child),
+  );
+}
+
 CustomTransitionPage<void> _buildPage({
   required GoRouterState state,
   required Widget child,
 }) {
   return CustomTransitionPage<void>(
     key: state.pageKey,
-    transitionDuration: const Duration(milliseconds: 450),
-    reverseTransitionDuration: const Duration(milliseconds: 350),
+    transitionDuration: AppConstants.motionSlow,
+    reverseTransitionDuration: AppConstants.motionMedium,
     child: child,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      final fade = CurvedAnimation(
+      final curved = CurvedAnimation(
         parent: animation,
         curve: Curves.easeOutCubic,
       );
+
       final offset = Tween<Offset>(
-        begin: const Offset(0, 0.035),
+        begin: const Offset(0, 0.028),
         end: Offset.zero,
-      ).animate(fade);
+      ).animate(curved);
 
       return FadeTransition(
-        opacity: fade,
-        child: SlideTransition(position: offset, child: child),
+        opacity: curved,
+        child: SlideTransition(
+          position: offset,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.995, end: 1).animate(curved),
+            child: child,
+          ),
+        ),
       );
     },
   );

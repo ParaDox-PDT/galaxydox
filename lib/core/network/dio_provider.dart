@@ -4,19 +4,36 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/app_config.dart';
 
 final nasaApiDioProvider = Provider<Dio>((ref) {
-  final dio = Dio(_baseOptions(AppConfig.nasaApiBaseUrl));
+  return _buildDio(
+    baseUrl: AppConfig.nasaApiBaseUrl,
+    attachApiKeyByDefault: true,
+  );
+});
+
+final nasaMediaDioProvider = Provider<Dio>((ref) {
+  return _buildDio(
+    baseUrl: AppConfig.nasaMediaBaseUrl,
+    attachApiKeyByDefault: false,
+  );
+});
+
+Dio _buildDio({required String baseUrl, required bool attachApiKeyByDefault}) {
+  final dio = Dio(_baseOptions(baseUrl));
 
   dio.interceptors.add(
     InterceptorsWrapper(
       onRequest: (options, handler) {
         final shouldAttachApiKey =
-            options.extra['attachApiKey'] as bool? ?? true;
+            options.extra[RequestExtras.attachApiKey] as bool? ??
+            attachApiKeyByDefault;
 
         if (shouldAttachApiKey &&
             !options.queryParameters.containsKey('api_key')) {
-          final query = Map<String, dynamic>.from(options.queryParameters);
-          query['api_key'] = AppConfig.nasaApiKey;
-          options.queryParameters = query;
+          final queryParameters = Map<String, dynamic>.from(
+            options.queryParameters,
+          );
+          queryParameters['api_key'] = AppConfig.nasaApiKey;
+          options.queryParameters = queryParameters;
         }
 
         handler.next(options);
@@ -25,19 +42,17 @@ final nasaApiDioProvider = Provider<Dio>((ref) {
   );
 
   return dio;
-});
-
-final nasaMediaDioProvider = Provider<Dio>((ref) {
-  return Dio(_baseOptions(AppConfig.nasaMediaBaseUrl));
-});
+}
 
 BaseOptions _baseOptions(String baseUrl) {
   return BaseOptions(
     baseUrl: baseUrl,
-    connectTimeout: const Duration(seconds: 20),
-    receiveTimeout: const Duration(seconds: 20),
-    sendTimeout: const Duration(seconds: 20),
+    connectTimeout: AppConfig.connectTimeout,
+    receiveTimeout: AppConfig.receiveTimeout,
+    sendTimeout: AppConfig.sendTimeout,
     responseType: ResponseType.json,
-    headers: const {'Accept': 'application/json'},
+    headers: Map<String, dynamic>.from(AppConfig.defaultHeaders),
+    listFormat: ListFormat.multiCompatible,
+    validateStatus: (status) => status != null && status >= 200 && status < 500,
   );
 }

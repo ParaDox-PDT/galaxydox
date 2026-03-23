@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../config/app_config.dart';
 import 'dio_provider.dart';
 
 final nasaApiClientProvider = Provider<NasaApiClient>((ref) {
@@ -26,7 +27,7 @@ class NasaApiClient {
     bool hd = true,
   }) {
     return _apiDio.get<Map<String, dynamic>>(
-      '/planetary/apod',
+      NasaEndpoints.apod,
       queryParameters: {if (date != null) 'date': _formatDate(date), 'hd': hd},
     );
   }
@@ -38,7 +39,7 @@ class NasaApiClient {
     int page = 1,
   }) {
     return _apiDio.get<Map<String, dynamic>>(
-      '/mars-photos/api/v1/rovers/$rover/photos',
+      NasaEndpoints.marsRoverPhotos(rover),
       queryParameters: {
         if (earthDate != null)
           'earth_date': _formatDate(earthDate)
@@ -53,11 +54,13 @@ class NasaApiClient {
     DateTime? startDate,
     DateTime? endDate,
   }) {
-    final effectiveStart = startDate ?? DateTime.now();
-    final effectiveEnd = endDate ?? effectiveStart.add(const Duration(days: 7));
+    final (effectiveStart, effectiveEnd) = _resolveDateWindow(
+      startDate: startDate,
+      endDate: endDate,
+    );
 
     return _apiDio.get<Map<String, dynamic>>(
-      '/neo/rest/v1/feed',
+      NasaEndpoints.nearEarthFeed,
       queryParameters: {
         'start_date': _formatDate(effectiveStart),
         'end_date': _formatDate(effectiveEnd),
@@ -71,11 +74,20 @@ class NasaApiClient {
     String mediaType = 'image',
   }) {
     return _mediaDio.get<Map<String, dynamic>>(
-      '/search',
+      NasaEndpoints.mediaSearch,
       queryParameters: {'q': query, 'media_type': mediaType, 'page': page},
-      options: Options(extra: const {'attachApiKey': false}),
+      options: Options(extra: const {RequestExtras.attachApiKey: false}),
     );
   }
 
-  String _formatDate(DateTime date) => _dateFormat.format(date);
+  (DateTime, DateTime) _resolveDateWindow({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) {
+    final effectiveStart = startDate ?? DateTime.now();
+    final effectiveEnd = endDate ?? effectiveStart.add(const Duration(days: 7));
+    return (effectiveStart, effectiveEnd);
+  }
+
+  static String _formatDate(DateTime date) => _dateFormat.format(date);
 }
