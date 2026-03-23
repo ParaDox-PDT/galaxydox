@@ -1,4 +1,4 @@
-package com.example.galaxydox
+package com.galaxydox.app
 
 import io.flutter.embedding.android.FlutterActivity
 
