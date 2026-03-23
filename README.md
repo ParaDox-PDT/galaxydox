@@ -116,10 +116,27 @@ lib/
 
 ## API Key Setup
 
-GalaxyDox reads the NASA key from:
+GalaxyDox reads release values from compile-time defines. The easiest local setup is an ignored `.env` file that you pass into Flutter builds.
 
-1. `const String.fromEnvironment('NASA_API_KEY')`
-2. `DEMO_KEY` only for non-release debugging
+Tracked example:
+
+```bash
+.env.example
+```
+
+Ignored local file:
+
+```bash
+.env
+```
+
+Supported keys:
+
+1. `NASA_API_KEY`
+2. `PRIVACY_POLICY_URL`
+3. `SUPPORT_URL`
+4. `SOURCE_CODE_URL`
+5. `MARKETING_URL`
 
 Run with an override:
 
@@ -131,10 +148,14 @@ Recommended release defines:
 
 ```bash
 flutter build appbundle --release ^
-  --dart-define=NASA_API_KEY=your_nasa_key_here ^
-  --dart-define=PRIVACY_POLICY_URL=https://your-domain.example/privacy ^
-  --dart-define=SUPPORT_URL=https://your-domain.example/support ^
-  --dart-define=SOURCE_CODE_URL=https://github.com/your-org/galaxydox
+  --dart-define-from-file=.env
+```
+
+Split-per-ABI release:
+
+```bash
+flutter build apk --release --split-per-abi ^
+  --dart-define-from-file=.env
 ```
 
 If no `NASA_API_KEY` is supplied, debug builds use NASA's public `DEMO_KEY` for quick testing. Release builds show a configuration-required screen instead of shipping with an embedded secret.
