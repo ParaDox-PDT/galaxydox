@@ -16,6 +16,7 @@ final nasaSearchControllerProvider =
 
 class NasaSearchController extends Notifier<NasaSearchState> {
   late final SearchNasaMediaUseCase _searchNasaMediaUseCase;
+  int _requestVersion = 0;
 
   @override
   NasaSearchState build() {
@@ -25,6 +26,8 @@ class NasaSearchController extends Notifier<NasaSearchState> {
 
   Future<void> search({String? query}) async {
     final effectiveQuery = (query ?? state.query).trim();
+    final requestVersion = ++_requestVersion;
+    final activeFilter = state.mediaTypeFilter;
 
     state = state.copyWith(
       query: effectiveQuery,
@@ -32,7 +35,7 @@ class NasaSearchController extends Notifier<NasaSearchState> {
           ? NasaSearchStatus.idle
           : NasaSearchStatus.loading,
       clearError: true,
-      results: effectiveQuery.isEmpty ? const [] : null,
+      clearResults: true,
     );
 
     if (effectiveQuery.isEmpty) {
@@ -41,8 +44,12 @@ class NasaSearchController extends Notifier<NasaSearchState> {
 
     final result = await _searchNasaMediaUseCase(
       query: effectiveQuery,
-      mediaType: state.mediaTypeFilter.apiValue,
+      mediaType: activeFilter.apiValue,
     );
+
+    if (requestVersion != _requestVersion) {
+      return;
+    }
 
     state = result.when(
       success: (results) {
@@ -69,15 +76,32 @@ class NasaSearchController extends Notifier<NasaSearchState> {
   }
 
   void setViewMode(NasaSearchViewMode viewMode) {
+    if (viewMode == state.viewMode) {
+      return;
+    }
+
     state = state.copyWith(viewMode: viewMode);
   }
 
   Future<void> setMediaTypeFilter(NasaSearchMediaFilter mediaTypeFilter) async {
+    if (mediaTypeFilter == state.mediaTypeFilter) {
+      return;
+    }
+
     state = state.copyWith(mediaTypeFilter: mediaTypeFilter);
-    await search();
+
+    if (state.query.isNotEmpty) {
+      await search();
+    }
   }
 
-  Future<void> retry() => search();
+  Future<void> retry() async {
+    if (state.query.isEmpty) {
+      return;
+    }
+
+    await search();
+  }
 }
 
 enum NasaSearchStatus { idle, loading, success, empty, error }
@@ -134,11 +158,12 @@ class NasaSearchState {
     NasaSearchMediaFilter? mediaTypeFilter,
     AppException? error,
     bool clearError = false,
+    bool clearResults = false,
   }) {
     return NasaSearchState(
       status: status ?? this.status,
       query: query ?? this.query,
-      results: results ?? this.results,
+      results: clearResults ? const [] : (results ?? this.results),
       viewMode: viewMode ?? this.viewMode,
       mediaTypeFilter: mediaTypeFilter ?? this.mediaTypeFilter,
       error: clearError ? null : (error ?? this.error),

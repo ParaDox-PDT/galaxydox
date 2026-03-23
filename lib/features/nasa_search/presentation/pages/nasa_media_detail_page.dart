@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/app_chip.dart';
 import '../../../../shared/widgets/bookmark_button.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
+import '../../../../shared/widgets/metadata_row.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
 import '../../../../shared/widgets/section_heading.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
@@ -27,9 +30,16 @@ class NasaMediaDetailPage extends StatelessWidget {
           SliverToBoxAdapter(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1180),
+                constraints: const BoxConstraints(
+                  maxWidth: AppConstants.contentMaxWidthCompact,
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 42),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppConstants.pagePadding,
+                    12,
+                    AppConstants.pagePadding,
+                    42,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -51,7 +61,9 @@ class NasaMediaDetailPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 20),
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(32),
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.radiusXLarge,
+                        ),
                         child: AspectRatio(
                           aspectRatio: 16 / 10,
                           child: PremiumNetworkImage(
@@ -65,10 +77,10 @@ class NasaMediaDetailPage extends StatelessWidget {
                         spacing: 10,
                         runSpacing: 10,
                         children: [
-                          _InfoPill(label: item.center),
-                          _InfoPill(label: _typeLabel(item.mediaType)),
+                          AppChip(label: item.center),
+                          AppChip(label: _typeLabel(item.mediaType)),
                           if (item.dateCreated != null)
-                            _InfoPill(
+                            AppChip(
                               label: DateFormat.yMMMMd().format(
                                 item.dateCreated!,
                               ),
@@ -139,18 +151,18 @@ class _MetadataPanel extends StatelessWidget {
         children: [
           Text('Metadata', style: theme.textTheme.titleLarge),
           const SizedBox(height: 18),
-          _MetaRow(label: 'NASA ID', value: item.nasaId),
+          MetadataRow(label: 'NASA ID', value: item.nasaId),
           const SizedBox(height: 12),
-          _MetaRow(label: 'Center', value: item.center),
+          MetadataRow(label: 'Center', value: item.center),
           const SizedBox(height: 12),
-          _MetaRow(label: 'Type', value: _typeLabel(item.mediaType)),
+          MetadataRow(label: 'Type', value: _typeLabel(item.mediaType)),
           if ((item.photographer ?? '').isNotEmpty) ...[
             const SizedBox(height: 12),
-            _MetaRow(label: 'Photographer', value: item.photographer!),
+            MetadataRow(label: 'Photographer', value: item.photographer!),
           ],
           if ((item.secondaryCreator ?? '').isNotEmpty) ...[
             const SizedBox(height: 12),
-            _MetaRow(label: 'Creator', value: item.secondaryCreator!),
+            MetadataRow(label: 'Creator', value: item.secondaryCreator!),
           ],
         ],
       ),
@@ -195,7 +207,7 @@ class _EditorialPanel extends StatelessWidget {
                   runSpacing: 10,
                   children: [
                     for (final keyword in item.keywords.take(8))
-                      _InfoPill(label: keyword),
+                      AppChip(label: keyword),
                   ],
                 ),
               ],
@@ -203,52 +215,6 @@ class _EditorialPanel extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _MetaRow extends StatelessWidget {
-  const _MetaRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _InfoPill extends StatelessWidget {
-  const _InfoPill({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceStrong.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.outlineSoft),
-      ),
-      child: Text(label),
     );
   }
 }

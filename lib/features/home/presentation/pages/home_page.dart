@@ -7,6 +7,7 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
+import '../../../../shared/widgets/premium_refresh_indicator.dart';
 import '../../../../shared/widgets/section_heading.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
 import '../providers/home_preview_provider.dart';
@@ -27,9 +28,7 @@ class HomePage extends ConsumerWidget {
 
     return SpaceScaffold(
       bottomSafeArea: true,
-      body: RefreshIndicator(
-        color: AppColors.primaryStrong,
-        backgroundColor: AppColors.surfaceStrong,
+      body: PremiumRefreshIndicator(
         onRefresh: () => _refresh(ref),
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(
@@ -156,7 +155,9 @@ class _TopBar extends StatelessWidget {
                 width: 58,
                 height: 58,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.radiusMedium,
+                  ),
                   gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -218,7 +219,7 @@ class _PanelIconButton extends StatelessWidget {
       height: 56,
       child: FrostedPanel(
         padding: EdgeInsets.zero,
-        radius: 18,
+        radius: AppConstants.radiusSmall,
         child: IconButton(onPressed: onPressed, icon: Icon(icon)),
       ),
     );
@@ -346,7 +347,7 @@ class _SummaryCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.surfaceStrong.withValues(alpha: 0.52),
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
         border: Border.all(color: AppColors.outlineSoft),
       ),
       child: Column(
@@ -443,7 +444,7 @@ class _DiscoveryBullet extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.surfaceStrong.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
         border: Border.all(color: AppColors.outlineSoft),
       ),
       child: Column(

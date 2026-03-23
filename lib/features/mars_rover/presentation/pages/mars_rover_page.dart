@@ -8,6 +8,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_chip.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
+import '../../../../shared/widgets/metadata_row.dart';
 import '../../../../shared/widgets/page_header.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
 import '../../../../shared/widgets/premium_refresh_indicator.dart';
@@ -541,11 +542,17 @@ class _PhotoCard extends StatelessWidget {
                             style: theme.textTheme.bodyMedium,
                           ),
                           const SizedBox(height: 14),
-                          _MiniMeta(label: 'Camera', value: photo.cameraName),
+                          MetadataRow(label: 'Camera', value: photo.cameraName),
                           const SizedBox(height: 10),
-                          _MiniMeta(label: 'Status', value: photo.roverStatus),
+                          MetadataRow(
+                            label: 'Status',
+                            value: photo.roverStatus,
+                          ),
                           const SizedBox(height: 10),
-                          _MiniMeta(label: 'Sol', value: photo.sol.toString()),
+                          MetadataRow(
+                            label: 'Sol',
+                            value: photo.sol.toString(),
+                          ),
                           const Spacer(),
                           Row(
                             children: [
@@ -573,32 +580,6 @@ class _PhotoCard extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _MiniMeta extends StatelessWidget {
-  const _MiniMeta({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Row(
-      children: [
-        Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: theme.textTheme.titleSmall,
-          ),
-        ),
-      ],
     );
   }
 }

@@ -84,10 +84,22 @@ class NasaApiClient {
     DateTime? startDate,
     DateTime? endDate,
   }) {
-    final effectiveStart = startDate ?? DateTime.now();
-    final effectiveEnd = endDate ?? effectiveStart.add(const Duration(days: 7));
+    final effectiveStart = _normalizeDate(startDate ?? DateTime.now());
+    final requestedEnd = _normalizeDate(
+      endDate ?? effectiveStart.add(const Duration(days: 6)),
+    );
+    final maxAllowedEnd = effectiveStart.add(const Duration(days: 6));
+    final effectiveEnd = requestedEnd.isBefore(effectiveStart)
+        ? effectiveStart
+        : requestedEnd.isAfter(maxAllowedEnd)
+        ? maxAllowedEnd
+        : requestedEnd;
+
     return (effectiveStart, effectiveEnd);
   }
 
   static String _formatDate(DateTime date) => _dateFormat.format(date);
+
+  static DateTime _normalizeDate(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
 }

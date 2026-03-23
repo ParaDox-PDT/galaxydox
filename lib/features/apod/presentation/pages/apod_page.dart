@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_chip.dart';
 import '../../../../shared/widgets/bookmark_button.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
+import '../../../../shared/widgets/metadata_row.dart';
 import '../../../../shared/widgets/page_header.dart';
 import '../../../../shared/widgets/premium_refresh_indicator.dart';
 import '../../../../shared/widgets/section_heading.dart';
@@ -349,20 +350,23 @@ class _MetaPanel extends StatelessWidget {
         children: [
           Text('Metadata', style: theme.textTheme.titleLarge),
           const SizedBox(height: 18),
-          _MetaRow(label: 'Date', value: DateFormat.yMMMd().format(item.date)),
+          MetadataRow(
+            label: 'Date',
+            value: DateFormat.yMMMd().format(item.date),
+          ),
           const SizedBox(height: 14),
-          _MetaRow(
+          MetadataRow(
             label: 'Media type',
             value: item.isVideo ? 'Video' : 'Image',
           ),
           const SizedBox(height: 14),
-          _MetaRow(
+          MetadataRow(
             label: 'HD available',
             value: item.hasHdImage ? 'Yes' : 'No',
           ),
           if ((item.copyright ?? '').isNotEmpty) ...[
             const SizedBox(height: 14),
-            _MetaRow(label: 'Credit', value: item.copyright!),
+            MetadataRow(label: 'Credit', value: item.copyright!),
           ],
         ],
       ),
@@ -428,33 +432,6 @@ class _ActionPanel extends StatelessWidget {
           ],
         ],
       ),
-    );
-  }
-}
-
-class _MetaRow extends StatelessWidget {
-  const _MetaRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            style: theme.textTheme.titleSmall,
-          ),
-        ),
-      ],
     );
   }
 }

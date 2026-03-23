@@ -78,15 +78,10 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
                           state: state,
                           searchController: _searchController,
                           onChanged: _onSearchChanged,
-                          onSubmit: () =>
-                              controller.search(query: _searchController.text),
-                          onClear: () {
-                            _searchController.clear();
-                            controller.search(query: '');
-                            setState(() {});
-                          },
-                          onToggleView: controller.setViewMode,
-                          onFilterChanged: controller.setMediaTypeFilter,
+                          onSubmit: () => _submitSearch(controller),
+                          onClear: () => _clearSearch(controller),
+                          onToggleView: _handleViewToggle,
+                          onFilterChanged: _handleFilterChanged,
                         ).animate().fadeIn(duration: AppConstants.motionMedium),
                         const SizedBox(height: AppConstants.stackGap),
                         const _IntroPanel()
@@ -148,11 +143,34 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
   }
 
   void _onSearchChanged(String value) {
-    setState(() {});
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 550), () {
       ref.read(nasaSearchControllerProvider.notifier).search(query: value);
     });
+  }
+
+  Future<void> _submitSearch(NasaSearchController controller) async {
+    HapticFeedback.selectionClick();
+    await controller.search(query: _searchController.text);
+  }
+
+  Future<void> _clearSearch(NasaSearchController controller) async {
+    _debounce?.cancel();
+    HapticFeedback.selectionClick();
+    _searchController.clear();
+    await controller.search(query: '');
+  }
+
+  void _handleViewToggle(NasaSearchViewMode viewMode) {
+    HapticFeedback.selectionClick();
+    ref.read(nasaSearchControllerProvider.notifier).setViewMode(viewMode);
+  }
+
+  Future<void> _handleFilterChanged(NasaSearchMediaFilter filter) async {
+    HapticFeedback.selectionClick();
+    await ref
+        .read(nasaSearchControllerProvider.notifier)
+        .setMediaTypeFilter(filter);
   }
 
   void _openDetail(BuildContext context, NasaMediaItem item) {
@@ -200,21 +218,26 @@ class _TopBar extends StatelessWidget {
           padding: const EdgeInsets.all(18),
           child: Column(
             children: [
-              TextField(
-                controller: searchController,
-                onChanged: onChanged,
-                onSubmitted: (_) => onSubmit(),
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: 'Search nebulae, Apollo, Hubble, Artemis...',
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: searchController.text.isNotEmpty
-                      ? IconButton(
-                          onPressed: onClear,
-                          icon: const Icon(Icons.close_rounded),
-                        )
-                      : null,
-                ),
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: searchController,
+                builder: (context, value, child) {
+                  return TextField(
+                    controller: searchController,
+                    onChanged: onChanged,
+                    onSubmitted: (_) => onSubmit(),
+                    textInputAction: TextInputAction.search,
+                    decoration: InputDecoration(
+                      hintText: 'Search nebulae, Apollo, Hubble, Artemis...',
+                      prefixIcon: const Icon(Icons.search_rounded),
+                      suffixIcon: value.text.isNotEmpty
+                          ? IconButton(
+                              onPressed: onClear,
+                              icon: const Icon(Icons.close_rounded),
+                            )
+                          : null,
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 16),
               LayoutBuilder(

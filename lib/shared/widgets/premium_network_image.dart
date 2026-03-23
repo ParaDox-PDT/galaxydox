@@ -1,8 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:shimmer/shimmer.dart';
 
+import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
+import 'loading_skeleton.dart';
 
 class PremiumNetworkImage extends StatelessWidget {
   const PremiumNetworkImage({
@@ -30,24 +31,33 @@ class PremiumNetworkImage extends StatelessWidget {
       alignment: alignment,
       width: width,
       height: height,
-      placeholder: (context, url) => Shimmer.fromColors(
-        baseColor: AppColors.surfaceStrong,
-        highlightColor: AppColors.surfaceSoft,
+      fadeInDuration: AppConstants.motionMedium,
+      fadeOutDuration: AppConstants.motionFast,
+      placeholder: (context, url) => SkeletonScope(
         child: Container(
           width: width,
           height: height,
-          color: AppColors.surfaceStrong,
+          decoration: BoxDecoration(
+            color: AppColors.surfaceStrong,
+            borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+          ),
         ),
       ),
-      errorWidget: (context, url, error) => Container(
-        width: width,
-        height: height,
-        color: AppColors.surfaceStrong,
-        alignment: Alignment.center,
-        child: const Icon(
-          Icons.photo_outlined,
-          color: AppColors.textMuted,
-          size: 32,
+      errorWidget: (context, url, error) => DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceStrong,
+          borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+        ),
+        child: SizedBox(
+          width: width,
+          height: height,
+          child: const Center(
+            child: Icon(
+              Icons.photo_outlined,
+              color: AppColors.textMuted,
+              size: 32,
+            ),
+          ),
         ),
       ),
     );
