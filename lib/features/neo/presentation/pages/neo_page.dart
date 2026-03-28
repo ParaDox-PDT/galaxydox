@@ -7,7 +7,9 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/trusted_external_url.dart';
+import '../../../../shared/bookmarks/bookmark_mapper.dart';
 import '../../../../shared/widgets/app_chip.dart';
+import '../../../../shared/widgets/bookmark_button.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/page_header.dart';
 import '../../../../shared/widgets/premium_refresh_indicator.dart';
@@ -17,6 +19,7 @@ import '../../../../shared/widgets/state_panel.dart';
 import '../../domain/entities/near_earth_object.dart';
 import '../providers/neo_controller.dart';
 import '../widgets/neo_loading_view.dart';
+import 'neo_detail_page.dart';
 
 class NeoPage extends ConsumerWidget {
   const NeoPage({super.key});
@@ -382,138 +385,170 @@ class _NeoCard extends StatelessWidget {
           ),
         ],
       ),
-      child: FrostedPanel(
-        radius: AppConstants.radiusLarge,
-        padding: const EdgeInsets.all(22),
-        borderColor: hazardColor.withValues(alpha: 0.32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final compact = constraints.maxWidth < 880;
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+          onTap: () {
+            HapticFeedback.selectionClick();
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (context) => NeoDetailPage(object: object),
+              ),
+            );
+          },
+          child: FrostedPanel(
+            radius: AppConstants.radiusLarge,
+            padding: const EdgeInsets.all(22),
+            borderColor: hazardColor.withValues(alpha: 0.32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxWidth < 880;
 
-                final header = Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
+                    final header = Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        AppChip(
-                          label: object.isHazardous
-                              ? 'Potentially hazardous'
-                              : 'Low hazard profile',
-                          accent: hazardColor,
-                          leading: Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: hazardColor,
-                              shape: BoxShape.circle,
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: [
+                            AppChip(
+                              label: object.isHazardous
+                                  ? 'Potentially hazardous'
+                                  : 'Low hazard profile',
+                              accent: hazardColor,
+                              leading: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: hazardColor,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
                             ),
+                            AppChip(label: 'Orbiting ${object.orbitingBody}'),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          object.name,
+                          style: theme.textTheme.headlineMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          DateFormat.yMMMMd().format(object.closeApproachDate),
+                          style: theme.textTheme.bodyLarge,
+                        ),
+                      ],
+                    );
+
+                    final actions = Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      alignment: WrapAlignment.end,
+                      children: [
+                        BookmarkButton(
+                          bookmark: BookmarkMapper.fromNearEarthObject(object),
+                          savedLabel: 'Bookmarked',
+                          unsavedLabel: 'Bookmark',
+                          variant: BookmarkButtonVariant.icon,
+                        ),
+                        if (object.nasaJplUrl.isNotEmpty)
+                          OutlinedButton.icon(
+                            onPressed: () =>
+                                _launchUrl(context, object.nasaJplUrl),
+                            icon: const Icon(Icons.open_in_new_rounded),
+                            label: const Text('JPL details'),
                           ),
-                        ),
-                        AppChip(label: 'Orbiting ${object.orbitingBody}'),
                       ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(object.name, style: theme.textTheme.headlineMedium),
-                    const SizedBox(height: 8),
-                    Text(
-                      DateFormat.yMMMMd().format(object.closeApproachDate),
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                  ],
-                );
+                    );
 
-                final cta = object.nasaJplUrl.isEmpty
-                    ? const SizedBox.shrink()
-                    : Align(
-                        alignment: compact
-                            ? Alignment.centerLeft
-                            : Alignment.centerRight,
-                        child: OutlinedButton.icon(
-                          onPressed: () =>
-                              _launchUrl(context, object.nasaJplUrl),
-                          icon: const Icon(Icons.open_in_new_rounded),
-                          label: const Text('JPL details'),
-                        ),
+                    if (compact) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [header, const SizedBox(height: 16), actions],
                       );
+                    }
 
-                if (compact) {
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [header, const SizedBox(height: 16), cta],
-                  );
-                }
-
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: header),
-                    const SizedBox(width: 16),
-                    cta,
-                  ],
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final compact = constraints.maxWidth < 1020;
-                final metrics = [
-                  _TelemetryTile(
-                    label: 'Estimated diameter',
-                    value:
-                        '${object.minDiameterMeters.toStringAsFixed(0)} - ${object.maxDiameterMeters.toStringAsFixed(0)} m',
-                    accent: AppColors.primary,
-                    helper:
-                        'Average ${object.averageDiameterMeters.toStringAsFixed(0)} m',
-                  ),
-                  _TelemetryTile(
-                    label: 'Relative velocity',
-                    value:
-                        '${object.relativeVelocityKilometersPerSecond.toStringAsFixed(2)} km/s',
-                    accent: AppColors.secondary,
-                    helper:
-                        '${_toKilometersPerHour(object.relativeVelocityKilometersPerSecond).toStringAsFixed(0)} km/h',
-                  ),
-                  _TelemetryTile(
-                    label: 'Miss distance',
-                    value: _formatDistance(object.missDistanceKilometers),
-                    accent: object.isHazardous
-                        ? AppColors.warning
-                        : AppColors.tertiary,
-                    helper:
-                        '${_toLunarDistances(object.missDistanceKilometers).toStringAsFixed(2)} lunar distances',
-                  ),
-                ];
-
-                if (compact) {
-                  return Column(
-                    children: [
-                      for (var index = 0; index < metrics.length; index++) ...[
-                        metrics[index],
-                        if (index != metrics.length - 1)
-                          const SizedBox(height: 12),
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: header),
+                        const SizedBox(width: 16),
+                        actions,
                       ],
-                    ],
-                  );
-                }
+                    );
+                  },
+                ),
+                const SizedBox(height: 20),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final compact = constraints.maxWidth < 1020;
+                    final metrics = [
+                      _TelemetryTile(
+                        label: 'Estimated diameter',
+                        value:
+                            '${object.minDiameterMeters.toStringAsFixed(0)} - ${object.maxDiameterMeters.toStringAsFixed(0)} m',
+                        accent: AppColors.primary,
+                        helper:
+                            'Average ${object.averageDiameterMeters.toStringAsFixed(0)} m',
+                      ),
+                      _TelemetryTile(
+                        label: 'Relative velocity',
+                        value:
+                            '${object.relativeVelocityKilometersPerSecond.toStringAsFixed(2)} km/s',
+                        accent: AppColors.secondary,
+                        helper:
+                            '${_toKilometersPerHour(object.relativeVelocityKilometersPerSecond).toStringAsFixed(0)} km/h',
+                      ),
+                      _TelemetryTile(
+                        label: 'Miss distance',
+                        value: _formatDistance(object.missDistanceKilometers),
+                        accent: object.isHazardous
+                            ? AppColors.warning
+                            : AppColors.tertiary,
+                        helper:
+                            '${_toLunarDistances(object.missDistanceKilometers).toStringAsFixed(2)} lunar distances',
+                      ),
+                    ];
 
-                return Row(
-                  children: [
-                    for (var index = 0; index < metrics.length; index++) ...[
-                      Expanded(child: metrics[index]),
-                      if (index != metrics.length - 1)
-                        const SizedBox(width: 12),
-                    ],
-                  ],
-                );
-              },
+                    if (compact) {
+                      return Column(
+                        children: [
+                          for (
+                            var index = 0;
+                            index < metrics.length;
+                            index++
+                          ) ...[
+                            metrics[index],
+                            if (index != metrics.length - 1)
+                              const SizedBox(height: 12),
+                          ],
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        for (
+                          var index = 0;
+                          index < metrics.length;
+                          index++
+                        ) ...[
+                          Expanded(child: metrics[index]),
+                          if (index != metrics.length - 1)
+                            const SizedBox(width: 12),
+                        ],
+                      ],
+                    );
+                  },
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -17,6 +17,9 @@ abstract final class AppRoutes {
   static const searchName = 'search';
   static const searchPath = '/search';
 
+  static const bookmarksName = 'bookmarks';
+  static const bookmarksPath = '/bookmarks';
+
   static const auroraDemoName = 'aurora-demo';
   static const auroraDemoPath = '/aurora-demo';
 

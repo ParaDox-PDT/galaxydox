@@ -5,9 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app/app.dart';
 import 'app/bootstrap/configuration_required_app.dart';
 import 'core/config/app_config.dart';
+import 'shared/bookmarks/data/bookmark_hive_bootstrap.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await BookmarkHiveBootstrap.initialize();
 
   FlutterError.onError = (details) {
     FlutterError.presentError(details);

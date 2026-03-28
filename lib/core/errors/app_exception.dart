@@ -1,4 +1,11 @@
-enum AppExceptionType { network, timeout, unauthorized, serialization, unknown }
+enum AppExceptionType {
+  network,
+  timeout,
+  unauthorized,
+  serialization,
+  storage,
+  unknown,
+}
 
 class AppException implements Exception {
   const AppException({required this.type, required this.message, this.cause});

@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/bookmarks/bookmark_mapper.dart';
+import '../../../../shared/widgets/bookmark_button.dart';
 import '../../../../shared/widgets/app_chip.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/metadata_row.dart';
@@ -494,6 +496,16 @@ class _PhotoCard extends StatelessWidget {
                           child: PremiumNetworkImage(
                             imageUrl: photo.imageUrl,
                             fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          top: 16,
+                          right: 16,
+                          child: BookmarkButton(
+                            bookmark: BookmarkMapper.fromMarsRoverPhoto(photo),
+                            savedLabel: 'Bookmarked',
+                            unsavedLabel: 'Bookmark',
+                            variant: BookmarkButtonVariant.icon,
                           ),
                         ),
                         Positioned(

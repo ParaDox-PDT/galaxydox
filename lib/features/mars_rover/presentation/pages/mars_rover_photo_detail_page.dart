@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../shared/bookmarks/bookmark_mapper.dart';
+import '../../../../shared/widgets/bookmark_button.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
 import '../../domain/entities/mars_rover_photo.dart';
@@ -43,6 +45,16 @@ class MarsRoverPhotoDetailPage extends StatelessWidget {
             child: _TopButton(
               icon: Icons.arrow_back_rounded,
               onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.paddingOf(context).top + 12,
+            right: 16,
+            child: BookmarkButton(
+              bookmark: BookmarkMapper.fromMarsRoverPhoto(photo),
+              savedLabel: 'Bookmarked',
+              unsavedLabel: 'Bookmark',
+              variant: BookmarkButtonVariant.icon,
             ),
           ),
           Positioned(

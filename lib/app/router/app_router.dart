@@ -11,6 +11,7 @@ import '../../features/nasa_search/presentation/pages/nasa_search_page.dart';
 import '../../features/neo/presentation/pages/neo_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
+import '../../shared/bookmarks/presentation/pages/bookmarks_page.dart';
 import '../../shared/widgets/coming_soon_page.dart';
 import 'app_routes.dart';
 
@@ -70,6 +71,11 @@ final List<RouteBase> _routes = [
     path: AppRoutes.searchPath,
     name: AppRoutes.searchName,
     child: const NasaSearchPage(),
+  ),
+  _appRoute(
+    path: AppRoutes.bookmarksPath,
+    name: AppRoutes.bookmarksName,
+    child: const BookmarksPage(),
   ),
   _appRoute(
     path: AppRoutes.auroraDemoPath,

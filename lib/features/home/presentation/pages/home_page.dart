@@ -209,6 +209,12 @@ class _TopBar extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         _PanelIconButton(
+          icon: Icons.bookmarks_rounded,
+          tooltip: 'Bookmarks',
+          onPressed: () => context.pushNamed(AppRoutes.bookmarksName),
+        ),
+        const SizedBox(width: 12),
+        _PanelIconButton(
           icon: Icons.tune_rounded,
           tooltip: 'Settings',
           onPressed: () => context.pushNamed(AppRoutes.settingsName),

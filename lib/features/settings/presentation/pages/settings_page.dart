@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
-import '../../../../core/config/app_config.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/utils/trusted_external_url.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
 import 'privacy_notice_page.dart';
@@ -29,38 +27,8 @@ class SettingsPage extends StatelessWidget {
                 Text('Settings', style: theme.textTheme.displayMedium),
                 const SizedBox(height: 10),
                 Text(
-                  'GalaxyDox keeps privacy, external links, and release configuration visible so public-repo maintenance and store review stay predictable.',
+                  'GalaxyDox keeps privacy and core app actions easy to reach without clutter.',
                   style: theme.textTheme.bodyLarge,
-                ),
-                const SizedBox(height: 24),
-                FrostedPanel(
-                  child: Column(
-                    children: [
-                      _SettingRow(
-                        label: 'Release configuration',
-                        value: AppConfig.requiresProductionConfiguration
-                            ? 'NASA_API_KEY is required for production'
-                            : AppConfig.apiKeySourceLabel,
-                      ),
-                      const Divider(),
-                      const _SettingRow(
-                        label: 'Core NASA API',
-                        value: AppConfig.nasaApiBaseUrl,
-                      ),
-                      const Divider(),
-                      const _SettingRow(
-                        label: 'NASA media search API',
-                        value: AppConfig.nasaMediaBaseUrl,
-                      ),
-                      const Divider(),
-                      _SettingRow(
-                        label: 'Privacy policy URL',
-                        value:
-                            AppConfig.privacyPolicyUri?.toString() ??
-                            'Configure with --dart-define=PRIVACY_POLICY_URL=https://...',
-                      ),
-                    ],
-                  ),
                 ),
                 const SizedBox(height: 20),
                 FrostedPanel(
@@ -93,33 +61,12 @@ class SettingsPage extends StatelessWidget {
                             icon: const Icon(Icons.privacy_tip_outlined),
                             label: const Text('Privacy notice'),
                           ),
-                          if (AppConfig.privacyPolicyUri != null)
-                            OutlinedButton.icon(
-                              onPressed: () => _openConfiguredUri(
-                                context,
-                                AppConfig.privacyPolicyUri!,
-                              ),
-                              icon: const Icon(Icons.open_in_new_rounded),
-                              label: const Text('Open privacy URL'),
-                            ),
-                          if (AppConfig.supportUri != null)
-                            OutlinedButton.icon(
-                              onPressed: () => _openConfiguredUri(
-                                context,
-                                AppConfig.supportUri!,
-                              ),
-                              icon: const Icon(Icons.support_agent_rounded),
-                              label: const Text('Support'),
-                            ),
-                          if (AppConfig.sourceCodeUri != null)
-                            OutlinedButton.icon(
-                              onPressed: () => _openConfiguredUri(
-                                context,
-                                AppConfig.sourceCodeUri!,
-                              ),
-                              icon: const Icon(Icons.code_rounded),
-                              label: const Text('Source'),
-                            ),
+                          OutlinedButton.icon(
+                            onPressed: () =>
+                                context.pushNamed(AppRoutes.bookmarksName),
+                            icon: const Icon(Icons.bookmarks_rounded),
+                            label: const Text('Bookmarks'),
+                          ),
                         ],
                       ),
                     ],
@@ -148,45 +95,6 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-Future<void> _openConfiguredUri(BuildContext context, Uri uri) async {
-  final launched = await launchExternalUri(uri);
-  if (!launched && context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Unable to open that link right now.')),
-    );
-  }
-}
-
-class _SettingRow extends StatelessWidget {
-  const _SettingRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(child: Text(label, style: theme.textTheme.titleMedium)),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              value,
-              style: theme.textTheme.bodyLarge,
-              textAlign: TextAlign.right,
-            ),
-          ),
-        ],
       ),
     );
   }

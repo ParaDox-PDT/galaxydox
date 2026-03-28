@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/bookmarks/bookmark_mapper.dart';
+import '../../../../shared/widgets/bookmark_button.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
 import '../../domain/entities/nasa_media_item.dart';
@@ -86,6 +88,18 @@ class _GridCard extends StatelessWidget {
                               left: 16,
                               top: 16,
                               child: _TypePill(type: item.mediaType),
+                            ),
+                            Positioned(
+                              top: 16,
+                              right: 16,
+                              child: BookmarkButton(
+                                bookmark: BookmarkMapper.fromNasaMediaItem(
+                                  item,
+                                ),
+                                savedLabel: 'Bookmarked',
+                                unsavedLabel: 'Bookmark',
+                                variant: BookmarkButtonVariant.icon,
+                              ),
                             ),
                             Positioned(
                               right: 16,
@@ -230,6 +244,14 @@ class _ListCard extends StatelessWidget {
                             children: [
                               _TypePill(type: item.mediaType),
                               _MetadataPill(label: item.center),
+                              BookmarkButton(
+                                bookmark: BookmarkMapper.fromNasaMediaItem(
+                                  item,
+                                ),
+                                savedLabel: 'Bookmarked',
+                                unsavedLabel: 'Bookmark',
+                                variant: BookmarkButtonVariant.icon,
+                              ),
                             ],
                           ),
                           const SizedBox(height: 12),
@@ -306,10 +328,7 @@ class _OpenDetailsRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        const Icon(
-          Icons.arrow_outward_rounded,
-          color: AppColors.secondary,
-        ),
+        const Icon(Icons.arrow_outward_rounded, color: AppColors.secondary),
       ],
     );
   }

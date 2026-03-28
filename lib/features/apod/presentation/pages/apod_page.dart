@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/trusted_external_url.dart';
+import '../../../../shared/bookmarks/bookmark_mapper.dart';
 import '../../../../shared/widgets/app_chip.dart';
 import '../../../../shared/widgets/bookmark_button.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
@@ -241,7 +242,6 @@ class _ApodContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final formattedDate = DateFormat.yMMMMd().format(item.date);
-    final bookmarkId = 'apod:${item.date.toIso8601String()}';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,7 +291,7 @@ class _ApodContent extends StatelessWidget {
               children: [
                 _MetaPanel(item: item),
                 const SizedBox(height: 18),
-                _ActionPanel(item: item, bookmarkId: bookmarkId),
+                _ActionPanel(item: item),
               ],
             );
 
@@ -377,10 +377,9 @@ class _MetaPanel extends StatelessWidget {
 }
 
 class _ActionPanel extends StatelessWidget {
-  const _ActionPanel({required this.item, required this.bookmarkId});
+  const _ActionPanel({required this.item});
 
   final ApodItem item;
-  final String bookmarkId;
 
   @override
   Widget build(BuildContext context) {
@@ -392,7 +391,11 @@ class _ActionPanel extends StatelessWidget {
           Text('Quick actions', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 18),
           Row(
-            children: [Expanded(child: BookmarkButton(bookmarkId: bookmarkId))],
+            children: [
+              Expanded(
+                child: BookmarkButton(bookmark: BookmarkMapper.fromApod(item)),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           Row(

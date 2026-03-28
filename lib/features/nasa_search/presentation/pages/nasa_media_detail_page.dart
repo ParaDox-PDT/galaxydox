@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/app_chip.dart';
+import '../../../../shared/bookmarks/bookmark_mapper.dart';
 import '../../../../shared/widgets/bookmark_button.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/metadata_row.dart';
@@ -20,7 +21,6 @@ class NasaMediaDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bookmarkId = 'search:${item.nasaId}';
 
     return SpaceScaffold(
       bottomSafeArea: true,
@@ -53,7 +53,7 @@ class NasaMediaDetailPage extends StatelessWidget {
                             label: const Text('Back'),
                           ),
                           BookmarkButton(
-                            bookmarkId: bookmarkId,
+                            bookmark: BookmarkMapper.fromNasaMediaItem(item),
                             unsavedLabel: 'Bookmark',
                             savedLabel: 'Bookmarked',
                           ),
