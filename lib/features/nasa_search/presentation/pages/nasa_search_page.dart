@@ -7,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/widgets/app_chip.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/page_header.dart';
 import '../../../../shared/widgets/premium_refresh_indicator.dart';
@@ -79,6 +78,8 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
                           searchController: _searchController,
                           onChanged: _onSearchChanged,
                           onSubmit: () => _submitSearch(controller),
+                          onExampleSelected: (query) =>
+                              _selectExampleQuery(controller, query),
                           onClear: () => _clearSearch(controller),
                           onToggleView: _handleViewToggle,
                           onFilterChanged: _handleFilterChanged,
@@ -162,6 +163,18 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
     await controller.search(query: '');
   }
 
+  Future<void> _selectExampleQuery(
+    NasaSearchController controller,
+    String query,
+  ) async {
+    _debounce?.cancel();
+    HapticFeedback.selectionClick();
+    _searchController
+      ..text = query
+      ..selection = TextSelection.collapsed(offset: query.length);
+    await controller.search(query: query);
+  }
+
   void _handleViewToggle(NasaSearchViewMode viewMode) {
     HapticFeedback.selectionClick();
     ref.read(nasaSearchControllerProvider.notifier).setViewMode(viewMode);
@@ -190,6 +203,7 @@ class _TopBar extends StatelessWidget {
     required this.searchController,
     required this.onChanged,
     required this.onSubmit,
+    required this.onExampleSelected,
     required this.onClear,
     required this.onToggleView,
     required this.onFilterChanged,
@@ -199,9 +213,19 @@ class _TopBar extends StatelessWidget {
   final TextEditingController searchController;
   final ValueChanged<String> onChanged;
   final VoidCallback onSubmit;
+  final ValueChanged<String> onExampleSelected;
   final VoidCallback onClear;
   final ValueChanged<NasaSearchViewMode> onToggleView;
   final Future<void> Function(NasaSearchMediaFilter filter) onFilterChanged;
+
+  static const _exampleQueries = [
+    'James Webb',
+    'Apollo 11',
+    'Mars',
+    'Nebula',
+    'Artemis',
+    'Saturn',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -218,100 +242,278 @@ class _TopBar extends StatelessWidget {
         FrostedPanel(
           padding: const EdgeInsets.all(18),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               ValueListenableBuilder<TextEditingValue>(
                 valueListenable: searchController,
                 builder: (context, value, child) {
-                  return TextField(
-                    controller: searchController,
-                    onChanged: onChanged,
-                    onSubmitted: (_) => onSubmit(),
-                    textInputAction: TextInputAction.search,
-                    decoration: InputDecoration(
-                      hintText: 'Search nebulae, Apollo, Hubble, Artemis...',
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      suffixIcon: value.text.isNotEmpty
-                          ? IconButton(
-                              onPressed: onClear,
-                              icon: const Icon(Icons.close_rounded),
-                            )
-                          : null,
-                    ),
+                  final hasText = value.text.trim().isNotEmpty;
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: SizedBox(
+                              height: 56,
+                              child: TextField(
+                                controller: searchController,
+                                onChanged: onChanged,
+                                onSubmitted: (_) => onSubmit(),
+                                textInputAction: TextInputAction.search,
+                                decoration: InputDecoration(
+                                  hintText:
+                                      'Search nebulae, Apollo, Hubble, Artemis...',
+                                  prefixIcon: const Icon(Icons.search_rounded),
+                                  suffixIcon: hasText
+                                      ? IconButton(
+                                          onPressed: onClear,
+                                          icon: const Icon(Icons.close_rounded),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                            ),
+                          ),
+                          AnimatedSwitcher(
+                            duration: AppConstants.motionFast,
+                            switchInCurve: Curves.easeOutCubic,
+                            switchOutCurve: Curves.easeOutCubic,
+                            child: hasText
+                                ? Padding(
+                                    key: const ValueKey('search-action'),
+                                    padding: const EdgeInsets.only(left: 12),
+                                    child: SizedBox(
+                                      width: 56,
+                                      height: 56,
+                                      child: FilledButton(
+                                        onPressed: onSubmit,
+                                        style: FilledButton.styleFrom(
+                                          padding: EdgeInsets.zero,
+                                        ),
+                                        child: const Icon(Icons.search_rounded),
+                                      ),
+                                    ),
+                                  )
+                                : const SizedBox.shrink(
+                                    key: ValueKey('search-action-hidden'),
+                                  ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: SizedBox(
+                          height: 44,
+                          child: ListView.separated(
+                            padding: EdgeInsets.zero,
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: _exampleQueries.length,
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(width: 10),
+                            itemBuilder: (context, index) {
+                              final query = _exampleQueries[index];
+                              final isSelected =
+                                  searchController.text.trim().toLowerCase() ==
+                                  query.toLowerCase();
+
+                              return ChoiceChip(
+                                label: Text(query),
+                                selected: isSelected,
+                                onSelected: (_) => onExampleSelected(query),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
                   );
                 },
               ),
               const SizedBox(height: 16),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final compact = constraints.maxWidth < 760;
-                  final filterRow = Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: [
-                      for (final filter in NasaSearchMediaFilter.values)
-                        ChoiceChip(
-                          label: Text(filter.label),
-                          selected: state.mediaTypeFilter == filter,
-                          onSelected: (_) => onFilterChanged(filter),
-                        ),
-                    ],
-                  );
-
-                  final actions = Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: [
-                      SegmentedButton<NasaSearchViewMode>(
-                        showSelectedIcon: false,
-                        segments: const [
-                          ButtonSegment(
-                            value: NasaSearchViewMode.grid,
-                            icon: Icon(Icons.grid_view_rounded),
-                            label: Text('Grid'),
-                          ),
-                          ButtonSegment(
-                            value: NasaSearchViewMode.list,
-                            icon: Icon(Icons.view_agenda_rounded),
-                            label: Text('List'),
-                          ),
-                        ],
-                        selected: {state.viewMode},
-                        onSelectionChanged: (selection) {
-                          onToggleView(selection.first);
-                        },
-                      ),
-                      FilledButton.icon(
-                        onPressed: onSubmit,
-                        icon: const Icon(Icons.search_rounded),
-                        label: const Text('Search'),
-                      ),
-                    ],
-                  );
-
-                  if (compact) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        filterRow,
-                        const SizedBox(height: 14),
-                        actions,
-                      ],
-                    );
-                  }
-
-                  return Row(
-                    children: [
-                      Expanded(child: filterRow),
-                      const SizedBox(width: 12),
-                      actions,
-                    ],
-                  );
+              _EqualSegmentedControl<NasaSearchMediaFilter>(
+                value: state.mediaTypeFilter,
+                items: const [
+                  _SegmentItem(
+                    value: NasaSearchMediaFilter.image,
+                    label: 'Images',
+                    icon: Icons.image_outlined,
+                  ),
+                  _SegmentItem(
+                    value: NasaSearchMediaFilter.video,
+                    label: 'Videos',
+                    icon: Icons.play_circle_outline_rounded,
+                  ),
+                ],
+                onChanged: (filter) {
+                  onFilterChanged(filter);
                 },
+              ),
+              const SizedBox(height: 14),
+              _EqualSegmentedControl<NasaSearchViewMode>(
+                value: state.viewMode,
+                items: const [
+                  _SegmentItem(
+                    value: NasaSearchViewMode.grid,
+                    label: 'Grid',
+                    icon: Icons.grid_view_rounded,
+                  ),
+                  _SegmentItem(
+                    value: NasaSearchViewMode.list,
+                    label: 'List',
+                    icon: Icons.view_agenda_rounded,
+                  ),
+                ],
+                onChanged: onToggleView,
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SegmentItem<T> {
+  const _SegmentItem({
+    required this.value,
+    required this.label,
+    required this.icon,
+  });
+
+  final T value;
+  final String label;
+  final IconData icon;
+}
+
+class _EqualSegmentedControl<T> extends StatelessWidget {
+  const _EqualSegmentedControl({
+    required this.value,
+    required this.items,
+    required this.onChanged,
+  });
+
+  final T value;
+  final List<_SegmentItem<T>> items;
+  final ValueChanged<T> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    const gap = 4.0;
+    final selectedIndex = items.indexWhere((item) => item.value == value);
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      height: 60,
+      padding: const EdgeInsets.all(4),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceStrong.withValues(alpha: 0.28),
+        borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+        border: Border.all(color: AppColors.outlineSoft),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final segmentWidth =
+              (constraints.maxWidth - ((items.length - 1) * gap)) /
+              items.length;
+          final thumbLeft =
+              (selectedIndex < 0 ? 0 : selectedIndex) * (segmentWidth + gap);
+
+          return Stack(
+            children: [
+              AnimatedPositioned(
+                duration: AppConstants.motionMedium,
+                curve: Curves.easeOutCubic,
+                left: thumbLeft,
+                top: 0,
+                bottom: 0,
+                width: segmentWidth,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryStrong.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.radiusSmall,
+                    ),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.18),
+                    ),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  for (var index = 0; index < items.length; index++) ...[
+                    Expanded(
+                      child: _SegmentButton<T>(
+                        item: items[index],
+                        selected: items[index].value == value,
+                        onTap: () => onChanged(items[index].value),
+                        textStyle: theme.textTheme.labelLarge,
+                      ),
+                    ),
+                    if (index != items.length - 1) const SizedBox(width: gap),
+                  ],
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _SegmentButton<T> extends StatelessWidget {
+  const _SegmentButton({
+    required this.item,
+    required this.selected,
+    required this.onTap,
+    required this.textStyle,
+  });
+
+  final _SegmentItem<T> item;
+  final bool selected;
+  final VoidCallback onTap;
+  final TextStyle? textStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                item.icon,
+                size: 18,
+                color: selected
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                item.label,
+                style: textStyle?.copyWith(
+                  color: selected
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -332,42 +534,22 @@ class _IntroPanel extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Editorial discovery for NASA archives',
+                'Find the right NASA media faster',
                 style: theme.textTheme.titleLarge,
               ),
               const SizedBox(height: 10),
               Text(
-                'Debounced input keeps the experience responsive, while grid and list modes let users browse dense visual results in the format that fits the moment.',
+                'Search by mission, planet, telescope, astronaut, or keyword, then open the most relevant images and videos in the view that feels easiest to scan.',
                 style: theme.textTheme.bodyLarge,
               ),
             ],
           );
 
-          final chips = Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: const [
-              AppChip(label: 'Debounced input'),
-              AppChip(label: 'Grid and list views'),
-              AppChip(label: 'Detail page'),
-              AppChip(label: 'Image and video aware'),
-            ],
-          );
-
           if (compact) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [lead, const SizedBox(height: 18), chips],
-            );
+            return lead;
           }
 
-          return Row(
-            children: [
-              Expanded(flex: 3, child: lead),
-              const SizedBox(width: 24),
-              Expanded(flex: 2, child: chips),
-            ],
-          );
+          return lead;
         },
       ),
     );

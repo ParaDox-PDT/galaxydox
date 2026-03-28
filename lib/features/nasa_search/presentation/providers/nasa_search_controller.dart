@@ -17,6 +17,8 @@ final nasaSearchControllerProvider =
 class NasaSearchController extends Notifier<NasaSearchState> {
   late final SearchNasaMediaUseCase _searchNasaMediaUseCase;
   int _requestVersion = 0;
+  String? _lastResolvedQuery;
+  NasaSearchMediaFilter? _lastResolvedFilter;
 
   @override
   NasaSearchState build() {
@@ -24,10 +26,22 @@ class NasaSearchController extends Notifier<NasaSearchState> {
     return NasaSearchState.initial();
   }
 
-  Future<void> search({String? query}) async {
+  Future<void> search({String? query, bool force = false}) async {
     final effectiveQuery = (query ?? state.query).trim();
     final requestVersion = ++_requestVersion;
     final activeFilter = state.mediaTypeFilter;
+
+    final shouldSkipDuplicateRequest =
+        !force &&
+        effectiveQuery.isNotEmpty &&
+        _lastResolvedQuery == effectiveQuery &&
+        _lastResolvedFilter == activeFilter &&
+        (state.status == NasaSearchStatus.success ||
+            state.status == NasaSearchStatus.empty);
+
+    if (shouldSkipDuplicateRequest) {
+      return;
+    }
 
     state = state.copyWith(
       query: effectiveQuery,
@@ -39,6 +53,8 @@ class NasaSearchController extends Notifier<NasaSearchState> {
     );
 
     if (effectiveQuery.isEmpty) {
+      _lastResolvedQuery = null;
+      _lastResolvedFilter = null;
       return;
     }
 
@@ -53,6 +69,8 @@ class NasaSearchController extends Notifier<NasaSearchState> {
 
     state = result.when(
       success: (results) {
+        _lastResolvedQuery = effectiveQuery;
+        _lastResolvedFilter = activeFilter;
         if (results.isEmpty) {
           return state.copyWith(
             status: NasaSearchStatus.empty,
@@ -100,7 +118,7 @@ class NasaSearchController extends Notifier<NasaSearchState> {
       return;
     }
 
-    await search();
+    await search(force: true);
   }
 }
 
@@ -133,7 +151,7 @@ class NasaSearchState {
       status: NasaSearchStatus.idle,
       query: '',
       results: [],
-      viewMode: NasaSearchViewMode.grid,
+      viewMode: NasaSearchViewMode.list,
       mediaTypeFilter: NasaSearchMediaFilter.image,
     );
   }

@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../apod/presentation/widgets/apod_fullscreen_viewer.dart';
 import '../../../../shared/widgets/app_chip.dart';
 import '../../../../shared/bookmarks/bookmark_mapper.dart';
 import '../../../../shared/widgets/bookmark_button.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
-import '../../../../shared/widgets/metadata_row.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
 import '../../../../shared/widgets/section_heading.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
@@ -21,6 +22,7 @@ class NasaMediaDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final heroTag = 'nasa-media-detail-${item.nasaId}';
 
     return SpaceScaffold(
       bottomSafeArea: true,
@@ -60,15 +62,34 @@ class NasaMediaDetailPage extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(
-                          AppConstants.radiusXLarge,
-                        ),
-                        child: AspectRatio(
-                          aspectRatio: 16 / 10,
-                          child: PremiumNetworkImage(
-                            imageUrl: item.previewUrl,
-                            fit: BoxFit.cover,
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (context) => ApodFullscreenViewer(
+                                imageUrl: item.previewUrl,
+                                heroTag: heroTag,
+                                title: item.title,
+                                subtitle:
+                                    'Tap and pinch to explore the image in detail.',
+                              ),
+                            ),
+                          );
+                        },
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                            AppConstants.radiusXLarge,
+                          ),
+                          child: AspectRatio(
+                            aspectRatio: 16 / 10,
+                            child: Hero(
+                              tag: heroTag,
+                              child: PremiumNetworkImage(
+                                imageUrl: item.previewUrl,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -97,73 +118,13 @@ class NasaMediaDetailPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final compact = constraints.maxWidth < 980;
-                          final metadata = _MetadataPanel(item: item);
-                          final editorial = _EditorialPanel(item: item);
-
-                          if (compact) {
-                            return Column(
-                              children: [
-                                metadata,
-                                const SizedBox(height: 18),
-                                editorial,
-                              ],
-                            );
-                          }
-
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(flex: 2, child: metadata),
-                              const SizedBox(width: 18),
-                              Expanded(flex: 3, child: editorial),
-                            ],
-                          );
-                        },
-                      ),
+                      _EditorialPanel(item: item),
                     ],
                   ),
                 ),
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MetadataPanel extends StatelessWidget {
-  const _MetadataPanel({required this.item});
-
-  final NasaMediaItem item;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return FrostedPanel(
-      padding: const EdgeInsets.all(22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Metadata', style: theme.textTheme.titleLarge),
-          const SizedBox(height: 18),
-          MetadataRow(label: 'NASA ID', value: item.nasaId),
-          const SizedBox(height: 12),
-          MetadataRow(label: 'Center', value: item.center),
-          const SizedBox(height: 12),
-          MetadataRow(label: 'Type', value: _typeLabel(item.mediaType)),
-          if ((item.photographer ?? '').isNotEmpty) ...[
-            const SizedBox(height: 12),
-            MetadataRow(label: 'Photographer', value: item.photographer!),
-          ],
-          if ((item.secondaryCreator ?? '').isNotEmpty) ...[
-            const SizedBox(height: 12),
-            MetadataRow(label: 'Creator', value: item.secondaryCreator!),
-          ],
         ],
       ),
     );
