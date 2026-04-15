@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_constants.dart';
 import '../../features/apod/presentation/pages/apod_page.dart';
 import '../../features/demo/presentation/pages/aurora_demo_page.dart';
+import '../../features/epic_earth/presentation/pages/epic_earth_gallery_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/mars_rover/presentation/pages/mars_rover_page.dart';
 import '../../features/nasa_search/presentation/pages/nasa_search_page.dart';
@@ -61,6 +62,11 @@ final List<RouteBase> _routes = [
     path: AppRoutes.marsRoverPath,
     name: AppRoutes.marsRoverName,
     child: const MarsRoverPage(),
+  ),
+  _appRoute(
+    path: AppRoutes.epicEarthPath,
+    name: AppRoutes.epicEarthName,
+    child: const EpicEarthGalleryPage(),
   ),
   _appRoute(
     path: AppRoutes.neoPath,

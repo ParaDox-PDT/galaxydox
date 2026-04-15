@@ -50,6 +50,22 @@ class NasaApiClient {
     );
   }
 
+  Future<Response<List<dynamic>>> getLatestEpicNaturalImages() {
+    return _apiDio.get<List<dynamic>>(NasaEndpoints.epicNatural);
+  }
+
+  Future<Response<List<dynamic>>> getEpicNaturalAvailableDates() {
+    return _apiDio.get<List<dynamic>>(NasaEndpoints.epicNaturalAvailable);
+  }
+
+  Future<Response<List<dynamic>>> getEpicNaturalImagesByDate({
+    required DateTime date,
+  }) {
+    return _apiDio.get<List<dynamic>>(
+      NasaEndpoints.epicNaturalByDate(_formatDate(date)),
+    );
+  }
+
   Future<Response<Map<String, dynamic>>> getNearEarthObjects({
     DateTime? startDate,
     DateTime? endDate,

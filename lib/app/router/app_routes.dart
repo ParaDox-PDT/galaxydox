@@ -11,6 +11,9 @@ abstract final class AppRoutes {
   static const marsRoverName = 'mars-rover';
   static const marsRoverPath = '/mars-rover';
 
+  static const epicEarthName = 'epic-earth';
+  static const epicEarthPath = '/epic-earth';
+
   static const neoName = 'neo';
   static const neoPath = '/neo';
 

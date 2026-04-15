@@ -28,6 +28,8 @@ abstract final class AppConstants {
       'https://images-assets.nasa.gov/image/PIA04921/PIA04921~medium.jpg';
   static const marsPreviewImage =
       'https://images-assets.nasa.gov/image/PIA07081/PIA07081~small.jpg';
+  static const epicPreviewImage =
+      'https://epic.gsfc.nasa.gov/archive/natural/2019/05/30/png/epic_1b_20190530003921.png';
   static const neoPreviewImage =
       'https://images-assets.nasa.gov/image/PIA19379/PIA19379~small.jpg';
   static const searchPreviewImage =

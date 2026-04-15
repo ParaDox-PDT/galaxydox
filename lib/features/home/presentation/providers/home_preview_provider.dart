@@ -45,18 +45,18 @@ final homePreviewProvider = Provider<HomePreviewData>((ref) {
         ],
       ),
       HomeFeaturePreview(
-        routeName: AppRoutes.marsRoverName,
-        kicker: 'Surface archive',
-        title: 'Mars Rover Gallery',
+        routeName: AppRoutes.epicEarthName,
+        kicker: 'Earth archive',
+        title: 'EPIC Earth Gallery',
         description:
-            'Browse rover photography with date filters, camera metadata, and an image-first layout tuned for long scrolling sessions.',
-        imageUrl: AppConstants.marsPreviewImage,
-        accentColor: AppColors.secondary,
-        icon: Icons.rocket_launch_rounded,
-        ctaLabel: 'Browse rover frames',
+            'Browse natural-color Earth imagery from DSCOVR with available date selection, precise metadata, and image-first detail views.',
+        imageUrl: AppConstants.epicPreviewImage,
+        accentColor: AppColors.tertiary,
+        icon: Icons.public_rounded,
+        ctaLabel: 'Browse Earth frames',
         metrics: [
-          FeatureMetric(label: 'Filters', value: 'Rover and date'),
-          FeatureMetric(label: 'Metadata', value: 'Camera and status'),
+          FeatureMetric(label: 'Mode', value: 'Natural color'),
+          FeatureMetric(label: 'Dates', value: 'EPIC archive'),
         ],
       ),
       HomeFeaturePreview(

@@ -73,9 +73,14 @@ abstract final class RequestExtras {
 
 abstract final class NasaEndpoints {
   static const apod = '/planetary/apod';
+  static const epicNatural = '/EPIC/api/natural';
+  static const epicNaturalAvailable = '/EPIC/api/natural/available';
   static const nearEarthFeed = '/neo/rest/v1/feed';
   static const mediaSearch = '/search';
 
   static String marsRoverPhotos(String rover) =>
       '/mars-photos/api/v1/rovers/$rover/photos';
+
+  static String epicNaturalByDate(String date) =>
+      '/EPIC/api/natural/date/$date';
 }
