@@ -101,10 +101,17 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
           SliverAppBar(
             backgroundColor: Colors.transparent,
             surfaceTintColor: Colors.transparent,
-            leading: IconButton(
-              onPressed: () => Navigator.of(context).maybePop(),
-              icon: const Icon(Icons.arrow_back_rounded),
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: Center(
+                child: OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).maybePop(),
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  label: const Text('Back'),
+                ),
+              ),
             ),
+            leadingWidth: 123,
             title: Text(planet.title),
             centerTitle: false,
             pinned: true,
@@ -114,7 +121,7 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    AppColors.backgroundDeep.withValues(alpha: 0.92),
+                    AppColors.backgroundDeep.withValues(alpha: 0.42),
                     AppColors.backgroundDeep.withValues(alpha: 0.0),
                   ],
                 ),
@@ -130,7 +137,7 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppConstants.pagePadding,
-                    0,
+                    16,
                     AppConstants.pagePadding,
                     42,
                   ),
@@ -180,8 +187,8 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                   center: Alignment.center,
                   radius: 0.9,
                   colors: [
-                    planet.accentColor.withValues(alpha: 0.06),
-                    AppColors.backgroundDeep,
+                    planet.accentColor.withValues(alpha: 0.12),
+                    Colors.transparent,
                   ],
                 ),
               ),

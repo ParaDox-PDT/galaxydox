@@ -6,6 +6,7 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_gradients.dart';
+import '../../../../shared/widgets/page_header.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
 import '../../data/planets_catalog.dart';
 import '../../domain/planet_entity.dart';
@@ -23,7 +24,31 @@ class Planets3DPage extends StatelessWidget {
           parent: AlwaysScrollableScrollPhysics(),
         ),
         slivers: [
-          _buildAppBar(context),
+          SliverToBoxAdapter(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: AppConstants.contentMaxWidth,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppConstants.pagePadding,
+                  12,
+                  AppConstants.pagePadding,
+                  0,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const PageHeader(
+                      title: '3D Planets',
+                      subtitle: 'Explore the solar system in interactive 3D',
+                      actions: [],
+                    ).animate().fadeIn(duration: 400.ms),
+                  ],
+                ),
+              ),
+            ),
+          ),
           SliverToBoxAdapter(
             child: Center(
               child: ConstrainedBox(
@@ -62,32 +87,6 @@ class Planets3DPage extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  SliverAppBar _buildAppBar(BuildContext context) {
-    return SliverAppBar(
-      backgroundColor: Colors.transparent,
-      surfaceTintColor: Colors.transparent,
-      leading: IconButton(
-        onPressed: () => Navigator.of(context).maybePop(),
-        icon: const Icon(Icons.arrow_back_rounded),
-      ),
-      title: const Text('3D Planets'),
-      centerTitle: false,
-      pinned: true,
-      flexibleSpace: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppColors.backgroundDeep.withValues(alpha: 0.92),
-              AppColors.backgroundDeep.withValues(alpha: 0.0),
-            ],
-          ),
-        ),
       ),
     );
   }

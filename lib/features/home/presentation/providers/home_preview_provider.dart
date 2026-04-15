@@ -45,6 +45,22 @@ final homePreviewProvider = Provider<HomePreviewData>((ref) {
         ],
       ),
       HomeFeaturePreview(
+        routeName: AppRoutes.planets3dName,
+        kicker: 'Interactive 3D',
+        title: '3D Planets',
+        description:
+            'Explore planets in interactive 3D with auto-rotation, camera controls, and detailed fact panels.',
+        imageUrl: '',
+        assetImagePath: 'assets/images/planets.png',
+        accentColor: Color(0xFF9D8DFF),
+        icon: Icons.view_in_ar_rounded,
+        ctaLabel: 'Explore planets in 3D',
+        metrics: [
+          FeatureMetric(label: 'Rendering', value: 'Local .glb'),
+          FeatureMetric(label: 'Controls', value: 'Touch and zoom'),
+        ],
+      ),
+      HomeFeaturePreview(
         routeName: AppRoutes.epicEarthName,
         kicker: 'Earth archive',
         title: 'EPIC Earth Gallery',
@@ -87,22 +103,6 @@ final homePreviewProvider = Provider<HomePreviewData>((ref) {
         metrics: [
           FeatureMetric(label: 'Mode', value: 'Grid or list'),
           FeatureMetric(label: 'Scope', value: 'Image and video'),
-        ],
-      ),
-      HomeFeaturePreview(
-        routeName: AppRoutes.planets3dName,
-        kicker: 'Interactive 3D',
-        title: '3D Planets',
-        description:
-            'Explore planets in interactive 3D with auto-rotation, camera controls, and detailed fact panels.',
-        imageUrl: '',
-        assetImagePath: 'assets/images/planets.png',
-        accentColor: Color(0xFF9D8DFF),
-        icon: Icons.view_in_ar_rounded,
-        ctaLabel: 'Explore planets in 3D',
-        metrics: [
-          FeatureMetric(label: 'Rendering', value: 'Local .glb'),
-          FeatureMetric(label: 'Controls', value: 'Touch and zoom'),
         ],
       ),
     ],
