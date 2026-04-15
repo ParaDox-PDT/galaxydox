@@ -308,6 +308,7 @@ class _OverviewRow extends StatelessWidget {
 
         if (compact) {
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               for (var index = 0; index < cards.length; index++) ...[
                 cards[index],
@@ -448,7 +449,9 @@ class _NeoCard extends StatelessWidget {
                     final actions = Wrap(
                       spacing: 12,
                       runSpacing: 12,
-                      alignment: WrapAlignment.end,
+                      alignment: compact
+                          ? WrapAlignment.start
+                          : WrapAlignment.end,
                       children: [
                         BookmarkButton(
                           bookmark: BookmarkMapper.fromNearEarthObject(object),
@@ -517,6 +520,7 @@ class _NeoCard extends StatelessWidget {
 
                     if (compact) {
                       return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           for (
                             var index = 0;

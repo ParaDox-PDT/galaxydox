@@ -125,6 +125,8 @@ class NeoDetailPage extends StatelessWidget {
 
                                 if (compact) {
                                   return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       for (
                                         var index = 0;
