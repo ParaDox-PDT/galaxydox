@@ -36,7 +36,7 @@ class ConfigurationRequiredApp extends StatelessWidget {
                       ),
                       SizedBox(height: 18),
                       Text(
-                        'Production configuration required',
+                        'NASA API key required',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 28,
@@ -45,7 +45,7 @@ class ConfigurationRequiredApp extends StatelessWidget {
                       ),
                       SizedBox(height: 12),
                       Text(
-                        'This release build was started without a NASA API key. Rebuild with --dart-define=NASA_API_KEY=your_key so the app can load NASA content without embedding a fallback secret.',
+                        'Start the app with --dart-define-from-file=.env so NASA content requests use your configured API key instead of a fallback value.',
                         style: TextStyle(
                           color: Color(0xFFD5E1EF),
                           fontSize: 16,

@@ -1,4 +1,4 @@
-enum ApiKeySource { dartDefine, debugDemoKey, missing }
+enum ApiKeySource { dartDefine, missing }
 
 abstract final class AppConfig {
   static const String clientName = 'GalaxyDox';
@@ -17,7 +17,6 @@ abstract final class AppConfig {
   };
 
   static const String _envApiKey = String.fromEnvironment('NASA_API_KEY');
-  static const String _debugFallbackApiKey = 'DEMO_KEY';
   static const String supportUrl = String.fromEnvironment('SUPPORT_URL');
   static const String privacyPolicyUrl = String.fromEnvironment(
     'PRIVACY_POLICY_URL',
@@ -30,10 +29,6 @@ abstract final class AppConfig {
       return _envApiKey;
     }
 
-    if (!isReleaseBuild) {
-      return _debugFallbackApiKey;
-    }
-
     return null;
   }
 
@@ -42,21 +37,15 @@ abstract final class AppConfig {
       return ApiKeySource.dartDefine;
     }
 
-    if (!isReleaseBuild) {
-      return ApiKeySource.debugDemoKey;
-    }
-
     return ApiKeySource.missing;
   }
 
   static bool get hasConfiguredNasaApiKey => _envApiKey.isNotEmpty;
-  static bool get requiresProductionConfiguration =>
-      isReleaseBuild && !hasConfiguredNasaApiKey;
+  static bool get requiresProductionConfiguration => !hasConfiguredNasaApiKey;
 
   static String get apiKeySourceLabel => switch (apiKeySource) {
-    ApiKeySource.dartDefine => 'Injected with --dart-define',
-    ApiKeySource.debugDemoKey => 'Debug DEMO_KEY fallback',
-    ApiKeySource.missing => 'Missing production API key',
+    ApiKeySource.dartDefine => 'Injected from environment defines',
+    ApiKeySource.missing => 'Missing NASA API key',
   };
 
   static Uri? get supportUri => _parseHttpsUri(supportUrl);

@@ -8,10 +8,10 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/premium_refresh_indicator.dart';
-import '../../../../shared/widgets/section_heading.dart';
+// import '../../../../shared/widgets/section_heading.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
 import '../providers/home_preview_provider.dart';
-import '../widgets/hero_feature_card.dart';
+// import '../widgets/hero_feature_card.dart';
 import '../widgets/home_feature_card.dart';
 
 class HomePage extends ConsumerWidget {
@@ -55,6 +55,9 @@ class HomePage extends ConsumerWidget {
                             .animate()
                             .fadeIn(duration: 420.ms)
                             .slideY(begin: -0.06, end: 0),
+                        // Temporarily hidden because this repeated intro feels
+                        // more like onboarding than a useful home visit.
+                        /*
                         const SizedBox(height: 22),
                         const _EditorialLead()
                             .animate()
@@ -84,6 +87,8 @@ class HomePage extends ConsumerWidget {
                             .fadeIn(delay: 340.ms, duration: 500.ms)
                             .slideY(begin: 0.05, end: 0),
                         const SizedBox(height: 20),
+                        */
+                        const SizedBox(height: 22),
                         LayoutBuilder(
                           builder: (context, constraints) {
                             final isWide = constraints.maxWidth >= 980;
@@ -121,11 +126,15 @@ class HomePage extends ConsumerWidget {
                             );
                           },
                         ),
+                        // Temporarily hidden to keep the home screen focused on
+                        // the main feature cards instead of repeat intro copy.
+                        /*
                         const SizedBox(height: AppConstants.sectionGap),
                         const _DiscoveryDeck()
                             .animate()
                             .fadeIn(delay: 720.ms, duration: 520.ms)
                             .slideY(begin: 0.06, end: 0),
+                        */
                       ],
                     ),
                   ),
@@ -274,6 +283,7 @@ class _PanelIconButton extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _EditorialLead extends StatelessWidget {
   const _EditorialLead();
 
@@ -331,6 +341,7 @@ class _EditorialLead extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _OrbitSummary extends StatelessWidget {
   const _OrbitSummary();
 
@@ -410,6 +421,7 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _DiscoveryDeck extends StatelessWidget {
   const _DiscoveryDeck();
 

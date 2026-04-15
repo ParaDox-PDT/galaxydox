@@ -4,8 +4,8 @@ GalaxyDox is a premium NASA explorer built with Flutter. This first delivery set
 
 ## Release And Safety Highlights
 
-- release builds require an injected `NASA_API_KEY`
-- debug builds fall back to NASA's public `DEMO_KEY` only
+- app builds require an injected `NASA_API_KEY`
+- debug builds do not fall back to NASA's public `DEMO_KEY`
 - external links are restricted to trusted HTTPS hosts
 - privacy notice, security policy, CI, and store metadata templates live in the repo for public GitHub maintenance
 
@@ -116,7 +116,7 @@ lib/
 
 ## API Key Setup
 
-GalaxyDox reads release values from compile-time defines. The easiest local setup is an ignored `.env` file that you pass into Flutter builds.
+GalaxyDox reads environment values from compile-time defines. The easiest local setup is an ignored `.env` file that you pass into Flutter builds and runs.
 
 Tracked example:
 
@@ -138,10 +138,10 @@ Supported keys:
 4. `SOURCE_CODE_URL`
 5. `MARKETING_URL`
 
-Run with an override:
+Run with the local `.env` file:
 
 ```bash
-flutter run --dart-define=NASA_API_KEY=your_nasa_key_here
+flutter run --dart-define-from-file=.env
 ```
 
 Recommended release defines:
@@ -158,7 +158,7 @@ flutter build apk --release --split-per-abi ^
   --dart-define-from-file=.env
 ```
 
-If no `NASA_API_KEY` is supplied, debug builds use NASA's public `DEMO_KEY` for quick testing. Release builds show a configuration-required screen instead of shipping with an embedded secret.
+If no `NASA_API_KEY` is supplied, the app shows a configuration-required screen instead of sending NASA requests with `DEMO_KEY`.
 
 ## Release Docs
 
