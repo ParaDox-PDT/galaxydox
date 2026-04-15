@@ -89,6 +89,22 @@ final homePreviewProvider = Provider<HomePreviewData>((ref) {
           FeatureMetric(label: 'Scope', value: 'Image and video'),
         ],
       ),
+      HomeFeaturePreview(
+        routeName: AppRoutes.planets3dName,
+        kicker: 'Interactive 3D',
+        title: '3D Planets',
+        description:
+            'Explore planets in interactive 3D with auto-rotation, camera controls, and detailed fact panels.',
+        imageUrl: '',
+        assetImagePath: 'assets/images/planets.png',
+        accentColor: Color(0xFF9D8DFF),
+        icon: Icons.view_in_ar_rounded,
+        ctaLabel: 'Explore planets in 3D',
+        metrics: [
+          FeatureMetric(label: 'Rendering', value: 'Local .glb'),
+          FeatureMetric(label: 'Controls', value: 'Touch and zoom'),
+        ],
+      ),
     ],
   );
 });
@@ -141,6 +157,7 @@ class HomeFeaturePreview {
     required this.icon,
     required this.ctaLabel,
     required this.metrics,
+    this.assetImagePath,
   });
 
   final String routeName;
@@ -148,6 +165,7 @@ class HomeFeaturePreview {
   final String title;
   final String description;
   final String imageUrl;
+  final String? assetImagePath;
   final Color accentColor;
   final IconData icon;
   final String ctaLabel;

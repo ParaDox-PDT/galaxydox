@@ -30,6 +30,7 @@ dependencies:
   share_plus: ^12.0.1
   flutter_bloc: ^9.1.1
   equatable: ^2.0.8
+  model_viewer_plus: ^1.10.0
 
 dev_dependencies:
   flutter_test:
@@ -47,6 +48,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/3d_models/
 
 flutter_launcher_icons:
   android: true

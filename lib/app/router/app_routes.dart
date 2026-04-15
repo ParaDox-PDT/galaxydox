@@ -28,4 +28,10 @@ abstract final class AppRoutes {
 
   static const settingsName = 'settings';
   static const settingsPath = '/settings';
+
+  static const planets3dName = 'planets-3d';
+  static const planets3dPath = '/planets-3d';
+
+  static const planetDetailName = 'planet-detail';
+  static const planetDetailPath = '/planets-3d/:id';
 }

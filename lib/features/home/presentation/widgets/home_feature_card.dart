@@ -59,10 +59,18 @@ class HomeFeatureCard extends StatelessWidget {
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            PremiumNetworkImage(
-                              imageUrl: feature.imageUrl,
-                              fit: BoxFit.cover,
-                            ),
+                            if (feature.assetImagePath != null)
+                              Image.asset(
+                                feature.assetImagePath!,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                              )
+                            else
+                              PremiumNetworkImage(
+                                imageUrl: feature.imageUrl,
+                                fit: BoxFit.cover,
+                              ),
                             Positioned.fill(
                               child: DecoratedBox(
                                 decoration: BoxDecoration(

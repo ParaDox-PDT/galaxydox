@@ -10,6 +10,8 @@ import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/mars_rover/presentation/pages/mars_rover_page.dart';
 import '../../features/nasa_search/presentation/pages/nasa_search_page.dart';
 import '../../features/neo/presentation/pages/neo_page.dart';
+import '../../features/planets_3d/presentation/pages/planet_detail_page.dart';
+import '../../features/planets_3d/presentation/pages/planets_3d_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../shared/bookmarks/presentation/pages/bookmarks_page.dart';
@@ -92,6 +94,22 @@ final List<RouteBase> _routes = [
     path: AppRoutes.settingsPath,
     name: AppRoutes.settingsName,
     child: const SettingsPage(),
+  ),
+  _appRoute(
+    path: AppRoutes.planets3dPath,
+    name: AppRoutes.planets3dName,
+    child: const Planets3DPage(),
+  ),
+  GoRoute(
+    path: AppRoutes.planetDetailPath,
+    name: AppRoutes.planetDetailName,
+    pageBuilder: (context, state) {
+      final id = state.pathParameters['id'] ?? '';
+      return _buildPage(
+        state: state,
+        child: PlanetDetailPage(planetId: id),
+      );
+    },
   ),
 ];
 
