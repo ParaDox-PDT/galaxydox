@@ -1,11 +1,11 @@
 {
-    "name": "galaxydox",
-    "short_name": "galaxydox",
+    "name": "GalaxyDox",
+    "short_name": "GalaxyDox",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#040B16",
+    "theme_color": "#08111F",
+    "description": "GalaxyDox is a premium NASA explorer built for cinematic discovery on the web.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

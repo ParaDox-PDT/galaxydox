@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_gradients.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
@@ -20,13 +19,17 @@ class HomeFeatureCard extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final isCompact = width < 420;
-        final cardHeight = isCompact ? 400.0 : AppConstants.featureCardHeight;
+        final isMedium = width < 720;
+        final imageAspectRatio = isCompact
+            ? 1.16
+            : isMedium
+            ? 1.44
+            : 1.72;
         final visibleMetrics = isCompact
-            ? feature.metrics.take(1)
+            ? feature.metrics.take(1).toList()
             : feature.metrics;
 
         return Container(
-          height: cardHeight,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
@@ -53,9 +56,10 @@ class HomeFeatureCard extends StatelessWidget {
                     ),
                   ),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        flex: isCompact ? 5 : 6,
+                      AspectRatio(
+                        aspectRatio: imageAspectRatio,
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
@@ -185,67 +189,58 @@ class HomeFeatureCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Expanded(
-                        flex: isCompact ? 6 : 5,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                feature.title,
-                                maxLines: isCompact ? 2 : 3,
-                                overflow: TextOverflow.ellipsis,
-                                style: isCompact
-                                    ? theme.textTheme.titleLarge
-                                    : theme.textTheme.headlineSmall,
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                feature.description,
-                                maxLines: isCompact ? 2 : 3,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: AppColors.textPrimary.withValues(
-                                    alpha: 0.76,
-                                  ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              feature.title,
+                              maxLines: isCompact ? 2 : 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: isCompact
+                                  ? theme.textTheme.titleLarge
+                                  : theme.textTheme.headlineSmall,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              feature.description,
+                              maxLines: isCompact ? 3 : 4,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: AppColors.textPrimary.withValues(
+                                  alpha: 0.76,
                                 ),
                               ),
-                              const Spacer(),
-                              Wrap(
-                                spacing: 10,
-                                runSpacing: 10,
-                                children: [
-                                  for (final metric in visibleMetrics)
-                                    _CompactMetric(
-                                      accentColor: feature.accentColor,
-                                      metric: metric,
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 14),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      feature.ctaLabel,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: theme.textTheme.labelLarge
-                                          ?.copyWith(
-                                            color: feature.accentColor,
-                                          ),
+                            ),
+                            const SizedBox(height: 18),
+                            _FeatureMetricSection(
+                              accentColor: feature.accentColor,
+                              metrics: visibleMetrics,
+                              isCompact: isCompact,
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    feature.ctaLabel,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.labelLarge?.copyWith(
+                                      color: feature.accentColor,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Icon(
-                                    Icons.arrow_outward_rounded,
-                                    color: feature.accentColor,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.arrow_outward_rounded,
+                                  color: feature.accentColor,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -256,6 +251,51 @@ class HomeFeatureCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _FeatureMetricSection extends StatelessWidget {
+  const _FeatureMetricSection({
+    required this.accentColor,
+    required this.metrics,
+    required this.isCompact,
+  });
+
+  final Color accentColor;
+  final List<FeatureMetric> metrics;
+  final bool isCompact;
+
+  @override
+  Widget build(BuildContext context) {
+    if (metrics.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    if (isCompact || metrics.length == 1) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var index = 0; index < metrics.length; index++) ...[
+            _CompactMetric(accentColor: accentColor, metric: metrics[index]),
+            if (index != metrics.length - 1) const SizedBox(height: 10),
+          ],
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        for (var index = 0; index < metrics.length; index++) ...[
+          Expanded(
+            child: _CompactMetric(
+              accentColor: accentColor,
+              metric: metrics[index],
+            ),
+          ),
+          if (index != metrics.length - 1) const SizedBox(width: 10),
+        ],
+      ],
     );
   }
 }
@@ -271,6 +311,7 @@ class _CompactMetric extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.2),

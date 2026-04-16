@@ -27,13 +27,28 @@ class PageHeader extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 760;
+        final narrow = constraints.maxWidth < 480;
 
         final info = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: theme.textTheme.displayMedium),
+            Text(
+              title,
+              style: narrow
+                  ? theme.textTheme.headlineLarge
+                  : compact
+                  ? theme.textTheme.headlineLarge
+                  : theme.textTheme.displayMedium,
+            ),
             const SizedBox(height: 8),
-            Text(subtitle, style: theme.textTheme.bodyLarge),
+            Text(
+              subtitle,
+              maxLines: compact ? 3 : 2,
+              overflow: TextOverflow.ellipsis,
+              style: compact
+                  ? theme.textTheme.bodyMedium
+                  : theme.textTheme.bodyLarge,
+            ),
           ],
         );
 

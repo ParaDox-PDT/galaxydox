@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -25,7 +26,43 @@ class PremiumNetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget image = CachedNetworkImage(
+    Widget image = kIsWeb ? _buildWebImage() : _buildCachedImage();
+
+    if (borderRadius != null) {
+      image = ClipRRect(borderRadius: borderRadius!, child: image);
+    }
+
+    return image;
+  }
+
+  Widget _buildWebImage() {
+    return Image.network(
+      imageUrl,
+      fit: fit,
+      alignment: alignment,
+      width: width,
+      height: height,
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        if (wasSynchronouslyLoaded || frame != null) {
+          return child;
+        }
+
+        return _buildPlaceholder();
+      },
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          return child;
+        }
+
+        return _buildPlaceholder();
+      },
+      errorBuilder: (context, error, stackTrace) => _buildError(),
+      webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
+    );
+  }
+
+  Widget _buildCachedImage() {
+    return CachedNetworkImage(
       imageUrl: imageUrl,
       fit: fit,
       alignment: alignment,
@@ -33,39 +70,41 @@ class PremiumNetworkImage extends StatelessWidget {
       height: height,
       fadeInDuration: AppConstants.motionMedium,
       fadeOutDuration: AppConstants.motionFast,
-      placeholder: (context, url) => SkeletonScope(
-        child: Container(
-          width: width,
-          height: height,
-          decoration: BoxDecoration(
-            color: AppColors.surfaceStrong,
-            borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
-          ),
-        ),
-      ),
-      errorWidget: (context, url, error) => DecoratedBox(
+      placeholder: (context, url) => _buildPlaceholder(),
+      errorWidget: (context, url, error) => _buildError(),
+    );
+  }
+
+  Widget _buildPlaceholder() {
+    return SkeletonScope(
+      child: Container(
+        width: width,
+        height: height,
         decoration: BoxDecoration(
           color: AppColors.surfaceStrong,
           borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
         ),
-        child: SizedBox(
-          width: width,
-          height: height,
-          child: const Center(
-            child: Icon(
-              Icons.photo_outlined,
-              color: AppColors.textMuted,
-              size: 32,
-            ),
+      ),
+    );
+  }
+
+  Widget _buildError() {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceStrong,
+        borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+      ),
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: const Center(
+          child: Icon(
+            Icons.photo_outlined,
+            color: AppColors.textMuted,
+            size: 32,
           ),
         ),
       ),
     );
-
-    if (borderRadius != null) {
-      image = ClipRRect(borderRadius: borderRadius!, child: image);
-    }
-
-    return image;
   }
 }

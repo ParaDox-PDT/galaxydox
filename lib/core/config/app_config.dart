@@ -13,7 +13,6 @@ abstract final class AppConfig {
 
   static const Map<String, String> defaultHeaders = {
     'Accept': 'application/json',
-    'X-App-Client': clientName,
   };
 
   static const String _envApiKey = String.fromEnvironment('NASA_API_KEY');

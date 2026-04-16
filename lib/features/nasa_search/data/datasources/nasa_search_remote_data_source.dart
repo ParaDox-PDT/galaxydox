@@ -68,20 +68,11 @@ class NasaSearchRemoteDataSourceImpl implements NasaSearchRemoteDataSource {
   }
 
   AppException _mapDioException(DioException error) {
-    if (error.type == DioExceptionType.connectionTimeout ||
-        error.type == DioExceptionType.sendTimeout ||
-        error.type == DioExceptionType.receiveTimeout) {
-      return AppException(
-        type: AppExceptionType.timeout,
-        message: 'NASA media search took too long to respond.',
-        cause: error,
-      );
-    }
-
-    return AppException(
-      type: AppExceptionType.network,
-      message: 'Unable to reach NASA media search right now.',
-      cause: error,
+    return mapNasaDioException(
+      error: error,
+      resource: 'NASA media search',
+      timeoutMessage: 'NASA media search took too long to respond.',
+      networkMessage: 'Unable to reach NASA media search right now.',
     );
   }
 }

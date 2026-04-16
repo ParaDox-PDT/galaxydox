@@ -48,30 +48,11 @@ class ApodRemoteDataSourceImpl implements ApodRemoteDataSource {
   }
 
   AppException _mapDioException(DioException error) {
-    final statusCode = error.response?.statusCode;
-
-    if (statusCode == 401 || statusCode == 403) {
-      return AppException(
-        type: AppExceptionType.unauthorized,
-        message: 'NASA API key is invalid or unauthorized.',
-        cause: error,
-      );
-    }
-
-    if (error.type == DioExceptionType.connectionTimeout ||
-        error.type == DioExceptionType.sendTimeout ||
-        error.type == DioExceptionType.receiveTimeout) {
-      return AppException(
-        type: AppExceptionType.timeout,
-        message: 'NASA APOD took too long to respond.',
-        cause: error,
-      );
-    }
-
-    return AppException(
-      type: AppExceptionType.network,
-      message: 'Unable to reach NASA APOD right now.',
-      cause: error,
+    return mapNasaDioException(
+      error: error,
+      resource: 'APOD',
+      timeoutMessage: 'NASA APOD took too long to respond.',
+      networkMessage: 'Unable to reach NASA APOD right now.',
     );
   }
 }
