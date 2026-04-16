@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -119,10 +120,12 @@ class _NasaInlineVideoPlayerState extends State<NasaInlineVideoPlayer> {
   void _createController() {
     final controller = VideoPlayerController.networkUrl(
       Uri.parse(widget.playbackUrl),
-      videoPlayerOptions: VideoPlayerOptions(
-        allowBackgroundPlayback: false,
-        mixWithOthers: false,
-      ),
+      videoPlayerOptions: kIsWeb
+          ? null
+          : VideoPlayerOptions(
+              allowBackgroundPlayback: false,
+              mixWithOthers: false,
+            ),
     );
 
     controller
