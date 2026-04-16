@@ -18,7 +18,9 @@ class PlanetDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final planet =
-        PlanetsCatalog.planets.where((p) => p.id == planetId).firstOrNull;
+        PlanetsCatalog.planets
+            .where((p) => p.id == planetId)
+            .firstOrNull;
 
     if (planet == null) {
       return SpaceScaffold(
@@ -34,7 +36,10 @@ class PlanetDetailPage extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 'Planet not found',
-                style: Theme.of(context).textTheme.headlineSmall,
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .headlineSmall,
               ),
               const SizedBox(height: 24),
               OutlinedButton.icon(
@@ -80,7 +85,7 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
     } catch (e) {
       if (mounted) {
         setState(
-          () => _modelError = 'Could not load 3D model: ${e.toString()}',
+              () => _modelError = 'Could not load 3D model: ${e.toString()}',
         );
       }
     }
@@ -204,24 +209,25 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                   _prepareModel();
                 },
               )
-            else if (_modelUrl == null)
-              _ModelLoadingState(accentColor: planet.accentColor)
             else
-              ModelViewer(
-                backgroundColor: Colors.transparent,
-                src: _modelUrl!,
-                alt: '3D model of ${planet.title}',
-                autoRotate: true,
-                autoRotateDelay: 0,
-                rotationPerSecond: '18deg',
-                cameraControls: true,
-                disableZoom: false,
-                disableTap: false,
-                disablePan: true,
-                shadowIntensity: 0.6,
-                shadowSoftness: 1,
-                exposure: 0.8,
-              ),
+              if (_modelUrl == null)
+                _ModelLoadingState(accentColor: planet.accentColor)
+              else
+                ModelViewer(
+                  backgroundColor: Colors.transparent,
+                  src: _modelUrl!,
+                  alt: '3D model of ${planet.title}',
+                  autoRotate: true,
+                  autoRotateDelay: 0,
+                  rotationPerSecond: '18deg',
+                  cameraControls: true,
+                  disableZoom: false,
+                  disableTap: false,
+                  disablePan: true,
+                  shadowIntensity: 0.6,
+                  shadowSoftness: 1,
+                  exposure: 0.8,
+                ),
             Positioned(
               bottom: 12,
               left: 0,
@@ -250,26 +256,51 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                       const SizedBox(width: 8),
                       Text(
                         'Drag to rotate · Pinch to zoom',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
+                        style: Theme
+                            .of(context)
+                            .textTheme
+                            .labelSmall
+                            ?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
             ),
+            if (_modelUrl != null)
+              Positioned(
+                top: 12,
+                right: 12,
+                child: IconButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            _FullScreenModelPage(
+                              planet: planet,
+                              modelUrl: _modelUrl!,
+                            ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.fullscreen_rounded),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.black.withValues(alpha: 0.4),
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
     ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.04, end: 0);
   }
 
-  Widget _buildInfoSection(
-    BuildContext context,
-    ThemeData theme,
-    PlanetEntity planet,
-  ) {
+  Widget _buildInfoSection(BuildContext context,
+      ThemeData theme,
+      PlanetEntity planet,) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -291,14 +322,15 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                   child: Image.asset(
                     planet.thumbnailAssetPath,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: planet.accentColor.withValues(alpha: 0.1),
-                      child: Icon(
-                        Icons.public_rounded,
-                        color: planet.accentColor,
-                        size: 28,
-                      ),
-                    ),
+                    errorBuilder: (context, error, stackTrace) =>
+                        Container(
+                          color: planet.accentColor.withValues(alpha: 0.1),
+                          child: Icon(
+                            Icons.public_rounded,
+                            color: planet.accentColor,
+                            size: 28,
+                          ),
+                        ),
                   ),
                 ),
               ),
@@ -388,9 +420,13 @@ class _ModelLoadingState extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             'Loading 3D model…',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textMuted,
-                ),
+            style: Theme
+                .of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(
+              color: AppColors.textMuted,
+            ),
           ),
         ],
       ),
@@ -483,12 +519,123 @@ class _FactRow extends StatelessWidget {
         Expanded(
           child: Text(
             fact,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+            style: Theme
+                .of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
         ),
       ],
     );
   }
 }
+
+class _FullScreenModelPage extends StatelessWidget {
+  const _FullScreenModelPage({
+    required this.planet,
+    required this.modelUrl,
+  });
+
+  final PlanetEntity planet;
+  final String modelUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                center: Alignment.center,
+                radius: 1.2,
+                colors: [
+                  planet.accentColor.withValues(alpha: 0.15),
+                  Colors.black,
+                ],
+              ),
+            ),
+          ),
+          ModelViewer(
+            backgroundColor: Colors.transparent,
+            src: modelUrl,
+            alt: '3D model of ${planet.title}',
+            autoRotate: true,
+            autoRotateDelay: 0,
+            rotationPerSecond: '10deg',
+            cameraControls: true,
+            disableZoom: false,
+            disableTap: false,
+            disablePan: false,
+            shadowIntensity: 0.8,
+            shadowSoftness: 1,
+            exposure: 1.0,
+          ),
+          Positioned(
+            top: MediaQuery
+                .paddingOf(context)
+                .top + 8,
+            left: 12,
+            child: IconButton(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.close_rounded),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.black.withValues(alpha: 0.4),
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: MediaQuery
+                .paddingOf(context)
+                .bottom + 24,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.1),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.threesixty_rounded,
+                      size: 20,
+                      color: planet.accentColor,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Drag to rotate · Pinch to zoom',
+                      style: Theme
+                          .of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

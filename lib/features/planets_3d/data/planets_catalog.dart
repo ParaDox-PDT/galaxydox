@@ -140,5 +140,37 @@ abstract final class PlanetsCatalog {
         'Surface gravity: 11.15 m/s²',
       ],
     ),
+    PlanetEntity(
+      id: 'moon',
+      title: 'Moon',
+      subtitle: 'Earth\'s Satellite',
+      description:
+          'The Moon is Earth\'s only natural satellite. It is the fifth largest satellite in the Solar System and the largest and most massive relative to its parent planet.',
+      modelAssetPath: 'assets/3d_models/moon.glb',
+      thumbnailAssetPath: 'assets/images/planets.png',
+      accentColor: Color(0xFFE0E0E0),
+      facts: [
+        'Diameter: 3,474 km',
+        'Distance from Earth: 384,400 km',
+        'Orbital period: 27.3 days',
+        'Surface gravity: 1.62 m/s²',
+      ],
+    ),
+    PlanetEntity(
+      id: 'solar_system',
+      title: 'Solar System',
+      subtitle: 'Our Cosmic Neighborhood',
+      description:
+          'The Solar System is the gravitationally bound system of the Sun and the objects that orbit it. It formed 4.6 billion years ago from the gravitational collapse of a giant interstellar molecular cloud.',
+      modelAssetPath: 'assets/3d_models/solar_system_model_orrery.glb',
+      thumbnailAssetPath: 'assets/images/planets.png',
+      accentColor: Color(0xFFFDD835),
+      facts: [
+        'Age: 4.6 Billion Years',
+        'Stars: 1 (Sun)',
+        'Planets: 8',
+        'Known Moons: 200+',
+      ],
+    ),
   ];
 }
