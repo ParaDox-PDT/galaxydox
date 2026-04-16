@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/utils/trusted_external_url.dart';
 import '../../../../shared/widgets/app_chip.dart';
 import '../../../../shared/bookmarks/bookmark_mapper.dart';
 import '../../../../shared/widgets/bookmark_button.dart';
@@ -186,6 +188,16 @@ class _VideoPreview extends ConsumerWidget {
               );
             }
 
+            // On web, video_player does not reliably initialize.
+            // Show a card that opens the video directly in the browser.
+            if (kIsWeb) {
+              return _WebVideoCard(
+                posterUrl: item.previewUrl,
+                playbackUrl: playbackUrl,
+                title: item.title,
+              );
+            }
+
             return NasaInlineVideoPlayer(
               playbackUrl: playbackUrl,
               posterUrl: item.previewUrl,
@@ -225,6 +237,131 @@ class _VideoPreview extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+/// Web-only widget: renders a poster with an "Open Video" button
+/// since video_player does not reliably run in a browser context.
+class _WebVideoCard extends StatelessWidget {
+  const _WebVideoCard({
+    required this.posterUrl,
+    required this.playbackUrl,
+    required this.title,
+  });
+
+  final String posterUrl;
+  final String playbackUrl;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (posterUrl.isNotEmpty)
+          PremiumNetworkImage(imageUrl: posterUrl, fit: BoxFit.cover),
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.2),
+                  Colors.black.withValues(alpha: 0.72),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.textPrimary.withValues(alpha: 0.14),
+                  border: Border.all(
+                    color: AppColors.textPrimary.withValues(alpha: 0.26),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.play_arrow_rounded,
+                  size: 38,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: FrostedPanel(
+                  radius: 20,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  backgroundColor: AppColors.surfaceElevated.withValues(
+                    alpha: 0.5,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'NASA Video',
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          color: AppColors.secondary,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Tap to open in browser for the best playback experience.',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: AppColors.textPrimary.withValues(alpha: 0.78),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      FilledButton.icon(
+                        onPressed: () => _openInBrowser(context),
+                        icon: const Icon(Icons.open_in_new_rounded),
+                        label: const Text('Open Video'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _openInBrowser(BuildContext context) async {
+    final uri = sanitizeTrustedExternalUri(
+      playbackUrl,
+      allowedHosts: TrustedHostSets.nasaAndVideoHosts,
+    );
+    if (uri == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to open this video URL.')),
+        );
+      }
+      return;
+    }
+
+    final launched = await launchExternalUri(uri);
+    if (!launched && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to open the NASA video.')),
+      );
+    }
   }
 }
 
