@@ -5,7 +5,6 @@ import 'package:video_player/video_player.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
-import '../../../../shared/widgets/premium_network_image.dart';
 
 class NasaInlineVideoPlayer extends StatefulWidget {
   const NasaInlineVideoPlayer({
@@ -85,18 +84,6 @@ class _NasaInlineVideoPlayerState extends State<NasaInlineVideoPlayer> {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              if (widget.posterUrl.isNotEmpty)
-                PremiumNetworkImage(
-                  imageUrl: widget.posterUrl,
-                  fit: BoxFit.cover,
-                ),
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.16),
-                  ),
-                ),
-              ),
               FutureBuilder<void>(
                 future: _initializeFuture,
                 builder: (context, snapshot) {

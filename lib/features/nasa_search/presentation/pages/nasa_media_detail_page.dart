@@ -250,19 +250,6 @@ class _VideoStatusCard extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        if (posterUrl.isNotEmpty)
-          PremiumNetworkImage(imageUrl: posterUrl, fit: BoxFit.cover)
-        else
-          DecoratedBox(
-            decoration: BoxDecoration(color: AppColors.surfaceStrong),
-          ),
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.34),
-            ),
-          ),
-        ),
         Center(
           child: FrostedPanel(
             radius: 26,

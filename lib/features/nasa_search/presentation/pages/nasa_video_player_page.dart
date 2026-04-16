@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../shared/widgets/space_scaffold.dart';
 import '../widgets/nasa_inline_video_player.dart';
 
 class NasaVideoPlayerPage extends StatefulWidget {
@@ -38,8 +39,7 @@ class _NasaVideoPlayerPageState extends State<NasaVideoPlayerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
+    return SpaceScaffold(
       body: NasaInlineVideoPlayer(
         playbackUrl: widget.playbackUrl,
         posterUrl: widget.posterUrl,
