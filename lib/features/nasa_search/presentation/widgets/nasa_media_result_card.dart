@@ -84,6 +84,8 @@ class _GridCard extends StatelessWidget {
                               imageUrl: item.previewUrl,
                               fit: BoxFit.cover,
                             ),
+                            if (item.mediaType == NasaMediaType.video)
+                              const Center(child: _VideoPlayBadge()),
                             Positioned(
                               left: 16,
                               top: 16,
@@ -226,9 +228,16 @@ class _ListCard extends StatelessWidget {
                       width: compact ? double.infinity : 216,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(22),
-                        child: PremiumNetworkImage(
-                          imageUrl: item.previewUrl,
-                          fit: BoxFit.cover,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            PremiumNetworkImage(
+                              imageUrl: item.previewUrl,
+                              fit: BoxFit.cover,
+                            ),
+                            if (item.mediaType == NasaMediaType.video)
+                              const Center(child: _VideoPlayBadge()),
+                          ],
                         ),
                       ),
                     );
@@ -356,6 +365,28 @@ class _TypePill extends StatelessWidget {
         border: Border.all(color: color.withValues(alpha: 0.28)),
       ),
       child: Text(label),
+    );
+  }
+}
+
+class _VideoPlayBadge extends StatelessWidget {
+  const _VideoPlayBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 62,
+      height: 62,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.black.withValues(alpha: 0.32),
+        border: Border.all(color: AppColors.textPrimary.withValues(alpha: 0.2)),
+      ),
+      child: const Icon(
+        Icons.play_arrow_rounded,
+        size: 34,
+        color: AppColors.textPrimary,
+      ),
     );
   }
 }

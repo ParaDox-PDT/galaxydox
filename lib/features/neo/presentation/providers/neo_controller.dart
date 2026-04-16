@@ -16,15 +16,30 @@ final neoControllerProvider =
 
 class NeoController extends Notifier<NeoState> {
   late final GetNearEarthObjectsUseCase _getNearEarthObjectsUseCase;
+  int _requestVersion = 0;
 
   @override
   NeoState build() {
     _getNearEarthObjectsUseCase = ref.watch(getNearEarthObjectsUseCaseProvider);
-    Future<void>.microtask(load);
+    ref.onDispose(() {
+      _requestVersion++;
+    });
+    Future<void>.microtask(() async {
+      if (!ref.mounted) {
+        return;
+      }
+
+      await load();
+    });
     return NeoState.initial();
   }
 
   Future<void> load({DateTime? startDate, DateTime? endDate}) async {
+    if (!ref.mounted) {
+      return;
+    }
+
+    final requestVersion = ++_requestVersion;
     final effectiveStart = startDate ?? state.startDate;
     final effectiveEnd = endDate ?? state.endDate;
 
@@ -39,6 +54,9 @@ class NeoController extends Notifier<NeoState> {
       startDate: effectiveStart,
       endDate: effectiveEnd,
     );
+    if (!ref.mounted || requestVersion != _requestVersion) {
+      return;
+    }
 
     state = result.when(
       success: (objects) {

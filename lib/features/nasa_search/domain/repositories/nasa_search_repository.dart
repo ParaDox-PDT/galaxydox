@@ -7,4 +7,8 @@ abstract interface class NasaSearchRepository {
     required String mediaType,
     int page = 1,
   });
+
+  Future<Result<String?>> resolveVideoPlaybackUrl({
+    required String assetManifestUrl,
+  });
 }

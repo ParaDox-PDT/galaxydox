@@ -23,10 +23,17 @@ class NasaSearchController extends Notifier<NasaSearchState> {
   @override
   NasaSearchState build() {
     _searchNasaMediaUseCase = ref.watch(searchNasaMediaUseCaseProvider);
+    ref.onDispose(() {
+      _requestVersion++;
+    });
     return NasaSearchState.initial();
   }
 
   Future<void> search({String? query, bool force = false}) async {
+    if (!ref.mounted) {
+      return;
+    }
+
     final effectiveQuery = (query ?? state.query).trim();
     final requestVersion = ++_requestVersion;
     final activeFilter = state.mediaTypeFilter;
@@ -63,7 +70,7 @@ class NasaSearchController extends Notifier<NasaSearchState> {
       mediaType: activeFilter.apiValue,
     );
 
-    if (requestVersion != _requestVersion) {
+    if (!ref.mounted || requestVersion != _requestVersion) {
       return;
     }
 

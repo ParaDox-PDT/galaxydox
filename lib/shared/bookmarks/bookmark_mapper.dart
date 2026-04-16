@@ -77,6 +77,7 @@ abstract final class BookmarkMapper {
         'previewUrl': item.previewUrl,
         'mediaType': item.mediaType.name,
         'center': item.center,
+        'assetManifestUrl': item.assetManifestUrl,
         'dateCreated': item.dateCreated?.toIso8601String(),
         'photographer': item.photographer,
         'secondaryCreator': item.secondaryCreator,
@@ -164,6 +165,7 @@ abstract final class BookmarkMapper {
       previewUrl: payload['previewUrl'] as String,
       mediaType: NasaMediaType.fromValue(payload['mediaType'] as String),
       center: payload['center'] as String,
+      assetManifestUrl: payload['assetManifestUrl'] as String?,
       dateCreated: payload['dateCreated'] == null
           ? null
           : DateTime.parse(payload['dateCreated'] as String),

@@ -25,18 +25,37 @@ final isBookmarkedProvider = Provider.family<bool, String>((ref, bookmarkId) {
 class BookmarkController extends Notifier<BookmarkState> {
   late final BookmarkRepository _repository;
   StreamSubscription<List<BookmarkItem>>? _subscription;
+  int _requestVersion = 0;
 
   @override
   BookmarkState build() {
     _repository = ref.watch(bookmarkRepositoryProvider);
-    ref.onDispose(() => _subscription?.cancel());
-    Future<void>.microtask(_initialize);
+    ref.onDispose(() async {
+      _requestVersion++;
+      await _subscription?.cancel();
+    });
+    Future<void>.microtask(() async {
+      if (!ref.mounted) {
+        return;
+      }
+
+      await _initialize();
+    });
     return const BookmarkState.loading();
   }
 
   Future<void> _initialize() async {
+    if (!ref.mounted) {
+      return;
+    }
+
+    final requestVersion = ++_requestVersion;
     try {
       final items = await _repository.getBookmarks();
+      if (!ref.mounted || requestVersion != _requestVersion) {
+        return;
+      }
+
       state = state.copyWith(
         status: BookmarkStatus.success,
         items: items,
@@ -46,6 +65,10 @@ class BookmarkController extends Notifier<BookmarkState> {
       await _subscription?.cancel();
       _subscription = _repository.watchBookmarks().listen(
         (items) {
+          if (!ref.mounted || requestVersion != _requestVersion) {
+            return;
+          }
+
           state = state.copyWith(
             status: BookmarkStatus.success,
             items: items,
@@ -53,6 +76,10 @@ class BookmarkController extends Notifier<BookmarkState> {
           );
         },
         onError: (Object error, StackTrace stackTrace) {
+          if (!ref.mounted || requestVersion != _requestVersion) {
+            return;
+          }
+
           state = state.copyWith(
             status: BookmarkStatus.error,
             error: _mapException(error),
@@ -60,6 +87,10 @@ class BookmarkController extends Notifier<BookmarkState> {
         },
       );
     } catch (error) {
+      if (!ref.mounted || requestVersion != _requestVersion) {
+        return;
+      }
+
       state = state.copyWith(
         status: BookmarkStatus.error,
         error: _mapException(error),

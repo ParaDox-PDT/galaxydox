@@ -8,6 +8,7 @@ class NasaMediaItemModel {
     required this.previewUrl,
     required this.mediaType,
     required this.center,
+    this.assetManifestUrl,
     this.dateCreated,
     this.photographer,
     this.secondaryCreator,
@@ -32,6 +33,7 @@ class NasaMediaItemModel {
       previewUrl: link['href'] as String? ?? '',
       mediaType: data['media_type'] as String? ?? '',
       center: data['center'] as String? ?? 'NASA',
+      assetManifestUrl: json['href'] as String?,
       dateCreated: _parseDate(data['date_created'] as String?),
       photographer: data['photographer'] as String?,
       secondaryCreator: data['secondary_creator'] as String?,
@@ -45,6 +47,7 @@ class NasaMediaItemModel {
   final String previewUrl;
   final String mediaType;
   final String center;
+  final String? assetManifestUrl;
   final DateTime? dateCreated;
   final String? photographer;
   final String? secondaryCreator;
@@ -58,6 +61,7 @@ class NasaMediaItemModel {
       previewUrl: previewUrl,
       mediaType: NasaMediaType.fromValue(mediaType),
       center: center,
+      assetManifestUrl: assetManifestUrl,
       dateCreated: dateCreated,
       photographer: photographer,
       secondaryCreator: secondaryCreator,
