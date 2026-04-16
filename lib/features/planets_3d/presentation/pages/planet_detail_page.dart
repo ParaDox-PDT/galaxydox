@@ -17,10 +17,9 @@ class PlanetDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final planet =
-        PlanetsCatalog.planets
-            .where((p) => p.id == planetId)
-            .firstOrNull;
+    final planet = PlanetsCatalog.planets
+        .where((p) => p.id == planetId)
+        .firstOrNull;
 
     if (planet == null) {
       return SpaceScaffold(
@@ -36,10 +35,7 @@ class PlanetDetailPage extends StatelessWidget {
               const SizedBox(height: 16),
               Text(
                 'Planet not found',
-                style: Theme
-                    .of(context)
-                    .textTheme
-                    .headlineSmall,
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 24),
               OutlinedButton.icon(
@@ -81,11 +77,13 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
       final url = await LocalModelServer.instance.serveAsset(
         widget.planet.modelAssetPath,
       );
-      if (mounted) setState(() => _modelUrl = url);
+      if (mounted) {
+        setState(() => _modelUrl = url);
+      }
     } catch (e) {
       if (mounted) {
         setState(
-              () => _modelError = 'Could not load 3D model: ${e.toString()}',
+          () => _modelError = 'Could not load 3D model: ${e.toString()}',
         );
       }
     }
@@ -170,9 +168,7 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
       height: 400,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
-        border: Border.all(
-          color: planet.accentColor.withValues(alpha: 0.18),
-        ),
+        border: Border.all(color: planet.accentColor.withValues(alpha: 0.18)),
         boxShadow: [
           BoxShadow(
             color: planet.accentColor.withValues(alpha: 0.1),
@@ -209,25 +205,24 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                   _prepareModel();
                 },
               )
+            else if (_modelUrl == null)
+              _ModelLoadingState(accentColor: planet.accentColor)
             else
-              if (_modelUrl == null)
-                _ModelLoadingState(accentColor: planet.accentColor)
-              else
-                ModelViewer(
-                  backgroundColor: Colors.transparent,
-                  src: _modelUrl!,
-                  alt: '3D model of ${planet.title}',
-                  autoRotate: true,
-                  autoRotateDelay: 0,
-                  rotationPerSecond: '18deg',
-                  cameraControls: true,
-                  disableZoom: false,
-                  disableTap: false,
-                  disablePan: true,
-                  shadowIntensity: 0.6,
-                  shadowSoftness: 1,
-                  exposure: 0.8,
-                ),
+              ModelViewer(
+                backgroundColor: Colors.transparent,
+                src: _modelUrl!,
+                alt: '3D model of ${planet.title}',
+                autoRotate: true,
+                autoRotateDelay: 0,
+                rotationPerSecond: '18deg',
+                cameraControls: true,
+                disableZoom: false,
+                disableTap: false,
+                disablePan: true,
+                shadowIntensity: 0.6,
+                shadowSoftness: 1,
+                exposure: 0.8,
+              ),
             Positioned(
               bottom: 12,
               left: 0,
@@ -255,12 +250,8 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Drag to rotate · Pinch to zoom',
-                        style: Theme
-                            .of(context)
-                            .textTheme
-                            .labelSmall
-                            ?.copyWith(
+                        'Drag to rotate - Pinch to zoom',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: AppColors.textSecondary,
                         ),
                       ),
@@ -277,11 +268,10 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) =>
-                            _FullScreenModelPage(
-                              planet: planet,
-                              modelUrl: _modelUrl!,
-                            ),
+                        builder: (context) => _FullScreenModelPage(
+                          planet: planet,
+                          modelUrl: _modelUrl!,
+                        ),
                       ),
                     );
                   },
@@ -298,32 +288,33 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
     ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.04, end: 0);
   }
 
-  Widget _buildInfoSection(BuildContext context,
-      ThemeData theme,
-      PlanetEntity planet,) {
+  Widget _buildInfoSection(
+    BuildContext context,
+    ThemeData theme,
+    PlanetEntity planet,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          children: [
-            Hero(
-              tag: 'planet_thumb_${planet.id}',
-              child: Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: planet.accentColor.withValues(alpha: 0.24),
-                  ),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.asset(
-                    planet.thumbnailAssetPath,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        Container(
+              children: [
+                Hero(
+                  tag: 'planet_thumb_${planet.id}',
+                  child: Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: planet.accentColor.withValues(alpha: 0.24),
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset(
+                        planet.thumbnailAssetPath,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
                           color: planet.accentColor.withValues(alpha: 0.1),
                           child: Icon(
                             Icons.public_rounded,
@@ -331,64 +322,64 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                             size: 28,
                           ),
                         ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(planet.title, style: theme.textTheme.headlineMedium),
-                  const SizedBox(height: 4),
-                  Text(
-                    planet.subtitle,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: planet.accentColor,
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ),
-          ],
-        )
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(planet.title, style: theme.textTheme.headlineMedium),
+                      const SizedBox(height: 4),
+                      Text(
+                        planet.subtitle,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: planet.accentColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )
             .animate()
             .fadeIn(delay: 200.ms, duration: 480.ms)
             .slideY(begin: 0.04, end: 0),
         const SizedBox(height: 20),
         Text(
-          planet.description,
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: AppColors.textSecondary,
-            height: 1.6,
-          ),
-        )
+              planet.description,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: AppColors.textSecondary,
+                height: 1.6,
+              ),
+            )
             .animate()
             .fadeIn(delay: 300.ms, duration: 480.ms)
             .slideY(begin: 0.04, end: 0),
         if (planet.facts.isNotEmpty) ...[
           const SizedBox(height: 24),
           FrostedPanel(
-            padding: const EdgeInsets.all(20),
-            borderColor: planet.accentColor.withValues(alpha: 0.18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Quick Facts',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: planet.accentColor,
-                  ),
+                padding: const EdgeInsets.all(20),
+                borderColor: planet.accentColor.withValues(alpha: 0.18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Quick Facts',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: planet.accentColor,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    for (final fact in planet.facts) ...[
+                      _FactRow(fact: fact, accentColor: planet.accentColor),
+                      if (fact != planet.facts.last) const SizedBox(height: 10),
+                    ],
+                  ],
                 ),
-                const SizedBox(height: 14),
-                for (final fact in planet.facts) ...[
-                  _FactRow(fact: fact, accentColor: planet.accentColor),
-                  if (fact != planet.facts.last) const SizedBox(height: 10),
-                ],
-              ],
-            ),
-          )
+              )
               .animate()
               .fadeIn(delay: 420.ms, duration: 480.ms)
               .slideY(begin: 0.04, end: 0),
@@ -419,14 +410,10 @@ class _ModelLoadingState extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Loading 3D model…',
-            style: Theme
-                .of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(
-              color: AppColors.textMuted,
-            ),
+            'Loading 3D model...',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
           ),
         ],
       ),
@@ -510,22 +497,15 @@ class _FactRow extends StatelessWidget {
           width: 6,
           height: 6,
           margin: const EdgeInsets.only(top: 7),
-          decoration: BoxDecoration(
-            color: accentColor,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: accentColor, shape: BoxShape.circle),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             fact,
-            style: Theme
-                .of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
           ),
         ),
       ],
@@ -534,10 +514,7 @@ class _FactRow extends StatelessWidget {
 }
 
 class _FullScreenModelPage extends StatelessWidget {
-  const _FullScreenModelPage({
-    required this.planet,
-    required this.modelUrl,
-  });
+  const _FullScreenModelPage({required this.planet, required this.modelUrl});
 
   final PlanetEntity planet;
   final String modelUrl;
@@ -577,9 +554,7 @@ class _FullScreenModelPage extends StatelessWidget {
             exposure: 1.0,
           ),
           Positioned(
-            top: MediaQuery
-                .paddingOf(context)
-                .top + 8,
+            top: MediaQuery.paddingOf(context).top + 8,
             left: 12,
             child: IconButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -591,9 +566,7 @@ class _FullScreenModelPage extends StatelessWidget {
             ),
           ),
           Positioned(
-            bottom: MediaQuery
-                .paddingOf(context)
-                .bottom + 24,
+            bottom: MediaQuery.paddingOf(context).bottom + 24,
             left: 0,
             right: 0,
             child: Center(
@@ -619,14 +592,10 @@ class _FullScreenModelPage extends StatelessWidget {
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      'Drag to rotate · Pinch to zoom',
-                      style: Theme
-                          .of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(
-                        color: Colors.white,
-                      ),
+                      'Drag to rotate - Pinch to zoom',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.white),
                     ),
                   ],
                 ),
@@ -638,4 +607,3 @@ class _FullScreenModelPage extends StatelessWidget {
     );
   }
 }
-
