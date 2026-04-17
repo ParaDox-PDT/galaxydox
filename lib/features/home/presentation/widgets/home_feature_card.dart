@@ -25,10 +25,6 @@ class HomeFeatureCard extends StatelessWidget {
             : isMedium
             ? 1.44
             : 1.72;
-        final visibleMetrics = isCompact
-            ? feature.metrics.take(1).toList()
-            : feature.metrics;
-
         return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
@@ -94,68 +90,69 @@ class HomeFeatureCard extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            Positioned(
+                              top: 20,
+                              left: 20,
+                              child: Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: feature.accentColor.withValues(
+                                    alpha: 0.18,
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: feature.accentColor.withValues(
+                                      alpha: 0.26,
+                                    ),
+                                  ),
+                                ),
+                                child: Icon(
+                                  feature.icon,
+                                  color: feature.accentColor,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 20,
+                              right: 20,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 180,
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.22),
+                                    borderRadius: BorderRadius.circular(999),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.08,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    feature.kicker.toUpperCase(),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: AppColors.textPrimary,
+                                          letterSpacing: 1.3,
+                                        ),
+                                  ),
+                                ),
+                              ),
+                            ),
                             Padding(
                               padding: const EdgeInsets.all(20),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width: 48,
-                                        height: 48,
-                                        decoration: BoxDecoration(
-                                          color: feature.accentColor.withValues(
-                                            alpha: 0.18,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            16,
-                                          ),
-                                          border: Border.all(
-                                            color: feature.accentColor
-                                                .withValues(alpha: 0.26),
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          feature.icon,
-                                          color: feature.accentColor,
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Flexible(
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 8,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.22,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              999,
-                                            ),
-                                            border: Border.all(
-                                              color: Colors.white.withValues(
-                                                alpha: 0.08,
-                                              ),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            feature.kicker.toUpperCase(),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            textAlign: TextAlign.center,
-                                            style: theme.textTheme.labelMedium
-                                                ?.copyWith(
-                                                  color: AppColors.textPrimary,
-                                                  letterSpacing: 1.3,
-                                                ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
                                   const Spacer(),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
@@ -214,12 +211,13 @@ class HomeFeatureCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            const SizedBox(height: 18),
-                            _FeatureMetricSection(
-                              accentColor: feature.accentColor,
-                              metrics: visibleMetrics,
-                              isCompact: isCompact,
-                            ),
+                            // Temporarily hidden per current home screen layout request.
+                            // const SizedBox(height: 18),
+                            // _FeatureMetricSection(
+                            //   accentColor: feature.accentColor,
+                            //   metrics: visibleMetrics,
+                            //   isCompact: isCompact,
+                            // ),
                             const SizedBox(height: 16),
                             Row(
                               children: [
