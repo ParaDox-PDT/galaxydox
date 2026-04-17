@@ -316,8 +316,6 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                     disableZoom: false,
                     disableTap: false,
                     disablePan: true,
-                    shadowIntensity: 0.6,
-                    shadowSoftness: 1,
                     exposure: 0.8,
                     innerModelViewerHtml:
                         '<div class="mv-hidden-progress" slot="progress-bar"></div>',
@@ -328,6 +326,7 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                     ''',
                     relatedJs: _buildModelViewerBridgeScript(),
                     javascriptChannels: _buildModelViewerChannels(),
+                    debugLogging: false,
                   ),
                   if (_isModelViewerLoading)
                     IgnorePointer(
@@ -721,9 +720,8 @@ class _FullScreenModelPage extends StatelessWidget {
             disableZoom: false,
             disableTap: false,
             disablePan: false,
-            shadowIntensity: 0.8,
-            shadowSoftness: 1,
             exposure: 1.0,
+            debugLogging: false,
           ),
           Positioned(
             top: MediaQuery.paddingOf(context).top + 8,
