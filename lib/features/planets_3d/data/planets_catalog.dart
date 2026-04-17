@@ -5,54 +5,19 @@ import '../domain/planet_entity.dart';
 abstract final class PlanetsCatalog {
   static const List<PlanetEntity> planets = [
     PlanetEntity(
-      id: 'sun',
-      title: 'Sun',
-      subtitle: 'Our Star',
+      id: 'solar_system',
+      title: 'Solar System',
+      subtitle: 'Our Cosmic Neighborhood',
       description:
-          'The Sun is the star at the center of the Solar System. It is a nearly perfect sphere of hot plasma, '
-          'radiating energy mainly as visible light, ultraviolet light, and infrared radiation.',
-      modelAssetPath: 'assets/3d_models/sun.glb',
+          'The Solar System is the gravitationally bound system of the Sun and the objects that orbit it. It formed 4.6 billion years ago from the gravitational collapse of a giant interstellar molecular cloud.',
+      modelAssetPath: 'assets/3d_models/solar_system_model_orrery.glb',
       thumbnailAssetPath: 'assets/images/planets.png',
-      accentColor: Color(0xFFFFB300),
+      accentColor: Color(0xFFFDD835),
       facts: [
-        'Diameter: 1.39M km',
         'Age: 4.6 Billion Years',
-        'Surface temp: 5,505 °C',
-        'Mass: 330,000 x Earth',
-      ],
-    ),
-    PlanetEntity(
-      id: 'mercury',
-      title: 'Mercury',
-      subtitle: 'The Swift Planet',
-      description:
-          'Mercury is the smallest planet in the Solar System and the closest to the Sun. '
-          'Its orbit around the Sun takes 87.97 Earth days, the shortest of all the planets.',
-      modelAssetPath: 'assets/3d_models/mercury.glb',
-      thumbnailAssetPath: 'assets/images/planets.png',
-      accentColor: Color(0xFFB0BEC5),
-      facts: [
-        'Diameter: 4,880 km',
-        'Distance from Sun: 57.9M km',
-        'Orbital period: 88 days',
-        'Surface gravity: 3.7 m/s²',
-      ],
-    ),
-    PlanetEntity(
-      id: 'venus',
-      title: 'Venus',
-      subtitle: 'The Morning Star',
-      description:
-          'Venus is the second planet from the Sun. It is sometimes called Earth\'s "sister" or "twin" planet '
-          'as it is almost as large and has a similar composition, but has a toxic atmosphere.',
-      modelAssetPath: 'assets/3d_models/venus.glb',
-      thumbnailAssetPath: 'assets/images/planets.png',
-      accentColor: Color(0xFFFFCC80),
-      facts: [
-        'Diameter: 12,104 km',
-        'Distance from Sun: 108.2M km',
-        'Orbital period: 225 days',
-        'Surface gravity: 8.87 m/s²',
+        'Stars: 1 (Sun)',
+        'Planets: 8',
+        'Known Moons: 200+',
       ],
     ),
     PlanetEntity(
@@ -69,7 +34,57 @@ abstract final class PlanetsCatalog {
         'Diameter: 12,742 km',
         'Distance from Sun: 149.6M km',
         'Orbital period: 365.25 days',
-        'Surface gravity: 9.807 m/s²',
+        'Surface gravity: 9.807 m/s2',
+      ],
+    ),
+    PlanetEntity(
+      id: 'moon',
+      title: 'Moon',
+      subtitle: 'Earth\'s Satellite',
+      description:
+          'The Moon is Earth\'s only natural satellite. It is the fifth largest satellite in the Solar System and the largest and most massive relative to its parent planet.',
+      modelAssetPath: 'assets/3d_models/moon.glb',
+      thumbnailAssetPath: 'assets/images/planets.png',
+      accentColor: Color(0xFFE0E0E0),
+      facts: [
+        'Diameter: 3,474 km',
+        'Distance from Earth: 384,400 km',
+        'Orbital period: 27.3 days',
+        'Surface gravity: 1.62 m/s2',
+      ],
+    ),
+    PlanetEntity(
+      id: 'mercury',
+      title: 'Mercury',
+      subtitle: 'The Swift Planet',
+      description:
+          'Mercury is the smallest planet in the Solar System and the closest to the Sun. '
+          'Its orbit around the Sun takes 87.97 Earth days, the shortest of all the planets.',
+      modelAssetPath: 'assets/3d_models/mercury.glb',
+      thumbnailAssetPath: 'assets/images/planets.png',
+      accentColor: Color(0xFFB0BEC5),
+      facts: [
+        'Diameter: 4,880 km',
+        'Distance from Sun: 57.9M km',
+        'Orbital period: 88 days',
+        'Surface gravity: 3.7 m/s2',
+      ],
+    ),
+    PlanetEntity(
+      id: 'venus',
+      title: 'Venus',
+      subtitle: 'The Morning Star',
+      description:
+          'Venus is the second planet from the Sun. It is sometimes called Earth\'s "sister" or "twin" planet '
+          'as it is almost as large and has a similar composition, but has a toxic atmosphere.',
+      modelAssetPath: 'assets/3d_models/venus.glb',
+      thumbnailAssetPath: 'assets/images/planets.png',
+      accentColor: Color(0xFFFFCC80),
+      facts: [
+        'Diameter: 12,104 km',
+        'Distance from Sun: 108.2M km',
+        'Orbital period: 225 days',
+        'Surface gravity: 8.87 m/s2',
       ],
     ),
     PlanetEntity(
@@ -86,7 +101,7 @@ abstract final class PlanetsCatalog {
         'Diameter: 6,779 km',
         'Distance from Sun: 227.9M km',
         'Orbital period: 687 days',
-        'Surface gravity: 3.721 m/s²',
+        'Surface gravity: 3.721 m/s2',
       ],
     ),
     PlanetEntity(
@@ -103,7 +118,7 @@ abstract final class PlanetsCatalog {
         'Diameter: 139,820 km',
         'Distance from Sun: 778.5M km',
         'Orbital period: 11.86 years',
-        'Surface gravity: 24.79 m/s²',
+        'Surface gravity: 24.79 m/s2',
       ],
     ),
     PlanetEntity(
@@ -120,7 +135,7 @@ abstract final class PlanetsCatalog {
         'Diameter: 116,460 km',
         'Distance from Sun: 1.43B km',
         'Orbital period: 29.5 years',
-        'Surface gravity: 10.44 m/s²',
+        'Surface gravity: 10.44 m/s2',
       ],
     ),
     PlanetEntity(
@@ -137,39 +152,24 @@ abstract final class PlanetsCatalog {
         'Diameter: 49,244 km',
         'Distance from Sun: 4.5B km',
         'Orbital period: 165 years',
-        'Surface gravity: 11.15 m/s²',
+        'Surface gravity: 11.15 m/s2',
       ],
     ),
     PlanetEntity(
-      id: 'moon',
-      title: 'Moon',
-      subtitle: 'Earth\'s Satellite',
+      id: 'sun',
+      title: 'Sun',
+      subtitle: 'Our Star',
       description:
-          'The Moon is Earth\'s only natural satellite. It is the fifth largest satellite in the Solar System and the largest and most massive relative to its parent planet.',
-      modelAssetPath: 'assets/3d_models/moon.glb',
+          'The Sun is the star at the center of the Solar System. It is a nearly perfect sphere of hot plasma, '
+          'radiating energy mainly as visible light, ultraviolet light, and infrared radiation.',
+      modelAssetPath: 'assets/3d_models/sun.glb',
       thumbnailAssetPath: 'assets/images/planets.png',
-      accentColor: Color(0xFFE0E0E0),
+      accentColor: Color(0xFFFFB300),
       facts: [
-        'Diameter: 3,474 km',
-        'Distance from Earth: 384,400 km',
-        'Orbital period: 27.3 days',
-        'Surface gravity: 1.62 m/s²',
-      ],
-    ),
-    PlanetEntity(
-      id: 'solar_system',
-      title: 'Solar System',
-      subtitle: 'Our Cosmic Neighborhood',
-      description:
-          'The Solar System is the gravitationally bound system of the Sun and the objects that orbit it. It formed 4.6 billion years ago from the gravitational collapse of a giant interstellar molecular cloud.',
-      modelAssetPath: 'assets/3d_models/solar_system_model_orrery.glb',
-      thumbnailAssetPath: 'assets/images/planets.png',
-      accentColor: Color(0xFFFDD835),
-      facts: [
+        'Diameter: 1.39M km',
         'Age: 4.6 Billion Years',
-        'Stars: 1 (Sun)',
-        'Planets: 8',
-        'Known Moons: 200+',
+        'Surface temp: 5,505 C',
+        'Mass: 330,000 x Earth',
       ],
     ),
   ];
