@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
@@ -63,8 +65,12 @@ class _PlanetDetailContent extends StatefulWidget {
 }
 
 class _PlanetDetailContentState extends State<_PlanetDetailContent> {
+  static const _modelViewerChannelName = 'ModelViewerLoadingChannel';
+
   String? _modelUrl;
   String? _modelError;
+  double _modelLoadProgress = 0;
+  bool _isModelViewerLoading = false;
 
   @override
   void initState() {
@@ -78,7 +84,11 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
         widget.planet.modelAssetPath,
       );
       if (mounted) {
-        setState(() => _modelUrl = url);
+        setState(() {
+          _modelUrl = url;
+          _modelLoadProgress = 0;
+          _isModelViewerLoading = true;
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -161,6 +171,88 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
     );
   }
 
+  void _handleModelViewerMessage(dynamic message) {
+    try {
+      final payload = jsonDecode(message.message);
+      if (payload is! Map<String, dynamic>) {
+        return;
+      }
+
+      final type = payload['type'];
+      if (type == 'progress') {
+        final progress = (payload['progress'] as num?)?.toDouble() ?? 0;
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          _modelLoadProgress = progress.clamp(0.0, 1.0);
+          _isModelViewerLoading = _modelLoadProgress < 1;
+        });
+        return;
+      }
+
+      if (type == 'loaded') {
+        if (!mounted) {
+          return;
+        }
+        setState(() {
+          _modelLoadProgress = 1;
+          _isModelViewerLoading = false;
+        });
+        return;
+      }
+
+      if (type == 'error' && mounted) {
+        setState(() {
+          _modelUrl = null;
+          _modelError = 'Could not render the 3D model.';
+          _modelLoadProgress = 0;
+          _isModelViewerLoading = false;
+        });
+      }
+    } catch (_) {
+      // Ignore malformed messages coming from the embedded WebView.
+    }
+  }
+
+  Set<JavascriptChannel> _buildModelViewerChannels() {
+    return {
+      JavascriptChannel(
+        _modelViewerChannelName,
+        onMessageReceived: _handleModelViewerMessage,
+      ),
+    };
+  }
+
+  String _buildModelViewerBridgeScript() {
+    return '''
+      const modelViewer = document.querySelector('model-viewer');
+      const loadingChannel = window.$_modelViewerChannelName;
+
+      if (modelViewer && loadingChannel) {
+        const sendMessage = (payload) => {
+          loadingChannel.postMessage(JSON.stringify(payload));
+        };
+
+        modelViewer.addEventListener('progress', (event) => {
+          const detail = event.detail || {};
+          const progress = typeof detail.totalProgress === 'number'
+              ? detail.totalProgress
+              : 0;
+          sendMessage({ type: 'progress', progress });
+        });
+
+        modelViewer.addEventListener('load', () => {
+          sendMessage({ type: 'loaded' });
+        });
+
+        modelViewer.addEventListener('error', () => {
+          sendMessage({ type: 'error' });
+        });
+      }
+    ''';
+  }
+
   Widget _buildModelViewer(BuildContext context) {
     final planet = widget.planet;
 
@@ -201,6 +293,8 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                   setState(() {
                     _modelError = null;
                     _modelUrl = null;
+                    _modelLoadProgress = 0;
+                    _isModelViewerLoading = false;
                   });
                   _prepareModel();
                 },
@@ -208,20 +302,40 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
             else if (_modelUrl == null)
               _ModelLoadingState(accentColor: planet.accentColor)
             else
-              ModelViewer(
-                backgroundColor: Colors.transparent,
-                src: _modelUrl!,
-                alt: '3D model of ${planet.title}',
-                autoRotate: true,
-                autoRotateDelay: 0,
-                rotationPerSecond: '18deg',
-                cameraControls: true,
-                disableZoom: false,
-                disableTap: false,
-                disablePan: true,
-                shadowIntensity: 0.6,
-                shadowSoftness: 1,
-                exposure: 0.8,
+              Stack(
+                fit: StackFit.expand,
+                children: [
+                  ModelViewer(
+                    backgroundColor: Colors.transparent,
+                    src: _modelUrl!,
+                    alt: '3D model of ${planet.title}',
+                    autoRotate: true,
+                    autoRotateDelay: 0,
+                    rotationPerSecond: '18deg',
+                    cameraControls: true,
+                    disableZoom: false,
+                    disableTap: false,
+                    disablePan: true,
+                    shadowIntensity: 0.6,
+                    shadowSoftness: 1,
+                    exposure: 0.8,
+                    innerModelViewerHtml:
+                        '<div class="mv-hidden-progress" slot="progress-bar"></div>',
+                    relatedCss: '''
+                      .mv-hidden-progress {
+                        display: none;
+                      }
+                    ''',
+                    relatedJs: _buildModelViewerBridgeScript(),
+                    javascriptChannels: _buildModelViewerChannels(),
+                  ),
+                  if (_isModelViewerLoading)
+                    IgnorePointer(
+                      child: _ModelViewerProgressOverlay(
+                        progress: _modelLoadProgress,
+                      ),
+                    ),
+                ],
               ),
             Positioned(
               bottom: 12,
@@ -414,6 +528,64 @@ class _ModelLoadingState extends StatelessWidget {
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ModelViewerProgressOverlay extends StatelessWidget {
+  const _ModelViewerProgressOverlay({required this.progress});
+
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalizedProgress = progress.clamp(0.0, 1.0);
+    final progressLabel = '${(normalizedProgress * 100).round()}%';
+
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 92,
+            height: 92,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.black.withValues(alpha: 0.42),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+            ),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                CircularProgressIndicator(
+                  value: normalizedProgress > 0 ? normalizedProgress : null,
+                  strokeWidth: 5,
+                  strokeCap: StrokeCap.round,
+                  color: Colors.white,
+                  backgroundColor: Colors.white.withValues(alpha: 0.16),
+                ),
+                Center(
+                  child: Text(
+                    progressLabel,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Loading 3D model...',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
           ),
         ],
       ),
