@@ -4,8 +4,8 @@ class LocalModelServer {
   static LocalModelServer? _instance;
   static LocalModelServer get instance => _instance ??= LocalModelServer._();
 
-  Future<String> serveAsset(String assetPath) async {
-    return Uri.base.resolve('assets/$assetPath').toString();
+  Future<String> serveFile(String filePath) async {
+    return filePath;
   }
 
   Future<void> dispose() async {}

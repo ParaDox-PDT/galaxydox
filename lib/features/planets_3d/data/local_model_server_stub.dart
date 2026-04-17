@@ -4,7 +4,7 @@ class LocalModelServer {
   static LocalModelServer? _instance;
   static LocalModelServer get instance => _instance ??= LocalModelServer._();
 
-  Future<String> serveAsset(String assetPath) {
+  Future<String> serveFile(String filePath) {
     throw UnsupportedError('3D models are not supported on this platform.');
   }
 

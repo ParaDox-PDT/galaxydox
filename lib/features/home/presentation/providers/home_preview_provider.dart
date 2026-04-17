@@ -56,8 +56,8 @@ final homePreviewProvider = Provider<HomePreviewData>((ref) {
         icon: Icons.view_in_ar_rounded,
         ctaLabel: 'Explore planets in 3D',
         metrics: [
-          FeatureMetric(label: 'Rendering', value: 'Local .glb'),
-          FeatureMetric(label: 'Controls', value: 'Touch and zoom'),
+          FeatureMetric(label: 'Source', value: 'Firebase models'),
+          FeatureMetric(label: 'Storage', value: 'Device cache'),
         ],
       ),
       HomeFeaturePreview(

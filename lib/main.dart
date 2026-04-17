@@ -1,14 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'app/app.dart';
 import 'app/bootstrap/configuration_required_app.dart';
 import 'core/config/app_config.dart';
+import 'firebase_options.dart';
 import 'shared/bookmarks/data/bookmark_hive_bootstrap.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await BookmarkHiveBootstrap.initialize();
 
   FlutterError.onError = (details) {

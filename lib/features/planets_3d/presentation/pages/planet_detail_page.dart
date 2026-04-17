@@ -2,74 +2,114 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
+import '../../../../shared/widgets/premium_network_image.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
-import '../../data/local_model_server.dart';
-import '../../data/planets_catalog.dart';
+import '../../../../shared/widgets/state_panel.dart';
+import '../../data/models/resolved_planet_model.dart';
 import '../../domain/planet_entity.dart';
+import '../providers/planets_providers.dart';
 
-class PlanetDetailPage extends StatelessWidget {
+const _fallbackPlanetThumbnailAsset = 'assets/images/planets.png';
+
+class PlanetDetailPage extends ConsumerWidget {
   const PlanetDetailPage({super.key, required this.planetId});
 
   final String planetId;
 
   @override
-  Widget build(BuildContext context) {
-    final planet = PlanetsCatalog.planets
-        .where((p) => p.id == planetId)
-        .firstOrNull;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final planetAsync = ref.watch(planetProvider(planetId));
 
-    if (planet == null) {
-      return SpaceScaffold(
-        body: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.error_outline_rounded,
-                size: 56,
-                color: AppColors.error,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Planet not found',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 24),
-              OutlinedButton.icon(
-                onPressed: () => Navigator.of(context).maybePop(),
-                icon: const Icon(Icons.arrow_back_rounded),
-                label: const Text('Go back'),
-              ),
-            ],
-          ),
+    return planetAsync.when(
+      loading: () => const _DetailShell(
+        child: _CenteredStatus(
+          title: 'Loading planet',
+          message: 'Fetching this planet from Firebase...',
+          icon: Icons.cloud_download_rounded,
         ),
-      );
+      ),
+      error: (error, stackTrace) => _DetailShell(
+        child: StatePanel(
+          title: 'Unable to load planet',
+          message: _resolveAsyncErrorMessage(error),
+          icon: Icons.error_outline_rounded,
+          accent: AppColors.warning,
+          actions: [
+            StatePanelAction(
+              label: 'Try again',
+              icon: Icons.refresh_rounded,
+              onPressed: () {
+                ref.invalidate(planetProvider(planetId));
+              },
+            ),
+            StatePanelAction(
+              label: 'Go back',
+              icon: Icons.arrow_back_rounded,
+              onPressed: () => Navigator.of(context).maybePop(),
+              emphasis: StatePanelActionEmphasis.secondary,
+            ),
+          ],
+        ),
+      ),
+      data: (planet) {
+        if (planet == null) {
+          return _DetailShell(
+            child: StatePanel(
+              title: 'Planet not found',
+              message:
+                  'This document does not exist in the Firebase `planets` collection.',
+              icon: Icons.public_off_rounded,
+              accent: AppColors.secondary,
+              actions: [
+                StatePanelAction(
+                  label: 'Go back',
+                  icon: Icons.arrow_back_rounded,
+                  onPressed: () => Navigator.of(context).maybePop(),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return _PlanetDetailContent(planet: planet);
+      },
+    );
+  }
+
+  static String _resolveAsyncErrorMessage(Object error) {
+    if (error is AppException) {
+      return error.message;
     }
 
-    return _PlanetDetailContent(planet: planet);
+    return 'Planet details could not be loaded from Firebase.';
   }
 }
 
-class _PlanetDetailContent extends StatefulWidget {
+class _PlanetDetailContent extends ConsumerStatefulWidget {
   const _PlanetDetailContent({required this.planet});
 
   final PlanetEntity planet;
 
   @override
-  State<_PlanetDetailContent> createState() => _PlanetDetailContentState();
+  ConsumerState<_PlanetDetailContent> createState() =>
+      _PlanetDetailContentState();
 }
 
-class _PlanetDetailContentState extends State<_PlanetDetailContent> {
+class _PlanetDetailContentState extends ConsumerState<_PlanetDetailContent> {
   static const _modelViewerChannelName = 'ModelViewerLoadingChannel';
 
-  String? _modelUrl;
+  ResolvedPlanetModel? _resolvedModel;
   String? _modelError;
+  double? _downloadProgress;
   double _modelLoadProgress = 0;
+  bool _isPreparingModel = false;
   bool _isModelViewerLoading = false;
 
   @override
@@ -78,24 +118,72 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
     _prepareModel();
   }
 
+  @override
+  void didUpdateWidget(covariant _PlanetDetailContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.planet.id != widget.planet.id ||
+        oldWidget.planet.modelUrl != widget.planet.modelUrl) {
+      _prepareModel();
+    }
+  }
+
   Future<void> _prepareModel() async {
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _resolvedModel = null;
+      _modelError = null;
+      _downloadProgress = null;
+      _modelLoadProgress = 0;
+      _isPreparingModel = true;
+      _isModelViewerLoading = false;
+    });
+
     try {
-      final url = await LocalModelServer.instance.serveAsset(
-        widget.planet.modelAssetPath,
-      );
-      if (mounted) {
-        setState(() {
-          _modelUrl = url;
-          _modelLoadProgress = 0;
-          _isModelViewerLoading = true;
-        });
+      final resolvedModel = await ref
+          .read(planetModelCacheServiceProvider)
+          .prepareModel(
+            planetId: widget.planet.id,
+            modelUrl: widget.planet.modelUrl,
+            onDownloadProgress: (progress) {
+              if (!mounted) {
+                return;
+              }
+
+              setState(() {
+                _downloadProgress = progress;
+                _isPreparingModel = true;
+              });
+            },
+          );
+
+      if (!mounted) {
+        return;
       }
-    } catch (e) {
-      if (mounted) {
-        setState(
-          () => _modelError = 'Could not load 3D model: ${e.toString()}',
-        );
+
+      setState(() {
+        _resolvedModel = resolvedModel;
+        _downloadProgress = 1;
+        _isPreparingModel = false;
+        _isModelViewerLoading = true;
+      });
+    } catch (error) {
+      if (!mounted) {
+        return;
       }
+
+      setState(() {
+        _modelError = error is AppException
+            ? error.message
+            : 'Could not prepare the 3D model.';
+        _resolvedModel = null;
+        _downloadProgress = null;
+        _modelLoadProgress = 0;
+        _isPreparingModel = false;
+        _isModelViewerLoading = false;
+      });
     }
   }
 
@@ -158,6 +246,8 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildModelViewer(context),
+                      const SizedBox(height: 18),
+                      _buildStorageInfo(theme, planet),
                       const SizedBox(height: 24),
                       _buildInfoSection(context, theme, planet),
                     ],
@@ -204,8 +294,8 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
 
       if (type == 'error' && mounted) {
         setState(() {
-          _modelUrl = null;
           _modelError = 'Could not render the 3D model.';
+          _resolvedModel = null;
           _modelLoadProgress = 0;
           _isModelViewerLoading = false;
         });
@@ -287,27 +377,24 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
               ),
             ),
             if (_modelError != null)
-              _ModelErrorState(
-                message: _modelError!,
-                onRetry: () {
-                  setState(() {
-                    _modelError = null;
-                    _modelUrl = null;
-                    _modelLoadProgress = 0;
-                    _isModelViewerLoading = false;
-                  });
-                  _prepareModel();
-                },
+              _ModelErrorState(message: _modelError!, onRetry: _prepareModel)
+            else if (_resolvedModel == null)
+              _ModelLoadingState(
+                accentColor: planet.accentColor,
+                title: _isPreparingModel
+                    ? 'Downloading model from Firebase...'
+                    : 'Preparing 3D model...',
+                subtitle:
+                    'The first open stores the `.glb` file in device storage. Later opens use the saved file.',
+                progress: _downloadProgress,
               )
-            else if (_modelUrl == null)
-              _ModelLoadingState(accentColor: planet.accentColor)
             else
               Stack(
                 fit: StackFit.expand,
                 children: [
                   ModelViewer(
                     backgroundColor: Colors.transparent,
-                    src: _modelUrl!,
+                    src: _resolvedModel!.viewerSrc,
                     alt: '3D model of ${planet.title}',
                     autoRotate: true,
                     autoRotateDelay: 0,
@@ -336,6 +423,14 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                     ),
                 ],
               ),
+            Positioned(
+              top: 12,
+              left: 12,
+              child: _StorageBadge(
+                accentColor: planet.accentColor,
+                label: _storageLabel,
+              ),
+            ),
             Positioned(
               bottom: 12,
               left: 0,
@@ -373,7 +468,7 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                 ),
               ),
             ),
-            if (_modelUrl != null)
+            if (_resolvedModel != null)
               Positioned(
                 top: 12,
                 right: 12,
@@ -383,7 +478,7 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                       MaterialPageRoute(
                         builder: (context) => _FullScreenModelPage(
                           planet: planet,
-                          modelUrl: _modelUrl!,
+                          modelUrl: _resolvedModel!.viewerSrc,
                         ),
                       ),
                     );
@@ -399,6 +494,52 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
         ),
       ),
     ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.04, end: 0);
+  }
+
+  Widget _buildStorageInfo(ThemeData theme, PlanetEntity planet) {
+    return FrostedPanel(
+      padding: const EdgeInsets.all(18),
+      borderColor: planet.accentColor.withValues(alpha: 0.18),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: planet.accentColor.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: planet.accentColor.withValues(alpha: 0.22),
+              ),
+            ),
+            child: Icon(Icons.sd_storage_rounded, color: planet.accentColor),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Model storage', style: theme.textTheme.titleMedium),
+                const SizedBox(height: 4),
+                Text(
+                  _storageDescription,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_resolvedModel != null)
+            OutlinedButton.icon(
+              onPressed: _prepareModel,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Reload'),
+            ),
+        ],
+      ),
+    );
   }
 
   Widget _buildInfoSection(
@@ -424,17 +565,9 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: Image.asset(
-                        planet.thumbnailAssetPath,
+                      child: _PlanetThumbnail(
+                        planet: planet,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: planet.accentColor.withValues(alpha: 0.1),
-                          child: Icon(
-                            Icons.public_rounded,
-                            color: planet.accentColor,
-                            size: 28,
-                          ),
-                        ),
                       ),
                     ),
                   ),
@@ -447,7 +580,9 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
                       Text(planet.title, style: theme.textTheme.headlineMedium),
                       const SizedBox(height: 4),
                       Text(
-                        planet.subtitle,
+                        planet.subtitle.isEmpty
+                            ? 'Interactive 3D experience'
+                            : planet.subtitle,
                         style: theme.textTheme.bodyLarge?.copyWith(
                           color: planet.accentColor,
                         ),
@@ -500,35 +635,214 @@ class _PlanetDetailContentState extends State<_PlanetDetailContent> {
       ],
     );
   }
+
+  String get _storageLabel {
+    if (_resolvedModel == null) {
+      return _isPreparingModel ? 'Preparing cache' : 'Waiting';
+    }
+
+    if (!_resolvedModel!.isStoredLocally) {
+      return 'Remote stream';
+    }
+
+    return _resolvedModel!.wasLoadedFromCache
+        ? 'Loaded from device'
+        : 'Saved on device';
+  }
+
+  String get _storageDescription {
+    if (_modelError != null) {
+      return 'Model preparation failed. Tap reload to try downloading and caching the file again.';
+    }
+
+    if (_resolvedModel == null) {
+      return _isPreparingModel
+          ? 'Downloading the Firebase model and storing it inside app storage.'
+          : 'Preparing local storage for this model.';
+    }
+
+    if (!_resolvedModel!.isStoredLocally) {
+      return 'This platform is using the remote model URL directly.';
+    }
+
+    if (_resolvedModel!.wasLoadedFromCache) {
+      return 'This 3D model opened from device storage, so it does not need a fresh download now.';
+    }
+
+    return 'This 3D model was downloaded from Firebase and saved to device storage for future opens.';
+  }
 }
 
-class _ModelLoadingState extends StatelessWidget {
-  const _ModelLoadingState({required this.accentColor});
+class _PlanetThumbnail extends StatelessWidget {
+  const _PlanetThumbnail({required this.planet, this.fit = BoxFit.cover});
+
+  final PlanetEntity planet;
+  final BoxFit fit;
+
+  @override
+  Widget build(BuildContext context) {
+    if (planet.thumbnailUrl.isNotEmpty) {
+      return PremiumNetworkImage(imageUrl: planet.thumbnailUrl, fit: fit);
+    }
+
+    return Image.asset(
+      _fallbackPlanetThumbnailAsset,
+      fit: fit,
+      errorBuilder: (context, error, stackTrace) =>
+          _ThumbnailFallback(accentColor: planet.accentColor),
+    );
+  }
+}
+
+class _ThumbnailFallback extends StatelessWidget {
+  const _ThumbnailFallback({required this.accentColor});
 
   final Color accentColor;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
+    return Container(
+      color: accentColor.withValues(alpha: 0.1),
+      child: Icon(Icons.public_rounded, color: accentColor, size: 28),
+    );
+  }
+}
+
+class _StorageBadge extends StatelessWidget {
+  const _StorageBadge({required this.accentColor, required this.label});
+
+  final Color accentColor;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.44),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: accentColor.withValues(alpha: 0.26)),
+      ),
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: 36,
-            height: 36,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.5,
-              color: accentColor,
-            ),
-          ),
-          const SizedBox(height: 16),
+          Icon(Icons.cloud_done_rounded, size: 16, color: accentColor),
+          const SizedBox(width: 8),
           Text(
-            'Loading 3D model...',
+            label,
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+            ).textTheme.labelMedium?.copyWith(color: Colors.white),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _DetailShell extends StatelessWidget {
+  const _DetailShell({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return SpaceScaffold(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: AppConstants.contentMaxWidthCompact,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppConstants.pagePadding),
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CenteredStatus extends StatelessWidget {
+  const _CenteredStatus({
+    required this.title,
+    required this.message,
+    required this.icon,
+  });
+
+  final String title;
+  final String message;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return StatePanel(
+      title: title,
+      message: message,
+      icon: icon,
+      accent: AppColors.primary,
+    );
+  }
+}
+
+class _ModelLoadingState extends StatelessWidget {
+  const _ModelLoadingState({
+    required this.accentColor,
+    required this.title,
+    required this.subtitle,
+    this.progress,
+  });
+
+  final Color accentColor;
+  final String title;
+  final String subtitle;
+  final double? progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final normalizedProgress = progress?.clamp(0.0, 1.0);
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 62,
+              height: 62,
+              child: CircularProgressIndicator(
+                value: normalizedProgress,
+                strokeWidth: 4,
+                color: accentColor,
+                backgroundColor: accentColor.withValues(alpha: 0.18),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              subtitle,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+              textAlign: TextAlign.center,
+            ),
+            if (normalizedProgress != null) ...[
+              const SizedBox(height: 14),
+              Text(
+                '${(normalizedProgress * 100).round()}%',
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(color: accentColor),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -581,7 +895,7 @@ class _ModelViewerProgressOverlay extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Loading 3D model...',
+            'Rendering 3D model...',
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
@@ -596,7 +910,7 @@ class _ModelErrorState extends StatelessWidget {
   const _ModelErrorState({required this.message, required this.onRetry});
 
   final String message;
-  final VoidCallback onRetry;
+  final Future<void> Function() onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -637,7 +951,7 @@ class _ModelErrorState extends StatelessWidget {
                 color: AppColors.textMuted,
               ),
               textAlign: TextAlign.center,
-              maxLines: 3,
+              maxLines: 4,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 20),
