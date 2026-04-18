@@ -17,18 +17,20 @@ Future<void> main() async {
   await BookmarkHiveBootstrap.initialize();
   await OnboardingHiveBootstrap.initialize();
 
-  final crashlytics = FirebaseCrashlytics.instance;
-  await crashlytics.setCrashlyticsCollectionEnabled(!kDebugMode);
+  if (!kIsWeb) {
+    final crashlytics = FirebaseCrashlytics.instance;
+    await crashlytics.setCrashlyticsCollectionEnabled(!kDebugMode);
 
-  FlutterError.onError = (details) {
-    FlutterError.presentError(details);
-    crashlytics.recordFlutterFatalError(details);
-  };
+    FlutterError.onError = (details) {
+      FlutterError.presentError(details);
+      crashlytics.recordFlutterFatalError(details);
+    };
 
-  PlatformDispatcher.instance.onError = (error, stack) {
-    crashlytics.recordError(error, stack, fatal: true);
-    return true;
-  };
+    PlatformDispatcher.instance.onError = (error, stack) {
+      crashlytics.recordError(error, stack, fatal: true);
+      return true;
+    };
+  }
 
   runApp(
     ProviderScope(
@@ -46,4 +48,6 @@ Future<void> main() async {
 ///
 /// flutter build apk --release --split-per-abi --dart-define-from-file=.env
 ///
+/// WEB BUILD
 /// flutter build web --release --dart-define-from-file=.env
+//  dart tool/copy_web_redirects.dart
