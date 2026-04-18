@@ -13,6 +13,7 @@ import '../../features/neo/presentation/pages/neo_page.dart';
 import '../../features/planets_3d/presentation/pages/planet_detail_page.dart';
 import '../../features/planets_3d/presentation/pages/planets_3d_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../shared/bookmarks/presentation/pages/bookmarks_page.dart';
 import '../../shared/navigation/swipe_back_route.dart';
@@ -50,6 +51,12 @@ final List<RouteBase> _routes = [
     path: AppRoutes.splashPath,
     name: AppRoutes.splashName,
     child: const SplashPage(),
+    enableSwipeBack: false,
+  ),
+  _appRoute(
+    path: AppRoutes.onboardingPath,
+    name: AppRoutes.onboardingName,
+    child: const OnboardingPage(),
     enableSwipeBack: false,
   ),
   _appRoute(

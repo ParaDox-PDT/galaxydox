@@ -4,7 +4,9 @@
       "Bash(xargs grep *)",
       "Bash(grep -E \"\\\\.\\(dart\\)$\")",
       "Bash(gsutil cors *)",
-      "mcp__claude_ai_Cloudflare_Developer_Platform__r2_bucket_get"
+      "mcp__claude_ai_Cloudflare_Developer_Platform__r2_bucket_get",
+      "Bash(flutter analyze *)",
+      "Bash(flutter test *)"
     ]
   }
 }

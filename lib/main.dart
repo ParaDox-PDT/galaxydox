@@ -7,12 +7,14 @@ import 'app/app.dart';
 import 'app/bootstrap/configuration_required_app.dart';
 import 'core/config/app_config.dart';
 import 'firebase_options.dart';
+import 'features/onboarding/data/onboarding_hive_bootstrap.dart';
 import 'shared/bookmarks/data/bookmark_hive_bootstrap.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await BookmarkHiveBootstrap.initialize();
+  await OnboardingHiveBootstrap.initialize();
 
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
