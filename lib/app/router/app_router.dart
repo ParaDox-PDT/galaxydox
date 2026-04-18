@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,6 +29,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.splashPath,
+    observers: [FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance)],
     routes: _routes,
     errorPageBuilder: (context, state) => _buildPage(
       state: state,

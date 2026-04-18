@@ -1,3 +1,4 @@
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,22 +17,16 @@ Future<void> main() async {
   await BookmarkHiveBootstrap.initialize();
   await OnboardingHiveBootstrap.initialize();
 
+  final crashlytics = FirebaseCrashlytics.instance;
+  await crashlytics.setCrashlyticsCollectionEnabled(!kDebugMode);
+
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    if (kDebugMode) {
-      debugPrint('FLUTTER ERROR: ${details.exceptionAsString()}');
-      final stack = details.stack;
-      if (stack != null) {
-        debugPrintStack(stackTrace: stack);
-      }
-    }
+    crashlytics.recordFlutterFatalError(details);
   };
 
   PlatformDispatcher.instance.onError = (error, stack) {
-    if (kDebugMode) {
-      debugPrint('UNCAUGHT PLATFORM ERROR: $error');
-      debugPrintStack(stackTrace: stack);
-    }
+    crashlytics.recordError(error, stack, fatal: true);
     return true;
   };
 

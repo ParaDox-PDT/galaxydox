@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../../core/analytics/analytics_provider.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/trusted_external_url.dart';
@@ -63,7 +64,7 @@ class ApodPage extends ConsumerWidget {
                           actions: [
                             OutlinedButton.icon(
                               onPressed: () =>
-                                  _pickDate(context, controller, state),
+                                  _pickDate(context, ref, controller, state),
                               icon: const Icon(Icons.calendar_month_rounded),
                               label: const Text('Choose date'),
                             ),
@@ -115,7 +116,7 @@ class ApodPage extends ConsumerWidget {
                                 label: 'Choose another date',
                                 icon: Icons.calendar_today_rounded,
                                 onPressed: () =>
-                                    _pickDate(context, controller, state),
+                                    _pickDate(context, ref, controller, state),
                                 emphasis: StatePanelActionEmphasis.secondary,
                               ),
                             ],
@@ -137,6 +138,7 @@ class ApodPage extends ConsumerWidget {
 
   Future<void> _pickDate(
     BuildContext context,
+    WidgetRef ref,
     ApodController controller,
     ApodState state,
   ) async {
@@ -170,6 +172,7 @@ class ApodPage extends ConsumerWidget {
 
     if (picked != null) {
       HapticFeedback.selectionClick();
+      ref.read(analyticsServiceProvider).logApodDateChanged(picked);
       await controller.selectDate(picked);
     }
   }
@@ -375,13 +378,13 @@ class _MetaPanel extends StatelessWidget {
   }
 }
 
-class _ActionPanel extends StatelessWidget {
+class _ActionPanel extends ConsumerWidget {
   const _ActionPanel({required this.item});
 
   final ApodItem item;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return FrostedPanel(
       padding: const EdgeInsets.all(22),
       child: Column(
@@ -401,7 +404,7 @@ class _ActionPanel extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () => _shareApod(context),
+                  onPressed: () => _shareApod(context, ref),
                   icon: const Icon(Icons.ios_share_rounded),
                   label: const Text('Share'),
                 ),
@@ -414,7 +417,7 @@ class _ActionPanel extends StatelessWidget {
               children: [
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: () => _openHdImage(context),
+                    onPressed: () => _openHdImage(context, ref),
                     icon: const Icon(Icons.hd_rounded),
                     label: const Text('Open HD'),
                   ),
@@ -427,7 +430,8 @@ class _ActionPanel extends StatelessWidget {
     );
   }
 
-  Future<void> _shareApod(BuildContext context) async {
+  Future<void> _shareApod(BuildContext context, WidgetRef ref) async {
+    ref.read(analyticsServiceProvider).logApodShared();
     final shareUri = sanitizeTrustedExternalUri(
       item.isImage ? item.preferredImageUrl : item.url,
       allowedHosts: TrustedHostSets.nasaAndVideoHosts,
@@ -452,7 +456,8 @@ class _ActionPanel extends StatelessWidget {
     await SharePlus.instance.share(ShareParams(text: buffer.toString().trim()));
   }
 
-  Future<void> _openHdImage(BuildContext context) async {
+  Future<void> _openHdImage(BuildContext context, WidgetRef ref) async {
+    ref.read(analyticsServiceProvider).logApodHdOpened();
     final uri = sanitizeTrustedExternalUri(
       item.hdUrl ?? item.preferredImageUrl,
       allowedHosts: TrustedHostSets.nasaHosts,

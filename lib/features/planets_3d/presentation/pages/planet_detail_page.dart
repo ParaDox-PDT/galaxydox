@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
+import '../../../../core/analytics/analytics_provider.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -118,6 +119,12 @@ class _PlanetDetailContentState extends ConsumerState<_PlanetDetailContent> {
   void initState() {
     super.initState();
     _prepareModel();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(analyticsServiceProvider).logPlanetViewed(
+        planetId: widget.planet.id,
+        planetName: widget.planet.title,
+      );
+    });
   }
 
   @override

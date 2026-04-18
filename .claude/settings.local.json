@@ -6,7 +6,10 @@
       "Bash(gsutil cors *)",
       "mcp__claude_ai_Cloudflare_Developer_Platform__r2_bucket_get",
       "Bash(flutter analyze *)",
-      "Bash(flutter test *)"
+      "Bash(flutter test *)",
+      "Bash(flutter pub *)",
+      "Bash(dart run *)",
+      "Bash(flutter build *)"
     ]
   }
 }

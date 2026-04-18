@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/analytics/analytics_provider.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/navigation/swipe_back_route.dart';
@@ -201,7 +202,9 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
   Future<void> _submitSearch(NasaSearchController controller) async {
     FocusManager.instance.primaryFocus?.unfocus();
     HapticFeedback.selectionClick();
-    await controller.search(query: _searchController.text);
+    final query = _searchController.text;
+    ref.read(analyticsServiceProvider).logSearchPerformed(query);
+    await controller.search(query: query);
   }
 
   Future<void> _clearSearch(NasaSearchController controller) async {
@@ -220,6 +223,7 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
     _searchController
       ..text = query
       ..selection = TextSelection.collapsed(offset: query.length);
+    ref.read(analyticsServiceProvider).logSearchPerformed(query);
     await controller.search(query: query);
   }
 
