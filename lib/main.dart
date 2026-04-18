@@ -48,3 +48,5 @@ Future<void> main() async {
 /// flutter build appbundle --release --dart-define-from-file=.env
 ///
 /// flutter build apk --release --split-per-abi --dart-define-from-file=.env
+///
+/// flutter build web --release --dart-define-from-file=.env
