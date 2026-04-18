@@ -100,14 +100,6 @@ class NasaSearchController extends Notifier<NasaSearchState> {
     );
   }
 
-  void setViewMode(NasaSearchViewMode viewMode) {
-    if (viewMode == state.viewMode) {
-      return;
-    }
-
-    state = state.copyWith(viewMode: viewMode);
-  }
-
   Future<void> setMediaTypeFilter(NasaSearchMediaFilter mediaTypeFilter) async {
     if (mediaTypeFilter == state.mediaTypeFilter) {
       return;
@@ -131,8 +123,6 @@ class NasaSearchController extends Notifier<NasaSearchState> {
 
 enum NasaSearchStatus { idle, loading, success, empty, error }
 
-enum NasaSearchViewMode { grid, list }
-
 enum NasaSearchMediaFilter {
   image('image', 'Images'),
   video('video', 'Videos');
@@ -148,7 +138,6 @@ class NasaSearchState {
     required this.status,
     required this.query,
     required this.results,
-    required this.viewMode,
     required this.mediaTypeFilter,
     this.error,
   });
@@ -158,7 +147,6 @@ class NasaSearchState {
       status: NasaSearchStatus.idle,
       query: '',
       results: [],
-      viewMode: NasaSearchViewMode.list,
       mediaTypeFilter: NasaSearchMediaFilter.image,
     );
   }
@@ -166,7 +154,6 @@ class NasaSearchState {
   final NasaSearchStatus status;
   final String query;
   final List<NasaMediaItem> results;
-  final NasaSearchViewMode viewMode;
   final NasaSearchMediaFilter mediaTypeFilter;
   final AppException? error;
 
@@ -179,7 +166,6 @@ class NasaSearchState {
     NasaSearchStatus? status,
     String? query,
     List<NasaMediaItem>? results,
-    NasaSearchViewMode? viewMode,
     NasaSearchMediaFilter? mediaTypeFilter,
     AppException? error,
     bool clearError = false,
@@ -189,7 +175,6 @@ class NasaSearchState {
       status: status ?? this.status,
       query: query ?? this.query,
       results: clearResults ? const [] : (results ?? this.results),
-      viewMode: viewMode ?? this.viewMode,
       mediaTypeFilter: mediaTypeFilter ?? this.mediaTypeFilter,
       error: clearError ? null : (error ?? this.error),
     );
