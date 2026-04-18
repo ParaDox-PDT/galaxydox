@@ -162,7 +162,8 @@ class _PlanetCard extends StatelessWidget {
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 420;
         final cardHeight = compact ? 196.0 : 208.0;
-        final imageWidth = compact ? 132.0 : 168.0;
+        final imagePaneWidth = compact ? 148.0 : 180.0;
+        final imageSize = compact ? 124.0 : 150.0;
         final contentPadding = compact
             ? const EdgeInsets.fromLTRB(14, 16, 16, 16)
             : const EdgeInsets.fromLTRB(16, 20, 20, 20);
@@ -203,27 +204,56 @@ class _PlanetCard extends StatelessWidget {
                   child: Row(
                     children: [
                       SizedBox(
-                        width: imageWidth,
+                        width: imagePaneWidth,
                         child: Stack(
-                          fit: StackFit.expand,
                           children: [
-                            Hero(
-                              tag: 'planet_thumb_${planet.id}',
-                              child: _PlanetThumbnail(
-                                planet: planet,
-                                fit: BoxFit.cover,
+                            Center(
+                              child: Hero(
+                                tag: 'planet_thumb_${planet.id}',
+                                child: Container(
+                                  width: imageSize,
+                                  height: imageSize,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(
+                                      compact ? 24 : 28,
+                                    ),
+                                    border: Border.all(
+                                      color: planet.accentColor.withValues(
+                                        alpha: 0.2,
+                                      ),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: planet.accentColor.withValues(
+                                          alpha: 0.18,
+                                        ),
+                                        blurRadius: 24,
+                                        offset: const Offset(0, 14),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(
+                                      compact ? 24 : 28,
+                                    ),
+                                    child: _PlanetThumbnail(
+                                      planet: planet,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                             Positioned.fill(
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
-                                    begin: Alignment.centerLeft,
+                                    begin: Alignment.center,
                                     end: Alignment.centerRight,
                                     colors: [
                                       Colors.transparent,
                                       AppColors.surfaceElevated.withValues(
-                                        alpha: 0.94,
+                                        alpha: 0.9,
                                       ),
                                     ],
                                   ),
