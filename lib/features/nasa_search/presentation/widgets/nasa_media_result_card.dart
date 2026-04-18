@@ -9,6 +9,8 @@ import '../../../../shared/widgets/premium_network_image.dart';
 import '../../domain/entities/nasa_media_item.dart';
 import '../providers/nasa_search_controller.dart';
 
+final DateFormat _nasaMediaDateFormatter = DateFormat.yMMMd();
+
 class NasaMediaResultCard extends StatelessWidget {
   const NasaMediaResultCard({
     super.key,
@@ -23,9 +25,11 @@ class NasaMediaResultCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return viewMode == NasaSearchViewMode.grid
-        ? _GridCard(item: item, onTap: onTap)
-        : _ListCard(item: item, onTap: onTap);
+    return RepaintBoundary(
+      child: viewMode == NasaSearchViewMode.grid
+          ? _GridCard(item: item, onTap: onTap)
+          : _ListCard(item: item, onTap: onTap),
+    );
   }
 }
 
@@ -412,7 +416,8 @@ class _MetadataPill extends StatelessWidget {
 
 String _buildSubtitle(NasaMediaItem item) {
   final pieces = <String>[
-    if (item.dateCreated != null) DateFormat.yMMMd().format(item.dateCreated!),
+    if (item.dateCreated != null)
+      _nasaMediaDateFormatter.format(item.dateCreated!),
     if ((item.photographer ?? '').isNotEmpty) item.photographer!,
   ];
 
