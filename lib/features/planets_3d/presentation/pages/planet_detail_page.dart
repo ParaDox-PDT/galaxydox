@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -168,7 +169,9 @@ class _PlanetDetailContentState extends ConsumerState<_PlanetDetailContent> {
         _resolvedModel = resolvedModel;
         _downloadProgress = 1;
         _isPreparingModel = false;
-        _isModelViewerLoading = true;
+        // On web, JavascriptChannel is unavailable so the load event never
+        // arrives — skip the overlay entirely since download already tracked.
+        _isModelViewerLoading = !kIsWeb;
       });
     } catch (error) {
       if (!mounted) {
@@ -426,8 +429,9 @@ class _PlanetDetailContentState extends ConsumerState<_PlanetDetailContent> {
                         display: none;
                       }
                     ''',
-                    relatedJs: _buildModelViewerBridgeScript(),
-                    javascriptChannels: _buildModelViewerChannels(),
+                    relatedJs: kIsWeb ? '' : _buildModelViewerBridgeScript(),
+                    javascriptChannels:
+                        kIsWeb ? {} : _buildModelViewerChannels(),
                     debugLogging: false,
                   ),
                   if (_isModelViewerLoading)
