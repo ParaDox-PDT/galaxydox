@@ -31,7 +31,7 @@ class PlanetDetailPage extends ConsumerWidget {
       loading: () => const _DetailShell(
         child: _CenteredStatus(
           title: 'Loading planet',
-          message: 'Fetching this planet from Firebase...',
+          message: 'Getting this planet ready for you...',
           icon: Icons.cloud_download_rounded,
         ),
       ),
@@ -88,7 +88,7 @@ class PlanetDetailPage extends ConsumerWidget {
       return error.message;
     }
 
-    return 'Planet details could not be loaded from Firebase.';
+    return 'Planet details could not be loaded right now.';
   }
 }
 
@@ -216,6 +216,22 @@ class _PlanetDetailContentState extends ConsumerState<_PlanetDetailContent> {
             title: Text(planet.title),
             centerTitle: false,
             pinned: true,
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Center(
+                  child: IconButton(
+                    onPressed: () => _showStorageInfoSheet(context),
+                    tooltip: 'How model loading works',
+                    icon: const Icon(Icons.info_outline_rounded),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.black.withValues(alpha: 0.22),
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
             flexibleSpace: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -246,8 +262,6 @@ class _PlanetDetailContentState extends ConsumerState<_PlanetDetailContent> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildModelViewer(context),
-                      const SizedBox(height: 18),
-                      _buildStorageInfo(theme, planet),
                       const SizedBox(height: 24),
                       _buildInfoSection(context, theme, planet),
                     ],
@@ -382,10 +396,10 @@ class _PlanetDetailContentState extends ConsumerState<_PlanetDetailContent> {
               _ModelLoadingState(
                 accentColor: planet.accentColor,
                 title: _isPreparingModel
-                    ? 'Downloading model from Firebase...'
-                    : 'Preparing 3D model...',
+                    ? 'Getting the 3D model ready...'
+                    : 'Preparing the 3D view...',
                 subtitle:
-                    'The first open stores the `.glb` file in device storage. Later opens use the saved file.',
+                    'We are saving this model on your device so it can open faster next time.',
                 progress: _downloadProgress,
               )
             else
@@ -496,49 +510,175 @@ class _PlanetDetailContentState extends ConsumerState<_PlanetDetailContent> {
     ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.04, end: 0);
   }
 
-  Widget _buildStorageInfo(ThemeData theme, PlanetEntity planet) {
-    return FrostedPanel(
-      padding: const EdgeInsets.all(18),
-      borderColor: planet.accentColor.withValues(alpha: 0.18),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: planet.accentColor.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: planet.accentColor.withValues(alpha: 0.22),
-              ),
-            ),
-            child: Icon(Icons.sd_storage_rounded, color: planet.accentColor),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
+  Future<void> _showStorageInfoSheet(BuildContext context) {
+    final theme = Theme.of(context);
+    final planet = widget.planet;
+
+    return showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      backgroundColor: AppColors.backgroundDeep.withValues(alpha: 0.98),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (context) {
+        final normalizedProgress = _downloadProgress?.clamp(0.0, 1.0);
+
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Model storage', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 4),
-                Text(
-                  _storageDescription,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                    height: 1.5,
+                Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: planet.accentColor.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: planet.accentColor.withValues(alpha: 0.22),
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.info_outline_rounded,
+                        color: planet.accentColor,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'How model loading works',
+                            style: theme.textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'This helps explain where the 3D model is opening from right now.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: AppColors.textSecondary,
+                              height: 1.45,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                FrostedPanel(
+                  padding: const EdgeInsets.all(18),
+                  borderColor: planet.accentColor.withValues(alpha: 0.18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _StatusChip(
+                        label: _storageLabel,
+                        accentColor: planet.accentColor,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        _storageDescription,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: AppColors.textSecondary,
+                          height: 1.55,
+                        ),
+                      ),
+                      if (normalizedProgress != null) ...[
+                        const SizedBox(height: 16),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(999),
+                          child: LinearProgressIndicator(
+                            value: normalizedProgress,
+                            minHeight: 8,
+                            color: planet.accentColor,
+                            backgroundColor: planet.accentColor.withValues(
+                              alpha: 0.14,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${(normalizedProgress * 100).round()}% ready',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: planet.accentColor,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                FrostedPanel(
+                  padding: const EdgeInsets.all(18),
+                  borderColor: planet.accentColor.withValues(alpha: 0.14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'What happens behind the scenes',
+                        style: theme.textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 14),
+                      _InfoStep(
+                        icon: Icons.download_rounded,
+                        title: 'First open',
+                        description:
+                            'We download the model once and save it on your device.',
+                      ),
+                      const SizedBox(height: 12),
+                      _InfoStep(
+                        icon: Icons.offline_bolt_rounded,
+                        title: 'Next opens',
+                        description:
+                            'If the saved copy is available, the model opens faster without downloading again.',
+                      ),
+                      const SizedBox(height: 12),
+                      _InfoStep(
+                        icon: Icons.wifi_tethering_rounded,
+                        title: 'If saving is not available',
+                        description:
+                            'On some devices or platforms, the model may open directly from the internet instead.',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  child: Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    runSpacing: 12,
+                    spacing: 12,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close_rounded),
+                        label: const Text('Close'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          _prepareModel();
+                        },
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('Reload model'),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-          if (_resolvedModel != null)
-            OutlinedButton.icon(
-              onPressed: _prepareModel,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Reload'),
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -638,38 +778,38 @@ class _PlanetDetailContentState extends ConsumerState<_PlanetDetailContent> {
 
   String get _storageLabel {
     if (_resolvedModel == null) {
-      return _isPreparingModel ? 'Preparing cache' : 'Waiting';
+      return _isPreparingModel ? 'Downloading now' : 'Getting ready';
     }
 
     if (!_resolvedModel!.isStoredLocally) {
-      return 'Remote stream';
+      return 'Opening online';
     }
 
     return _resolvedModel!.wasLoadedFromCache
-        ? 'Loaded from device'
-        : 'Saved on device';
+        ? 'Opened from device'
+        : 'Saved for next time';
   }
 
   String get _storageDescription {
     if (_modelError != null) {
-      return 'Model preparation failed. Tap reload to try downloading and caching the file again.';
+      return 'We could not get the 3D model ready. Please try loading it again.';
     }
 
     if (_resolvedModel == null) {
       return _isPreparingModel
-          ? 'Downloading the Firebase model and storing it inside app storage.'
-          : 'Preparing local storage for this model.';
+          ? 'This 3D model is being downloaded and saved on your device.'
+          : 'We are getting everything ready so the 3D view can open smoothly.';
     }
 
     if (!_resolvedModel!.isStoredLocally) {
-      return 'This platform is using the remote model URL directly.';
+      return 'This model is opening directly from the internet on this device.';
     }
 
     if (_resolvedModel!.wasLoadedFromCache) {
-      return 'This 3D model opened from device storage, so it does not need a fresh download now.';
+      return 'This 3D model opened from your device, so no new download was needed.';
     }
 
-    return 'This 3D model was downloaded from Firebase and saved to device storage for future opens.';
+    return 'This 3D model was downloaded and saved on your device, so the next open should be faster.';
   }
 }
 
@@ -735,6 +875,31 @@ class _StorageBadge extends StatelessWidget {
             ).textTheme.labelMedium?.copyWith(color: Colors.white),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.label, required this.accentColor});
+
+  final String label;
+  final Color accentColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      decoration: BoxDecoration(
+        color: accentColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: accentColor.withValues(alpha: 0.22)),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(
+          context,
+        ).textTheme.labelLarge?.copyWith(color: accentColor),
       ),
     );
   }
@@ -895,13 +1060,60 @@ class _ModelViewerProgressOverlay extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Rendering 3D model...',
+            'Almost there...',
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _InfoStep extends StatelessWidget {
+  const _InfoStep({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
+
+  final IconData icon;
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, size: 18, color: AppColors.textSecondary),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                  height: 1.45,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
