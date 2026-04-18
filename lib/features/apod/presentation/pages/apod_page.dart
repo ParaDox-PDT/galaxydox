@@ -309,28 +309,28 @@ class _ApodContent extends StatelessWidget {
             );
           },
         ),
-        const SizedBox(height: AppConstants.stackGap),
-        SectionHeading(
-          eyebrow: 'Context',
-          title: 'Why this APOD matters',
-          subtitle:
-              'The explanation is the editorial core of APOD. It turns a single daily entry into something educational, reflective, and worth revisiting.',
-        ),
-        const SizedBox(height: 18),
-        FrostedPanel(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Reader notes', style: theme.textTheme.titleLarge),
-              const SizedBox(height: 12),
-              Text(
-                'APOD is strongest when it balances wonder with context. GalaxyDox keeps the narrative front and center while still surfacing the media format, date, and attribution details that matter.',
-                style: theme.textTheme.bodyLarge,
-              ),
-            ],
-          ),
-        ),
+        // const SizedBox(height: AppConstants.stackGap),
+        // SectionHeading(
+        //   eyebrow: 'Context',
+        //   title: 'Why this APOD matters',
+        //   subtitle:
+        //       'The explanation is the editorial core of APOD. It turns a single daily entry into something educational, reflective, and worth revisiting.',
+        // ),
+        // const SizedBox(height: 18),
+        // FrostedPanel(
+        //   padding: const EdgeInsets.all(24),
+        //   child: Column(
+        //     crossAxisAlignment: CrossAxisAlignment.start,
+        //     children: [
+        //       Text('Reader notes', style: theme.textTheme.titleLarge),
+        //       const SizedBox(height: 12),
+        //       Text(
+        //         'APOD is strongest when it balances wonder with context. GalaxyDox keeps the narrative front and center while still surfacing the media format, date, and attribution details that matter.',
+        //         style: theme.textTheme.bodyLarge,
+        //       ),
+        //     ],
+        //   ),
+        // ),
       ],
     );
   }

@@ -33,7 +33,7 @@ class ApodController extends Notifier<ApodState> {
     return const ApodState.loading();
   }
 
-  Future<void> load({DateTime? forDate}) async {
+  Future<void> load({DateTime? forDate, bool forceRefresh = false}) async {
     if (!ref.mounted) {
       return;
     }
@@ -47,7 +47,10 @@ class ApodController extends Notifier<ApodState> {
       clearError: true,
     );
 
-    final result = await _getApodUseCase(date: effectiveDate);
+    final result = await _getApodUseCase(
+      date: effectiveDate,
+      forceRefresh: forceRefresh,
+    );
     if (!ref.mounted || requestVersion != _requestVersion) {
       return;
     }
@@ -70,7 +73,8 @@ class ApodController extends Notifier<ApodState> {
     );
   }
 
-  Future<void> refresh() => load(forDate: state.selectedDate);
+  Future<void> refresh() =>
+      load(forDate: state.selectedDate, forceRefresh: true);
 
   Future<void> selectDate(DateTime? date) => load(forDate: date);
 }

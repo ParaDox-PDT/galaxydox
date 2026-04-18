@@ -34,6 +34,19 @@ class ApodModel {
   final String? thumbnailUrl;
   final String? copyright;
 
+  Map<String, dynamic> toJson() {
+    return {
+      'date': date.toIso8601String().split('T').first,
+      'title': title,
+      'explanation': explanation,
+      'media_type': mediaType,
+      'url': url,
+      'hdurl': hdUrl,
+      'thumbnail_url': thumbnailUrl,
+      'copyright': copyright,
+    };
+  }
+
   ApodItem toEntity() {
     return ApodItem(
       date: date,
