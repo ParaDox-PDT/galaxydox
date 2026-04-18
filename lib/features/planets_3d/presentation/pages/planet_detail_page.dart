@@ -8,6 +8,7 @@ import 'package:model_viewer_plus/model_viewer_plus.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/navigation/swipe_back_route.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
@@ -489,7 +490,7 @@ class _PlanetDetailContentState extends ConsumerState<_PlanetDetailContent> {
                 child: IconButton(
                   onPressed: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(
+                      SwipeBackPageRoute<void>(
                         builder: (context) => _FullScreenModelPage(
                           planet: planet,
                           modelUrl: _resolvedModel!.viewerSrc,

@@ -15,7 +15,6 @@ import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/metadata_row.dart';
 import '../../../../shared/widgets/page_header.dart';
 import '../../../../shared/widgets/premium_refresh_indicator.dart';
-import '../../../../shared/widgets/section_heading.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
 import '../../../../shared/widgets/state_panel.dart';
 import '../../domain/entities/apod_item.dart';

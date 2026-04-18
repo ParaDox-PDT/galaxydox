@@ -8,6 +8,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/trusted_external_url.dart';
 import '../../../../shared/bookmarks/bookmark_mapper.dart';
+import '../../../../shared/navigation/swipe_back_route.dart';
 import '../../../../shared/widgets/app_chip.dart';
 import '../../../../shared/widgets/bookmark_button.dart';
 import '../../../../shared/widgets/content_sliver_padding.dart';
@@ -432,7 +433,7 @@ class _NeoCard extends StatelessWidget {
           onTap: () {
             HapticFeedback.selectionClick();
             Navigator.of(context).push(
-              MaterialPageRoute<void>(
+              SwipeBackPageRoute<void>(
                 builder: (context) => NeoDetailPage(object: object),
               ),
             );

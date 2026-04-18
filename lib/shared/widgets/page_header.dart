@@ -55,31 +55,15 @@ class PageHeader extends StatelessWidget {
         final trailing = Wrap(spacing: 12, runSpacing: 12, children: actions);
 
         if (compact) {
-          final hasTopBar = backButton != null || actions.isNotEmpty;
-
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (hasTopBar) ...[
-                Row(
-                  children: [
-                    if (backButton != null) ...[backButton],
-                    if (backButton != null && actions.isNotEmpty)
-                      const SizedBox(width: 12),
-                    if (actions.isNotEmpty) ...[
-                      const Spacer(),
-                      Flexible(
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: trailing,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+              if (backButton != null) ...[
+                backButton,
                 const SizedBox(height: 16),
               ],
               info,
+              if (actions.isNotEmpty) ...[const SizedBox(height: 18), trailing],
             ],
           );
         }

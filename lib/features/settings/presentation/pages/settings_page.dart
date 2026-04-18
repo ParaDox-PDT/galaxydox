@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../shared/navigation/swipe_back_route.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
 import 'privacy_notice_page.dart';
@@ -52,7 +53,7 @@ class SettingsPage extends StatelessWidget {
                           FilledButton.icon(
                             onPressed: () {
                               Navigator.of(context).push(
-                                MaterialPageRoute<void>(
+                                SwipeBackPageRoute<void>(
                                   builder: (context) =>
                                       const PrivacyNoticePage(),
                                 ),

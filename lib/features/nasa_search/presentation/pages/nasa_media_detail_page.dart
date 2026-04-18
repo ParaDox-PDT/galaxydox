@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/trusted_external_url.dart';
 import '../../../../shared/widgets/app_chip.dart';
 import '../../../../shared/bookmarks/bookmark_mapper.dart';
+import '../../../../shared/navigation/swipe_back_route.dart';
 import '../../../../shared/widgets/bookmark_button.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
@@ -125,7 +126,7 @@ class _MediaPreview extends ConsumerWidget {
       onTap: () {
         HapticFeedback.selectionClick();
         Navigator.of(context).push(
-          MaterialPageRoute<void>(
+          SwipeBackPageRoute<void>(
             builder: (context) => ApodFullscreenViewer(
               imageUrl: item.previewUrl,
               heroTag: heroTag,
@@ -228,7 +229,7 @@ class _VideoPreview extends ConsumerWidget {
   void _openLargePlayer(BuildContext context, {required String playbackUrl}) {
     HapticFeedback.selectionClick();
     Navigator.of(context).push(
-      MaterialPageRoute<void>(
+      SwipeBackPageRoute<void>(
         builder: (context) => NasaVideoPlayerPage(
           title: item.title,
           subtitle: item.description,

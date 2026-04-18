@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_gradients.dart';
 import '../../../../core/utils/trusted_external_url.dart';
+import '../../../../shared/navigation/swipe_back_route.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
 import '../../domain/entities/apod_item.dart';
@@ -39,7 +40,7 @@ class _ApodImagePreview extends StatelessWidget {
       onTap: () {
         HapticFeedback.selectionClick();
         Navigator.of(context).push(
-          MaterialPageRoute<void>(
+          SwipeBackPageRoute<void>(
             builder: (context) => ApodFullscreenViewer(
               imageUrl: imageUrl,
               heroTag: heroTag,

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/navigation/swipe_back_route.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
 import '../../domain/entities/epic_image.dart';
 import '../pages/epic_earth_detail_page.dart';
@@ -40,7 +41,7 @@ class EpicImageCard extends StatelessWidget {
             onTap: () {
               HapticFeedback.selectionClick();
               Navigator.of(context).push(
-                MaterialPageRoute<void>(
+                SwipeBackPageRoute<void>(
                   builder: (context) =>
                       EpicEarthDetailPage(image: image, heroTag: heroTag),
                 ),

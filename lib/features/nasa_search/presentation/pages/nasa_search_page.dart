@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/navigation/swipe_back_route.dart';
 import '../../../../shared/widgets/content_sliver_padding.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/page_header.dart';
@@ -61,7 +62,9 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
           child: CustomScrollView(
             controller: _scrollController,
             cacheExtent: 1400,
-            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
             slivers: [
               ContentSliverPadding(
                 top: 12,
@@ -72,7 +75,8 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
                     searchController: _searchController,
                     onChanged: _onSearchChanged,
                     onSubmit: () => _submitSearch(controller),
-                    onExampleSelected: (query) => _selectExampleQuery(controller, query),
+                    onExampleSelected: (query) =>
+                        _selectExampleQuery(controller, query),
                     onClear: () => _clearSearch(controller),
                     onFilterChanged: _handleFilterChanged,
                   ).animate().fadeIn(duration: AppConstants.motionMedium),
@@ -143,9 +147,11 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
                     ),
                   ),
                 ),
-              if (state.status == NasaSearchStatus.success && state.results.isNotEmpty)
+              if (state.status == NasaSearchStatus.success &&
+                  state.results.isNotEmpty)
                 ..._buildResultSlivers(state),
-              if (state.status != NasaSearchStatus.success || state.results.isEmpty)
+              if (state.status != NasaSearchStatus.success ||
+                  state.results.isEmpty)
                 const SliverToBoxAdapter(child: SizedBox(height: 42)),
             ],
           ),
@@ -205,7 +211,10 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
     await controller.search(query: '');
   }
 
-  Future<void> _selectExampleQuery(NasaSearchController controller, String query) async {
+  Future<void> _selectExampleQuery(
+    NasaSearchController controller,
+    String query,
+  ) async {
     _debounce?.cancel();
     HapticFeedback.selectionClick();
     _searchController
@@ -216,13 +225,17 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
 
   Future<void> _handleFilterChanged(NasaSearchMediaFilter filter) async {
     HapticFeedback.selectionClick();
-    await ref.read(nasaSearchControllerProvider.notifier).setMediaTypeFilter(filter);
+    await ref
+        .read(nasaSearchControllerProvider.notifier)
+        .setMediaTypeFilter(filter);
   }
 
   void _openDetail(BuildContext context, NasaMediaItem item) {
     HapticFeedback.selectionClick();
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (context) => NasaMediaDetailPage(item: item)),
+      SwipeBackPageRoute<void>(
+        builder: (context) => NasaMediaDetailPage(item: item),
+      ),
     );
   }
 
@@ -364,7 +377,8 @@ class _TopBar extends StatelessWidget {
       children: [
         PageHeader(
           title: 'NASA Media Search',
-          subtitle: 'Search across NASA imagery with a cinematic discovery surface.',
+          subtitle:
+              'Search across NASA imagery with a cinematic discovery surface.',
           actions: [
             IconButton(
               onPressed: onInfoPressed,
@@ -403,7 +417,8 @@ class _TopBar extends StatelessWidget {
                                 onSubmitted: (_) => onSubmit(),
                                 textInputAction: TextInputAction.search,
                                 decoration: InputDecoration(
-                                  hintText: 'Search nebulae, Apollo, Hubble, Artemis...',
+                                  hintText:
+                                      'Search nebulae, Apollo, Hubble, Artemis...',
                                   prefixIcon: const Icon(Icons.search_rounded),
                                   suffixIcon: hasText
                                       ? IconButton(
@@ -498,7 +513,11 @@ class _TopBar extends StatelessWidget {
 }
 
 class _SegmentItem<T> {
-  const _SegmentItem({required this.value, required this.label, required this.icon});
+  const _SegmentItem({
+    required this.value,
+    required this.label,
+    required this.icon,
+  });
 
   final T value;
   final String label;
@@ -535,7 +554,8 @@ class _EqualSegmentedControl<T> extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final segmentWidth =
-              (constraints.maxWidth - ((items.length - 1) * gap)) / items.length;
+              (constraints.maxWidth - ((items.length - 1) * gap)) /
+              items.length;
           final thumbLeft =
               (selectedIndex < 0 ? 0 : selectedIndex) * (segmentWidth + gap);
 
@@ -551,8 +571,12 @@ class _EqualSegmentedControl<T> extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: AppColors.primaryStrong.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.radiusSmall,
+                    ),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.18),
+                    ),
                   ),
                 ),
               ),
@@ -607,13 +631,17 @@ class _SegmentButton<T> extends StatelessWidget {
               Icon(
                 item.icon,
                 size: 18,
-                color: selected ? AppColors.textPrimary : AppColors.textSecondary,
+                color: selected
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
               ),
               const SizedBox(width: 8),
               Text(
                 item.label,
                 style: textStyle?.copyWith(
-                  color: selected ? AppColors.textPrimary : AppColors.textSecondary,
+                  color: selected
+                      ? AppColors.textPrimary
+                      : AppColors.textSecondary,
                 ),
               ),
             ],
@@ -638,7 +666,10 @@ class _IntroPanel extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Find the right NASA media faster', style: theme.textTheme.titleLarge),
+              Text(
+                'Find the right NASA media faster',
+                style: theme.textTheme.titleLarge,
+              ),
               const SizedBox(height: 10),
               Text(
                 'Search by mission, planet, telescope, astronaut, or keyword, then open the most relevant images and videos in the view that feels easiest to scan.',
