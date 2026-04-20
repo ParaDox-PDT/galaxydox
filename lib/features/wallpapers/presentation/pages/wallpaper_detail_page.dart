@@ -240,35 +240,38 @@ class _WallpaperDetailPageState extends State<WallpaperDetailPage> {
           const SizedBox(width: 8),
         ],
       ),
-      body: PhotoView(
-        controller: _photoController,
-        scaleStateController: _scaleStateController,
-        imageProvider: CachedNetworkImageProvider(widget.wallpaper.imageUrl),
-        minScale: PhotoViewComputedScale.contained,
-        maxScale: PhotoViewComputedScale.covered * 4,
-        initialScale: PhotoViewComputedScale.contained,
-        enablePanAlways: true,
-        strictScale: true,
-        backgroundDecoration: const BoxDecoration(color: Colors.black),
-        scaleStateCycle: _scaleStateCycle,
-        onScaleEnd: _handleScaleEnd,
-        loadingBuilder: (context, event) {
-          return const Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 2.6,
-              color: AppColors.textPrimary,
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(
-            child: Icon(
-              Icons.broken_image_outlined,
-              size: 34,
-              color: AppColors.textMuted,
-            ),
-          );
-        },
+      body: Hero(
+        tag: 'wallpaper-hero-${widget.wallpaper.id}',
+        child: PhotoView(
+          controller: _photoController,
+          scaleStateController: _scaleStateController,
+          imageProvider: CachedNetworkImageProvider(widget.wallpaper.imageUrl),
+          minScale: PhotoViewComputedScale.contained,
+          maxScale: PhotoViewComputedScale.covered * 4,
+          initialScale: PhotoViewComputedScale.contained,
+          enablePanAlways: true,
+          strictScale: true,
+          backgroundDecoration: const BoxDecoration(color: Colors.black),
+          scaleStateCycle: _scaleStateCycle,
+          onScaleEnd: _handleScaleEnd,
+          loadingBuilder: (context, event) {
+            return const Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2.6,
+                color: AppColors.textPrimary,
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return const Center(
+              child: Icon(
+                Icons.broken_image_outlined,
+                size: 34,
+                color: AppColors.textMuted,
+              ),
+            );
+          },
+        ),
       ),
     );
   }

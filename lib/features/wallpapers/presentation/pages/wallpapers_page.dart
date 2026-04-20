@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,120 +18,141 @@ import '../../../../shared/widgets/state_panel.dart';
 import '../../domain/wallpaper_entity.dart';
 import '../providers/wallpapers_provider.dart';
 
-class WallpapersPage extends ConsumerWidget {
+class WallpapersPage extends ConsumerStatefulWidget {
   const WallpapersPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WallpapersPage> createState() => _WallpapersPageState();
+}
+
+class _WallpapersPageState extends ConsumerState<WallpapersPage> {
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final wallpapersAsync = ref.watch(wallpapersProvider);
 
     return SpaceScaffold(
-      body: PremiumRefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(wallpapersProvider);
-          await ref.read(wallpapersProvider.future);
-        },
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
-          slivers: [
-            SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: AppConstants.contentMaxWidth,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppConstants.pagePadding,
-                      12,
-                      AppConstants.pagePadding,
-                      16,
-                    ),
-                    child: PageHeader(
-                      title: 'Wallpapers',
-                      subtitle:
-                          'Curated space imagery from our collection. Download to your device or share with friends.',
-                      actions: [
-                        FilledButton.icon(
-                          onPressed: () => ref.invalidate(wallpapersProvider),
-                          icon: const Icon(Icons.refresh_rounded),
-                          label: const Text('Refresh'),
-                        ),
-                      ],
-                    ).animate().fadeIn(duration: 400.ms),
-                  ),
-                ),
-              ),
+      body: Scrollbar(
+        controller: _scrollController,
+        thumbVisibility: true,
+        child: PremiumRefreshIndicator(
+          onRefresh: () =>
+              ref.read(wallpapersProvider.notifier).forceRefresh(),
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
             ),
-            wallpapersAsync.when(
-              loading: () => const _WallpapersLoadingGrid(),
-              error: (error, _) => SliverToBoxAdapter(
+            slivers: [
+              SliverToBoxAdapter(
                 child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(
                       maxWidth: AppConstants.contentMaxWidth,
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppConstants.pagePadding,
+                      padding: const EdgeInsets.fromLTRB(
+                        AppConstants.pagePadding,
+                        12,
+                        AppConstants.pagePadding,
+                        16,
                       ),
-                      child: StatePanel(
-                        title: 'Unable to load wallpapers',
-                        message: _resolveErrorMessage(error),
-                        icon: Icons.cloud_off_rounded,
-                        accent: AppColors.warning,
+                      child: PageHeader(
+                        title: 'Wallpapers',
+                        subtitle:
+                            'Curated space imagery from our collection. Download to your device or share with friends.',
                         actions: [
-                          StatePanelAction(
-                            label: 'Try again',
-                            icon: Icons.refresh_rounded,
-                            onPressed: () => ref.invalidate(wallpapersProvider),
+                          FilledButton.icon(
+                            onPressed: () => ref
+                                .read(wallpapersProvider.notifier)
+                                .forceRefresh(),
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('Refresh'),
                           ),
                         ],
-                      ),
+                      ).animate().fadeIn(duration: 400.ms),
                     ),
                   ),
                 ),
               ),
-              data: (wallpapers) {
-                if (wallpapers.isEmpty) {
-                  return SliverToBoxAdapter(
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth: AppConstants.contentMaxWidth,
+              wallpapersAsync.when(
+                loading: () => const _WallpapersLoadingGrid(),
+                error: (error, _) => SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: AppConstants.contentMaxWidth,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppConstants.pagePadding,
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppConstants.pagePadding,
-                          ),
-                          child: StatePanel(
-                            title: 'No wallpapers yet',
-                            message:
-                                'The wallpapers collection is empty right now. Check back soon.',
-                            icon: Icons.image_not_supported_rounded,
-                            accent: AppColors.secondary,
-                            actions: [
-                              StatePanelAction(
-                                label: 'Refresh',
-                                icon: Icons.refresh_rounded,
-                                onPressed: () =>
-                                    ref.invalidate(wallpapersProvider),
-                              ),
-                            ],
-                          ),
+                        child: StatePanel(
+                          title: 'Unable to load wallpapers',
+                          message: _resolveErrorMessage(error),
+                          icon: Icons.cloud_off_rounded,
+                          accent: AppColors.warning,
+                          actions: [
+                            StatePanelAction(
+                              label: 'Try again',
+                              icon: Icons.refresh_rounded,
+                              onPressed: () => ref
+                                  .read(wallpapersProvider.notifier)
+                                  .forceRefresh(),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  );
-                }
+                  ),
+                ),
+                data: (wallpapers) {
+                  if (wallpapers.isEmpty) {
+                    return SliverToBoxAdapter(
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: AppConstants.contentMaxWidth,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppConstants.pagePadding,
+                            ),
+                            child: StatePanel(
+                              title: 'No wallpapers yet',
+                              message:
+                                  'The wallpapers collection is empty right now. Check back soon.',
+                              icon: Icons.image_not_supported_rounded,
+                              accent: AppColors.secondary,
+                              actions: [
+                                StatePanelAction(
+                                  label: 'Refresh',
+                                  icon: Icons.refresh_rounded,
+                                  onPressed: () => ref
+                                      .read(wallpapersProvider.notifier)
+                                      .forceRefresh(),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
 
-                return _WallpaperGrid(wallpapers: wallpapers);
-              },
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
-          ],
+                  return _WallpaperGrid(wallpapers: wallpapers);
+                },
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            ],
+          ),
         ),
       ),
     );
@@ -152,7 +174,11 @@ class _WallpaperGrid extends StatelessWidget {
     return _WallpapersGridSliver(
       itemCount: wallpapers.length,
       itemBuilder: (context, index) {
-        return _WallpaperGridItem(wallpaper: wallpapers[index])
+        final item = _WallpaperGridItem(wallpaper: wallpapers[index]);
+        // Only stagger-animate the first 12 items to avoid creating hundreds
+        // of simultaneous animation controllers on long lists.
+        if (index >= 12) return item;
+        return item
             .animate()
             .fadeIn(
               delay: Duration(milliseconds: 60 * index),
@@ -266,9 +292,20 @@ class _WallpaperGridItem extends StatelessWidget {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      PremiumNetworkImage(
-                        imageUrl: wallpaper.imageUrl,
-                        fit: BoxFit.cover,
+                      Hero(
+                        tag: 'wallpaper-hero-${wallpaper.id}',
+                        flightShuttleBuilder: (_, _, _, _, _) =>
+                            ColoredBox(
+                              color: Colors.black,
+                              child: CachedNetworkImage(
+                                imageUrl: wallpaper.imageUrl,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                        child: PremiumNetworkImage(
+                          imageUrl: wallpaper.imageUrl,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                       Positioned.fill(
                         child: DecoratedBox(

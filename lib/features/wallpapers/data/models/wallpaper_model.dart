@@ -30,6 +30,26 @@ class WallpaperModel {
     );
   }
 
+  factory WallpaperModel.fromMap(Map<dynamic, dynamic> map) {
+    return WallpaperModel(
+      id: map['id'] as String? ?? '',
+      title: map['title'] as String? ?? '',
+      description: map['description'] as String? ?? '',
+      imageUrl: map['image_url'] as String? ?? '',
+      createdAt: map['created_at'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int)
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toMap() => {
+    'id': id,
+    'title': title,
+    'description': description,
+    'image_url': imageUrl,
+    'created_at': createdAt?.millisecondsSinceEpoch,
+  };
+
   WallpaperEntity toEntity() => WallpaperEntity(
     id: id,
     title: title,
