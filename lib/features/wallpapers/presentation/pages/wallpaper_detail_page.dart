@@ -8,7 +8,6 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
 import '../../domain/wallpaper_entity.dart';
@@ -101,7 +100,7 @@ class _WallpaperDetailPageState extends State<WallpaperDetailPage> {
             Expanded(
               child: Text(
                 message,
-                style: TextStyle(color: AppColors.textPrimary),
+                style: const TextStyle(color: AppColors.textPrimary),
               ),
             ),
           ],
@@ -118,132 +117,62 @@ class _WallpaperDetailPageState extends State<WallpaperDetailPage> {
   @override
   Widget build(BuildContext context) {
     final wallpaper = widget.wallpaper;
+    final dateText = wallpaper.createdAt != null
+        ? DateFormat.yMMMMd().format(wallpaper.createdAt!)
+        : null;
 
     return SpaceScaffold(
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 460,
-            pinned: true,
-            stretch: true,
-            backgroundColor: AppColors.background,
-            surfaceTintColor: Colors.transparent,
-            leading: Padding(
-              padding: const EdgeInsets.all(6),
-              child: _BackButton(),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              stretchModes: const [StretchMode.zoomBackground],
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  PremiumNetworkImage(
-                    imageUrl: wallpaper.imageUrl,
-                    fit: BoxFit.cover,
-                  ),
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            AppColors.shadow.withValues(alpha: 0.35),
-                            Colors.transparent,
-                            Colors.transparent,
-                            AppColors.background.withValues(alpha: 0.6),
-                            AppColors.background,
-                          ],
-                          stops: const [0, 0.12, 0.6, 0.85, 1],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          InteractiveViewer(
+            minScale: 1,
+            maxScale: 4.5,
+            panEnabled: true,
+            clipBehavior: Clip.none,
+            child: SizedBox.expand(
+              child: PremiumNetworkImage(
+                imageUrl: wallpaper.imageUrl,
+                fit: BoxFit.cover,
               ),
             ),
           ),
-          SliverToBoxAdapter(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: AppConstants.contentMaxWidth,
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    AppColors.shadow.withValues(alpha: 0.42),
+                    Colors.transparent,
+                    Colors.transparent,
+                    AppColors.shadow.withValues(alpha: 0.28),
+                    AppColors.background.withValues(alpha: 0.82),
+                  ],
+                  stops: const [0, 0.12, 0.56, 0.76, 1],
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppConstants.pagePadding,
-                    4,
-                    AppConstants.pagePadding,
-                    40,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (wallpaper.createdAt != null) ...[
-                        Text(
-                          DateFormat.yMMMMd().format(wallpaper.createdAt!),
-                          style:
-                              Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: AppColors.secondary,
-                                letterSpacing: 0.8,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                        const SizedBox(height: 6),
-                      ],
-                      Text(
-                        wallpaper.title,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w700,
-                              height: 1.25,
-                            ),
-                      )
-                          .animate()
-                          .fadeIn(duration: AppConstants.motionMedium)
-                          .slideY(begin: 0.05, end: 0),
-                      if (wallpaper.description.isNotEmpty) ...[
-                        const SizedBox(height: 20),
-                        FrostedPanel(
-                          padding: const EdgeInsets.all(18),
-                          child: Text(
-                            wallpaper.description,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(
-                                  color: AppColors.textSecondary,
-                                  height: 1.65,
-                                ),
-                          ),
-                        )
-                            .animate()
-                            .fadeIn(
-                              delay: 80.ms,
-                              duration: AppConstants.motionMedium,
-                            )
-                            .slideY(begin: 0.05, end: 0),
-                      ],
-                      const SizedBox(height: 28),
-                      _ActionRow(
-                        isDownloading: _isDownloading,
-                        downloadProgress: _downloadProgress,
-                        onDownload: _downloadWallpaper,
-                        onShare: _shareWallpaper,
-                      )
-                          .animate()
-                          .fadeIn(
-                            delay: 140.ms,
-                            duration: AppConstants.motionMedium,
-                          )
-                          .slideY(begin: 0.05, end: 0),
-                    ],
-                  ),
-                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 18),
+              child: Column(
+                children: [
+                  _TopActionBar(
+                    isDownloading: _isDownloading,
+                    downloadProgress: _downloadProgress,
+                    onBack: () => Navigator.of(context).maybePop(),
+                    onDownload: _downloadWallpaper,
+                    onShare: _shareWallpaper,
+                  ).animate().fadeIn(duration: AppConstants.motionMedium),
+                  const Spacer(),
+                  _BottomMetadata(title: wallpaper.title, dateText: dateText)
+                      .animate()
+                      .fadeIn(delay: 80.ms, duration: AppConstants.motionMedium)
+                      .slideY(begin: 0.06, end: 0),
+                ],
               ),
             ),
           ),
@@ -253,35 +182,18 @@ class _WallpaperDetailPageState extends State<WallpaperDetailPage> {
   }
 }
 
-class _BackButton extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surfaceElevated.withValues(alpha: 0.72),
-      borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
-        onTap: () => Navigator.of(context).maybePop(),
-        child: const Icon(
-          Icons.arrow_back_rounded,
-          color: AppColors.textPrimary,
-          size: 22,
-        ),
-      ),
-    );
-  }
-}
-
-class _ActionRow extends StatelessWidget {
-  const _ActionRow({
+class _TopActionBar extends StatelessWidget {
+  const _TopActionBar({
     required this.isDownloading,
     required this.downloadProgress,
+    required this.onBack,
     required this.onDownload,
     required this.onShare,
   });
 
   final bool isDownloading;
   final double downloadProgress;
+  final VoidCallback onBack;
   final VoidCallback onDownload;
   final VoidCallback onShare;
 
@@ -289,62 +201,123 @@ class _ActionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(
-          child: FilledButton.icon(
-            onPressed: isDownloading ? null : onDownload,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.secondary,
-              foregroundColor: AppColors.backgroundDeep,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
-              ),
-            ),
-            icon: isDownloading
-                ? SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      value: downloadProgress > 0 ? downloadProgress : null,
-                      strokeWidth: 2,
-                      color: AppColors.backgroundDeep,
-                    ),
-                  )
-                : const Icon(Icons.download_rounded, size: 20),
-            label: Text(
-              isDownloading
-                  ? downloadProgress > 0
-                      ? '${(downloadProgress * 100).toInt()}%'
-                      : 'Downloading…'
-                  : 'Download',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-              ),
-            ),
+        _OverlayActionButton(
+          onPressed: onBack,
+          child: const Icon(
+            Icons.arrow_back_rounded,
+            color: AppColors.textPrimary,
+            size: 22,
           ),
         ),
-        const SizedBox(width: 12),
-        OutlinedButton.icon(
+        const Spacer(),
+        _OverlayActionButton(
+          onPressed: isDownloading ? null : onDownload,
+          child: isDownloading
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    value: downloadProgress > 0 ? downloadProgress : null,
+                    strokeWidth: 2.2,
+                    color: AppColors.textPrimary,
+                  ),
+                )
+              : const Icon(
+                  Icons.download_rounded,
+                  color: AppColors.textPrimary,
+                  size: 21,
+                ),
+        ),
+        const SizedBox(width: 10),
+        _OverlayActionButton(
           onPressed: onShare,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.textPrimary,
-            side: const BorderSide(color: AppColors.outline),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 14,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
-            ),
-          ),
-          icon: const Icon(Icons.share_rounded, size: 20),
-          label: const Text(
-            'Share',
-            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          child: const Icon(
+            Icons.share_rounded,
+            color: AppColors.textPrimary,
+            size: 21,
           ),
         ),
       ],
+    );
+  }
+}
+
+class _OverlayActionButton extends StatelessWidget {
+  const _OverlayActionButton({required this.onPressed, required this.child});
+
+  final VoidCallback? onPressed;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surfaceElevated.withValues(alpha: 0.72),
+      borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+        onTap: onPressed,
+        child: SizedBox(width: 44, height: 44, child: Center(child: child)),
+      ),
+    );
+  }
+}
+
+class _BottomMetadata extends StatelessWidget {
+  const _BottomMetadata({required this.title, required this.dateText});
+
+  final String title;
+  final String? dateText;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.bottomLeft,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxWidth: AppConstants.contentMaxWidth,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(
+            left: AppConstants.pagePadding,
+            right: AppConstants.pagePadding,
+            bottom: 10,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (dateText != null) ...[
+                Text(
+                  dateText!,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppColors.secondary,
+                    letterSpacing: 0.8,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+              Text(
+                title,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w800,
+                  height: 1.08,
+                  shadows: [
+                    Shadow(
+                      color: AppColors.shadow.withValues(alpha: 0.55),
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
