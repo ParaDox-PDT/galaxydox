@@ -8,6 +8,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Public read-only access to wallpapers collection
+    match /wallpapers/{wallpaperId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Deny all access to any other collection
     match /{document=**} {
       allow read, write: if false;

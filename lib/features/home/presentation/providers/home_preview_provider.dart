@@ -105,6 +105,21 @@ final homePreviewProvider = Provider<HomePreviewData>((ref) {
           FeatureMetric(label: 'Scope', value: 'Image and video'),
         ],
       ),
+      HomeFeaturePreview(
+        routeName: AppRoutes.wallpapersName,
+        kicker: 'Curated gallery',
+        title: 'Wallpapers',
+        description:
+            'Browse a curated collection of stunning space imagery. Download to your device or share your favourite shots.',
+        imageUrl: AppConstants.wallpapersPreviewImage,
+        accentColor: AppColors.secondary,
+        icon: Icons.wallpaper_rounded,
+        ctaLabel: 'Browse wallpapers',
+        metrics: [
+          FeatureMetric(label: 'Source', value: 'Firebase gallery'),
+          FeatureMetric(label: 'Actions', value: 'Download and share'),
+        ],
+      ),
     ],
   );
 });

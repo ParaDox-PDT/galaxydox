@@ -37,4 +37,10 @@ abstract final class AppRoutes {
 
   static const planetDetailName = 'planet-detail';
   static const planetDetailPath = '/planets-3d/:id';
+
+  static const wallpapersName = 'wallpapers';
+  static const wallpapersPath = '/wallpapers';
+
+  static const wallpaperDetailName = 'wallpaper-detail';
+  static const wallpaperDetailPath = '/wallpapers/:id';
 }

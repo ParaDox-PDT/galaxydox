@@ -13,6 +13,9 @@ import '../../features/nasa_search/presentation/pages/nasa_search_page.dart';
 import '../../features/neo/presentation/pages/neo_page.dart';
 import '../../features/planets_3d/presentation/pages/planet_detail_page.dart';
 import '../../features/planets_3d/presentation/pages/planets_3d_page.dart';
+import '../../features/wallpapers/domain/wallpaper_entity.dart';
+import '../../features/wallpapers/presentation/pages/wallpaper_detail_page.dart';
+import '../../features/wallpapers/presentation/pages/wallpapers_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
@@ -120,6 +123,22 @@ final List<RouteBase> _routes = [
       return _buildPage(
         state: state,
         child: PlanetDetailPage(planetId: id),
+      );
+    },
+  ),
+  _appRoute(
+    path: AppRoutes.wallpapersPath,
+    name: AppRoutes.wallpapersName,
+    child: const WallpapersPage(),
+  ),
+  GoRoute(
+    path: AppRoutes.wallpaperDetailPath,
+    name: AppRoutes.wallpaperDetailName,
+    pageBuilder: (context, state) {
+      final wallpaper = state.extra as WallpaperEntity;
+      return _buildPage(
+        state: state,
+        child: WallpaperDetailPage(wallpaper: wallpaper),
       );
     },
   ),
