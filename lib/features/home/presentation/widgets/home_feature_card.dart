@@ -21,10 +21,10 @@ class HomeFeatureCard extends StatelessWidget {
         final isCompact = width < 420;
         final isMedium = width < 720;
         final imageAspectRatio = isCompact
-            ? 1.16
+            ? 1.6
             : isMedium
-            ? 1.44
-            : 1.72;
+            ? 1.9
+            : 2.2;
         return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
@@ -91,16 +91,16 @@ class HomeFeatureCard extends StatelessWidget {
                               ),
                             ),
                             Positioned(
-                              top: 20,
-                              left: 20,
+                              top: 16,
+                              left: 16,
                               child: Container(
-                                width: 48,
-                                height: 48,
+                                width: 40,
+                                height: 40,
                                 decoration: BoxDecoration(
                                   color: feature.accentColor.withValues(
                                     alpha: 0.18,
                                   ),
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(13),
                                   border: Border.all(
                                     color: feature.accentColor.withValues(
                                       alpha: 0.26,
@@ -110,12 +110,13 @@ class HomeFeatureCard extends StatelessWidget {
                                 child: Icon(
                                   feature.icon,
                                   color: feature.accentColor,
+                                  size: 20,
                                 ),
                               ),
                             ),
                             Positioned(
-                              top: 20,
-                              right: 20,
+                              top: 16,
+                              right: 16,
                               child: ConstrainedBox(
                                 constraints: const BoxConstraints(
                                   maxWidth: 180,
@@ -149,7 +150,7 @@ class HomeFeatureCard extends StatelessWidget {
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.all(20),
+                              padding: const EdgeInsets.all(16),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -187,7 +188,12 @@ class HomeFeatureCard extends StatelessWidget {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+                        padding: EdgeInsets.fromLTRB(
+                          isCompact ? 16 : 18,
+                          isCompact ? 14 : 16,
+                          isCompact ? 16 : 18,
+                          isCompact ? 16 : 18,
+                        ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,15 +203,15 @@ class HomeFeatureCard extends StatelessWidget {
                               maxLines: isCompact ? 2 : 3,
                               overflow: TextOverflow.ellipsis,
                               style: isCompact
-                                  ? theme.textTheme.titleLarge
-                                  : theme.textTheme.headlineSmall,
+                                  ? theme.textTheme.titleMedium
+                                  : theme.textTheme.titleLarge,
                             ),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 8),
                             Text(
                               feature.description,
-                              maxLines: isCompact ? 3 : 4,
+                              maxLines: isCompact ? 2 : 3,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodyMedium?.copyWith(
+                              style: theme.textTheme.bodySmall?.copyWith(
                                 color: AppColors.textPrimary.withValues(
                                   alpha: 0.76,
                                 ),
@@ -218,23 +224,24 @@ class HomeFeatureCard extends StatelessWidget {
                             //   metrics: visibleMetrics,
                             //   isCompact: isCompact,
                             // ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 12),
                             Row(
                               children: [
                                 Expanded(
                                   child: Text(
                                     feature.ctaLabel,
-                                    maxLines: 2,
+                                    maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.labelLarge?.copyWith(
+                                    style: theme.textTheme.labelMedium?.copyWith(
                                       color: feature.accentColor,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 6),
                                 Icon(
                                   Icons.arrow_outward_rounded,
                                   color: feature.accentColor,
+                                  size: 16,
                                 ),
                               ],
                             ),
