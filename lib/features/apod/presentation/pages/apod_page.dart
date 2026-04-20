@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../../core/analytics/analytics_provider.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/trusted_external_url.dart';
@@ -15,7 +16,6 @@ import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/metadata_row.dart';
 import '../../../../shared/widgets/page_header.dart';
 import '../../../../shared/widgets/premium_refresh_indicator.dart';
-import '../../../../shared/widgets/section_heading.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
 import '../../../../shared/widgets/state_panel.dart';
 import '../../domain/entities/apod_item.dart';
@@ -64,7 +64,7 @@ class ApodPage extends ConsumerWidget {
                           actions: [
                             OutlinedButton.icon(
                               onPressed: () =>
-                                  _pickDate(context, controller, state),
+                                  _pickDate(context, ref, controller, state),
                               icon: const Icon(Icons.calendar_month_rounded),
                               label: const Text('Choose date'),
                             ),
@@ -116,7 +116,7 @@ class ApodPage extends ConsumerWidget {
                                 label: 'Choose another date',
                                 icon: Icons.calendar_today_rounded,
                                 onPressed: () =>
-                                    _pickDate(context, controller, state),
+                                    _pickDate(context, ref, controller, state),
                                 emphasis: StatePanelActionEmphasis.secondary,
                               ),
                             ],
@@ -138,6 +138,7 @@ class ApodPage extends ConsumerWidget {
 
   Future<void> _pickDate(
     BuildContext context,
+    WidgetRef ref,
     ApodController controller,
     ApodState state,
   ) async {
@@ -171,6 +172,7 @@ class ApodPage extends ConsumerWidget {
 
     if (picked != null) {
       HapticFeedback.selectionClick();
+      ref.read(analyticsServiceProvider).logApodDateChanged(picked);
       await controller.selectDate(picked);
     }
   }
@@ -309,28 +311,28 @@ class _ApodContent extends StatelessWidget {
             );
           },
         ),
-        const SizedBox(height: AppConstants.stackGap),
-        SectionHeading(
-          eyebrow: 'Context',
-          title: 'Why this APOD matters',
-          subtitle:
-              'The explanation is the editorial core of APOD. It turns a single daily entry into something educational, reflective, and worth revisiting.',
-        ),
-        const SizedBox(height: 18),
-        FrostedPanel(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Reader notes', style: theme.textTheme.titleLarge),
-              const SizedBox(height: 12),
-              Text(
-                'APOD is strongest when it balances wonder with context. GalaxyDox keeps the narrative front and center while still surfacing the media format, date, and attribution details that matter.',
-                style: theme.textTheme.bodyLarge,
-              ),
-            ],
-          ),
-        ),
+        // const SizedBox(height: AppConstants.stackGap),
+        // SectionHeading(
+        //   eyebrow: 'Context',
+        //   title: 'Why this APOD matters',
+        //   subtitle:
+        //       'The explanation is the editorial core of APOD. It turns a single daily entry into something educational, reflective, and worth revisiting.',
+        // ),
+        // const SizedBox(height: 18),
+        // FrostedPanel(
+        //   padding: const EdgeInsets.all(24),
+        //   child: Column(
+        //     crossAxisAlignment: CrossAxisAlignment.start,
+        //     children: [
+        //       Text('Reader notes', style: theme.textTheme.titleLarge),
+        //       const SizedBox(height: 12),
+        //       Text(
+        //         'APOD is strongest when it balances wonder with context. GalaxyDox keeps the narrative front and center while still surfacing the media format, date, and attribution details that matter.',
+        //         style: theme.textTheme.bodyLarge,
+        //       ),
+        //     ],
+        //   ),
+        // ),
       ],
     );
   }
@@ -376,13 +378,13 @@ class _MetaPanel extends StatelessWidget {
   }
 }
 
-class _ActionPanel extends StatelessWidget {
+class _ActionPanel extends ConsumerWidget {
   const _ActionPanel({required this.item});
 
   final ApodItem item;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return FrostedPanel(
       padding: const EdgeInsets.all(22),
       child: Column(
@@ -402,7 +404,7 @@ class _ActionPanel extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () => _shareApod(context),
+                  onPressed: () => _shareApod(context, ref),
                   icon: const Icon(Icons.ios_share_rounded),
                   label: const Text('Share'),
                 ),
@@ -415,7 +417,7 @@ class _ActionPanel extends StatelessWidget {
               children: [
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: () => _openHdImage(context),
+                    onPressed: () => _openHdImage(context, ref),
                     icon: const Icon(Icons.hd_rounded),
                     label: const Text('Open HD'),
                   ),
@@ -428,7 +430,8 @@ class _ActionPanel extends StatelessWidget {
     );
   }
 
-  Future<void> _shareApod(BuildContext context) async {
+  Future<void> _shareApod(BuildContext context, WidgetRef ref) async {
+    ref.read(analyticsServiceProvider).logApodShared();
     final shareUri = sanitizeTrustedExternalUri(
       item.isImage ? item.preferredImageUrl : item.url,
       allowedHosts: TrustedHostSets.nasaAndVideoHosts,
@@ -453,7 +456,8 @@ class _ActionPanel extends StatelessWidget {
     await SharePlus.instance.share(ShareParams(text: buffer.toString().trim()));
   }
 
-  Future<void> _openHdImage(BuildContext context) async {
+  Future<void> _openHdImage(BuildContext context, WidgetRef ref) async {
+    ref.read(analyticsServiceProvider).logApodHdOpened();
     final uri = sanitizeTrustedExternalUri(
       item.hdUrl ?? item.preferredImageUrl,
       allowedHosts: TrustedHostSets.nasaHosts,

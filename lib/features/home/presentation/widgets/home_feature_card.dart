@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_gradients.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
@@ -20,13 +19,13 @@ class HomeFeatureCard extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final isCompact = width < 420;
-        final cardHeight = isCompact ? 400.0 : AppConstants.featureCardHeight;
-        final visibleMetrics = isCompact
-            ? feature.metrics.take(1)
-            : feature.metrics;
-
+        final isMedium = width < 720;
+        final imageAspectRatio = isCompact
+            ? 1.6
+            : isMedium
+            ? 1.9
+            : 2.2;
         return Container(
-          height: cardHeight,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
             boxShadow: [
@@ -53,9 +52,10 @@ class HomeFeatureCard extends StatelessWidget {
                     ),
                   ),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        flex: isCompact ? 5 : 6,
+                      AspectRatio(
+                        aspectRatio: imageAspectRatio,
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
@@ -90,68 +90,70 @@ class HomeFeatureCard extends StatelessWidget {
                                 ),
                               ),
                             ),
+                            Positioned(
+                              top: 16,
+                              left: 16,
+                              child: Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: feature.accentColor.withValues(
+                                    alpha: 0.18,
+                                  ),
+                                  borderRadius: BorderRadius.circular(13),
+                                  border: Border.all(
+                                    color: feature.accentColor.withValues(
+                                      alpha: 0.26,
+                                    ),
+                                  ),
+                                ),
+                                child: Icon(
+                                  feature.icon,
+                                  color: feature.accentColor,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 16,
+                              right: 16,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 180,
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withValues(alpha: 0.22),
+                                    borderRadius: BorderRadius.circular(999),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.08,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    feature.kicker.toUpperCase(),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: AppColors.textPrimary,
+                                          letterSpacing: 1.3,
+                                        ),
+                                  ),
+                                ),
+                              ),
+                            ),
                             Padding(
-                              padding: const EdgeInsets.all(20),
+                              padding: const EdgeInsets.all(16),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width: 48,
-                                        height: 48,
-                                        decoration: BoxDecoration(
-                                          color: feature.accentColor.withValues(
-                                            alpha: 0.18,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            16,
-                                          ),
-                                          border: Border.all(
-                                            color: feature.accentColor
-                                                .withValues(alpha: 0.26),
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          feature.icon,
-                                          color: feature.accentColor,
-                                        ),
-                                      ),
-                                      const Spacer(),
-                                      Flexible(
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 8,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.22,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              999,
-                                            ),
-                                            border: Border.all(
-                                              color: Colors.white.withValues(
-                                                alpha: 0.08,
-                                              ),
-                                            ),
-                                          ),
-                                          child: Text(
-                                            feature.kicker.toUpperCase(),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                            textAlign: TextAlign.center,
-                                            style: theme.textTheme.labelMedium
-                                                ?.copyWith(
-                                                  color: AppColors.textPrimary,
-                                                  letterSpacing: 1.3,
-                                                ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
                                   const Spacer(),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
@@ -185,67 +187,65 @@ class HomeFeatureCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      Expanded(
-                        flex: isCompact ? 6 : 5,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                feature.title,
-                                maxLines: isCompact ? 2 : 3,
-                                overflow: TextOverflow.ellipsis,
-                                style: isCompact
-                                    ? theme.textTheme.titleLarge
-                                    : theme.textTheme.headlineSmall,
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                feature.description,
-                                maxLines: isCompact ? 2 : 3,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: AppColors.textPrimary.withValues(
-                                    alpha: 0.76,
-                                  ),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          isCompact ? 16 : 18,
+                          isCompact ? 14 : 16,
+                          isCompact ? 16 : 18,
+                          isCompact ? 16 : 18,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              feature.title,
+                              maxLines: isCompact ? 2 : 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: isCompact
+                                  ? theme.textTheme.titleMedium
+                                  : theme.textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              feature.description,
+                              maxLines: isCompact ? 2 : 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: AppColors.textPrimary.withValues(
+                                  alpha: 0.76,
                                 ),
                               ),
-                              const Spacer(),
-                              Wrap(
-                                spacing: 10,
-                                runSpacing: 10,
-                                children: [
-                                  for (final metric in visibleMetrics)
-                                    _CompactMetric(
-                                      accentColor: feature.accentColor,
-                                      metric: metric,
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 14),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      feature.ctaLabel,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: theme.textTheme.labelLarge
-                                          ?.copyWith(
-                                            color: feature.accentColor,
-                                          ),
+                            ),
+                            // Temporarily hidden per current home screen layout request.
+                            // const SizedBox(height: 18),
+                            // _FeatureMetricSection(
+                            //   accentColor: feature.accentColor,
+                            //   metrics: visibleMetrics,
+                            //   isCompact: isCompact,
+                            // ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    feature.ctaLabel,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                      color: feature.accentColor,
                                     ),
                                   ),
-                                  const SizedBox(width: 8),
-                                  Icon(
-                                    Icons.arrow_outward_rounded,
-                                    color: feature.accentColor,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                ),
+                                const SizedBox(width: 6),
+                                Icon(
+                                  Icons.arrow_outward_rounded,
+                                  color: feature.accentColor,
+                                  size: 16,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -256,6 +256,51 @@ class HomeFeatureCard extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _FeatureMetricSection extends StatelessWidget {
+  const _FeatureMetricSection({
+    required this.accentColor,
+    required this.metrics,
+    required this.isCompact,
+  });
+
+  final Color accentColor;
+  final List<FeatureMetric> metrics;
+  final bool isCompact;
+
+  @override
+  Widget build(BuildContext context) {
+    if (metrics.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    if (isCompact || metrics.length == 1) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var index = 0; index < metrics.length; index++) ...[
+            _CompactMetric(accentColor: accentColor, metric: metrics[index]),
+            if (index != metrics.length - 1) const SizedBox(height: 10),
+          ],
+        ],
+      );
+    }
+
+    return Row(
+      children: [
+        for (var index = 0; index < metrics.length; index++) ...[
+          Expanded(
+            child: _CompactMetric(
+              accentColor: accentColor,
+              metric: metrics[index],
+            ),
+          ),
+          if (index != metrics.length - 1) const SizedBox(width: 10),
+        ],
+      ],
     );
   }
 }
@@ -271,6 +316,7 @@ class _CompactMetric extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.2),

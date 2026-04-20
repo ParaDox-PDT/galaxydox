@@ -2,35 +2,40 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../features/onboarding/presentation/providers/onboarding_provider.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
 
-class SplashPage extends StatefulWidget {
+class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
   @override
-  State<SplashPage> createState() => _SplashPageState();
+  ConsumerState<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage> {
+class _SplashPageState extends ConsumerState<SplashPage> {
   Timer? _navigationTimer;
 
   @override
   void initState() {
     super.initState();
-    _navigationTimer = Timer(AppConstants.splashDuration, _openHome);
+    _navigationTimer = Timer(AppConstants.splashDuration, _navigate);
   }
 
-  void _openHome() {
-    if (!mounted) {
-      return;
+  void _navigate() {
+    if (!mounted) return;
+    final hasCompleted = ref.read(hasCompletedOnboardingProvider);
+    if (hasCompleted) {
+      context.goNamed(AppRoutes.homeName);
+    } else {
+      context.goNamed(AppRoutes.onboardingName);
     }
-    context.goNamed(AppRoutes.homeName);
   }
 
   @override

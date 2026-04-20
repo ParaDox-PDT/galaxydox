@@ -9,16 +9,22 @@ class SpaceScaffold extends StatelessWidget {
     required this.body,
     this.topSafeArea = true,
     this.bottomSafeArea = false,
+    this.extendBody = false,
+    this.extendBodyBehindAppBar = false,
   });
 
   final Widget body;
   final bool topSafeArea;
   final bool bottomSafeArea;
+  final bool extendBody;
+  final bool extendBodyBehindAppBar;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
+      extendBody: extendBody,
+      extendBodyBehindAppBar: extendBodyBehindAppBar,
       body: Stack(
         fit: StackFit.expand,
         children: [

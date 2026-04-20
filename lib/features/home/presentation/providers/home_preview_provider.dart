@@ -56,8 +56,24 @@ final homePreviewProvider = Provider<HomePreviewData>((ref) {
         icon: Icons.view_in_ar_rounded,
         ctaLabel: 'Explore planets in 3D',
         metrics: [
-          FeatureMetric(label: 'Rendering', value: 'Local .glb'),
-          FeatureMetric(label: 'Controls', value: 'Touch and zoom'),
+          FeatureMetric(label: 'Source', value: 'Firebase models'),
+          FeatureMetric(label: 'Storage', value: 'Device cache'),
+        ],
+      ),
+      HomeFeaturePreview(
+        routeName: AppRoutes.wallpapersName,
+        kicker: 'Curated gallery',
+        title: 'Wallpapers',
+        description:
+            'Browse a curated collection of stunning space imagery. Download to your device or share your favourite shots.',
+        imageUrl: '',
+        assetImagePath: 'assets/images/wallpapers.png',
+        accentColor: AppColors.secondary,
+        icon: Icons.wallpaper_rounded,
+        ctaLabel: 'Browse wallpapers',
+        metrics: [
+          FeatureMetric(label: 'Source', value: 'Firebase gallery'),
+          FeatureMetric(label: 'Actions', value: 'Download and share'),
         ],
       ),
       HomeFeaturePreview(

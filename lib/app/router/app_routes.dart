@@ -2,6 +2,9 @@ abstract final class AppRoutes {
   static const splashName = 'splash';
   static const splashPath = '/';
 
+  static const onboardingName = 'onboarding';
+  static const onboardingPath = '/onboarding';
+
   static const homeName = 'home';
   static const homePath = '/home';
 
@@ -34,4 +37,10 @@ abstract final class AppRoutes {
 
   static const planetDetailName = 'planet-detail';
   static const planetDetailPath = '/planets-3d/:id';
+
+  static const wallpapersName = 'wallpapers';
+  static const wallpapersPath = '/wallpapers';
+
+  static const wallpaperDetailName = 'wallpaper-detail';
+  static const wallpaperDetailPath = '/wallpapers/:id';
 }

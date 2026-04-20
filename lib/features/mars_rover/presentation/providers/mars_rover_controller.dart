@@ -18,15 +18,30 @@ final marsRoverControllerProvider =
 
 class MarsRoverController extends Notifier<MarsRoverState> {
   late final GetMarsRoverPhotosUseCase _getMarsRoverPhotosUseCase;
+  int _requestVersion = 0;
 
   @override
   MarsRoverState build() {
     _getMarsRoverPhotosUseCase = ref.watch(getMarsRoverPhotosUseCaseProvider);
-    Future<void>.microtask(load);
+    ref.onDispose(() {
+      _requestVersion++;
+    });
+    Future<void>.microtask(() async {
+      if (!ref.mounted) {
+        return;
+      }
+
+      await load();
+    });
     return MarsRoverState.initial();
   }
 
   Future<void> load() async {
+    if (!ref.mounted) {
+      return;
+    }
+
+    final requestVersion = ++_requestVersion;
     state = state.copyWith(status: MarsRoverStatus.loading, clearError: true);
 
     final result = await _getMarsRoverPhotosUseCase(
@@ -36,6 +51,9 @@ class MarsRoverController extends Notifier<MarsRoverState> {
           : null,
       sol: state.filterMode == MarsRoverFilterMode.sol ? state.sol : null,
     );
+    if (!ref.mounted || requestVersion != _requestVersion) {
+      return;
+    }
 
     state = result.when(
       success: (photos) {

@@ -158,6 +158,15 @@ flutter build apk --release --split-per-abi ^
   --dart-define-from-file=.env
 ```
 
+Web build for Netlify-style redirects:
+
+```bash
+flutter build web --release --dart-define-from-file=.env
+dart tool/copy_web_redirects.dart
+```
+
+The second command copies `web/_redirects` into `build/web/_redirects` because Flutter does not include that file in the web build output automatically.
+
 If no `NASA_API_KEY` is supplied, the app shows a configuration-required screen instead of sending NASA requests with `DEMO_KEY`.
 
 ## Release Docs

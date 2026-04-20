@@ -44,4 +44,26 @@ class NasaSearchRepositoryImpl implements NasaSearchRepository {
       );
     }
   }
+
+  @override
+  Future<Result<String?>> resolveVideoPlaybackUrl({
+    required String assetManifestUrl,
+  }) async {
+    try {
+      final playbackUrl = await _remoteDataSource.resolveVideoPlaybackUrl(
+        assetManifestUrl: assetManifestUrl,
+      );
+      return Success(playbackUrl);
+    } on AppException catch (error) {
+      return Failure(error);
+    } catch (error) {
+      return Failure(
+        AppException(
+          type: AppExceptionType.unknown,
+          message: 'Unexpected error while resolving NASA video playback.',
+          cause: error,
+        ),
+      );
+    }
+  }
 }

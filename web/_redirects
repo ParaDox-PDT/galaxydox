@@ -1,0 +1,7 @@
+# /admin exact path upstream'da /admin/login ga o'tadi.
+# Uni 200 proxy qilish redirect loop beradi, shuning uchun avval real redirect qilamiz.
+/admin    /admin/login                                  302!
+/admin/*  https://galaxydoxadmin.netlify.app/admin/:splat  200
+
+# Asosiy Flutter Web loyihasi uchun yo'naltirish
+/* /index.html                                      200

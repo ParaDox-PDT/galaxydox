@@ -1,0 +1,35 @@
+{
+    "name": "GalaxyDox",
+    "short_name": "GalaxyDox",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#040B16",
+    "theme_color": "#08111F",
+    "description": "GalaxyDox is a premium NASA explorer built for cinematic discovery on the web.",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/App-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/App-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/App-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/App-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

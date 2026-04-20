@@ -4,175 +4,25 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/bookmarks/bookmark_mapper.dart';
 import '../../../../shared/widgets/bookmark_button.dart';
-import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
 import '../../domain/entities/nasa_media_item.dart';
-import '../providers/nasa_search_controller.dart';
+
+final DateFormat _nasaMediaDateFormatter = DateFormat.yMMMd();
 
 class NasaMediaResultCard extends StatelessWidget {
   const NasaMediaResultCard({
     super.key,
     required this.item,
-    required this.viewMode,
     required this.onTap,
   });
 
   final NasaMediaItem item;
-  final NasaSearchViewMode viewMode;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return viewMode == NasaSearchViewMode.grid
-        ? _GridCard(item: item, onTap: onTap)
-        : _ListCard(item: item, onTap: onTap);
-  }
-}
-
-class _GridCard extends StatelessWidget {
-  const _GridCard({required this.item, required this.onTap});
-
-  final NasaMediaItem item;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < 220;
-
-        return Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadow.withValues(alpha: 0.24),
-                blurRadius: 34,
-                offset: const Offset(0, 22),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(30),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: onTap,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.surfaceElevated.withValues(alpha: 0.92),
-                        AppColors.surface.withValues(alpha: 0.98),
-                      ],
-                    ),
-                    border: Border.all(color: AppColors.outlineSoft),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: compact ? 5 : 6,
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            PremiumNetworkImage(
-                              imageUrl: item.previewUrl,
-                              fit: BoxFit.cover,
-                            ),
-                            Positioned(
-                              left: 16,
-                              top: 16,
-                              child: _TypePill(type: item.mediaType),
-                            ),
-                            Positioned(
-                              top: 16,
-                              right: 16,
-                              child: BookmarkButton(
-                                bookmark: BookmarkMapper.fromNasaMediaItem(
-                                  item,
-                                ),
-                                savedLabel: 'Bookmarked',
-                                unsavedLabel: 'Bookmark',
-                                variant: BookmarkButtonVariant.icon,
-                              ),
-                            ),
-                            Positioned(
-                              right: 16,
-                              bottom: 16,
-                              child: ConstrainedBox(
-                                constraints: BoxConstraints(
-                                  maxWidth: constraints.maxWidth * 0.52,
-                                ),
-                                child: FrostedPanel(
-                                  radius: 16,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 10,
-                                  ),
-                                  backgroundColor: AppColors.surfaceElevated
-                                      .withValues(alpha: 0.36),
-                                  child: Text(
-                                    item.center,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.labelMedium,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        flex: compact ? 6 : 5,
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.title,
-                                maxLines: compact ? 1 : 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.titleLarge,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _buildSubtitle(item),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodyMedium,
-                              ),
-                              const SizedBox(height: 12),
-                              Expanded(
-                                child: Text(
-                                  item.description,
-                                  maxLines: compact ? 2 : 3,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              _OpenDetailsRow(theme: theme),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
+    return RepaintBoundary(
+      child: _ListCard(item: item, onTap: onTap),
     );
   }
 }
@@ -226,9 +76,16 @@ class _ListCard extends StatelessWidget {
                       width: compact ? double.infinity : 216,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(22),
-                        child: PremiumNetworkImage(
-                          imageUrl: item.previewUrl,
-                          fit: BoxFit.cover,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            PremiumNetworkImage(
+                              imageUrl: item.previewUrl,
+                              fit: BoxFit.cover,
+                            ),
+                            if (item.mediaType == NasaMediaType.video)
+                              const Center(child: _VideoPlayBadge()),
+                          ],
                         ),
                       ),
                     );
@@ -360,6 +217,28 @@ class _TypePill extends StatelessWidget {
   }
 }
 
+class _VideoPlayBadge extends StatelessWidget {
+  const _VideoPlayBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 62,
+      height: 62,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.black.withValues(alpha: 0.32),
+        border: Border.all(color: AppColors.textPrimary.withValues(alpha: 0.2)),
+      ),
+      child: const Icon(
+        Icons.play_arrow_rounded,
+        size: 34,
+        color: AppColors.textPrimary,
+      ),
+    );
+  }
+}
+
 class _MetadataPill extends StatelessWidget {
   const _MetadataPill({required this.label});
 
@@ -381,7 +260,8 @@ class _MetadataPill extends StatelessWidget {
 
 String _buildSubtitle(NasaMediaItem item) {
   final pieces = <String>[
-    if (item.dateCreated != null) DateFormat.yMMMd().format(item.dateCreated!),
+    if (item.dateCreated != null)
+      _nasaMediaDateFormatter.format(item.dateCreated!),
     if ((item.photographer ?? '').isNotEmpty) item.photographer!,
   ];
 

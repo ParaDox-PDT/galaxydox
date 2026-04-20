@@ -129,15 +129,16 @@ class HeroFeatureCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 22),
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
-                        children: [
-                          for (final metric in hero.metrics)
-                            _MetricPill(metric: metric),
-                        ],
-                      ),
+                      // Temporarily hidden per current home screen layout request.
+                      // const SizedBox(height: 22),
+                      // Wrap(
+                      //   spacing: 10,
+                      //   runSpacing: 10,
+                      //   children: [
+                      //     for (final metric in hero.metrics)
+                      //       _MetricPill(metric: metric),
+                      //   ],
+                      // ),
                       const SizedBox(height: 22),
                       Wrap(
                         spacing: 12,
@@ -183,8 +184,6 @@ class _CompactHeroFeatureCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final horizontalPadding = isNarrow ? 18.0 : 22.0;
-    final metrics = hero.metrics.take(isNarrow ? 1 : 2).toList(growable: false);
-
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(36),
@@ -283,15 +282,16 @@ class _CompactHeroFeatureCard extends StatelessWidget {
                         color: AppColors.textPrimary.withValues(alpha: 0.86),
                       ),
                     ),
-                    const SizedBox(height: 18),
-                    Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: [
-                        for (final metric in metrics)
-                          _MetricPill(metric: metric),
-                      ],
-                    ),
+                    // Temporarily hidden per current home screen layout request.
+                    // const SizedBox(height: 18),
+                    // Wrap(
+                    //   spacing: 10,
+                    //   runSpacing: 10,
+                    //   children: [
+                    //     for (final metric in metrics)
+                    //       _MetricPill(metric: metric),
+                    //   ],
+                    // ),
                     const SizedBox(height: 18),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,

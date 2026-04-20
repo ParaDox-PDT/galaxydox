@@ -22,6 +22,7 @@ class NasaMediaItem {
     required this.previewUrl,
     required this.mediaType,
     required this.center,
+    this.assetManifestUrl,
     this.dateCreated,
     this.photographer,
     this.secondaryCreator,
@@ -34,10 +35,49 @@ class NasaMediaItem {
   final String previewUrl;
   final NasaMediaType mediaType;
   final String center;
+  final String? assetManifestUrl;
   final DateTime? dateCreated;
   final String? photographer;
   final String? secondaryCreator;
   final List<String> keywords;
 
   bool get hasKeywords => keywords.isNotEmpty;
+  bool get isVideo => mediaType == NasaMediaType.video;
+
+  String? get resolvedAssetManifestUrl {
+    final explicitUrl = assetManifestUrl?.trim();
+    if (explicitUrl != null && explicitUrl.isNotEmpty) {
+      return _normalizeHttpsUrl(explicitUrl);
+    }
+
+    if (!isVideo || previewUrl.trim().isEmpty) {
+      return null;
+    }
+
+    final previewUri = Uri.tryParse(previewUrl);
+    if (previewUri == null || previewUri.pathSegments.length < 2) {
+      return null;
+    }
+
+    return previewUri
+        .replace(
+          scheme: 'https',
+          pathSegments: [
+            ...previewUri.pathSegments.take(previewUri.pathSegments.length - 1),
+            'collection.json',
+          ],
+        )
+        .toString();
+  }
+}
+
+String _normalizeHttpsUrl(String value) {
+  final uri = Uri.tryParse(value);
+  if (uri == null) {
+    return value;
+  }
+
+  return uri.scheme.toLowerCase() == 'http'
+      ? uri.replace(scheme: 'https').toString()
+      : uri.toString();
 }

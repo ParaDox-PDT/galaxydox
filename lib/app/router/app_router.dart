@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,9 +13,14 @@ import '../../features/nasa_search/presentation/pages/nasa_search_page.dart';
 import '../../features/neo/presentation/pages/neo_page.dart';
 import '../../features/planets_3d/presentation/pages/planet_detail_page.dart';
 import '../../features/planets_3d/presentation/pages/planets_3d_page.dart';
+import '../../features/wallpapers/domain/wallpaper_entity.dart';
+import '../../features/wallpapers/presentation/pages/wallpaper_detail_page.dart';
+import '../../features/wallpapers/presentation/pages/wallpapers_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../shared/bookmarks/presentation/pages/bookmarks_page.dart';
+import '../../shared/navigation/swipe_back_route.dart';
 import '../../shared/widgets/coming_soon_page.dart';
 import 'app_routes.dart';
 
@@ -26,6 +32,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.splashPath,
+    observers: [FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance)],
     routes: _routes,
     errorPageBuilder: (context, state) => _buildPage(
       state: state,
@@ -49,11 +56,19 @@ final List<RouteBase> _routes = [
     path: AppRoutes.splashPath,
     name: AppRoutes.splashName,
     child: const SplashPage(),
+    enableSwipeBack: false,
+  ),
+  _appRoute(
+    path: AppRoutes.onboardingPath,
+    name: AppRoutes.onboardingName,
+    child: const OnboardingPage(),
+    enableSwipeBack: false,
   ),
   _appRoute(
     path: AppRoutes.homePath,
     name: AppRoutes.homeName,
     child: const HomePage(),
+    enableSwipeBack: false,
   ),
   _appRoute(
     path: AppRoutes.apodPath,
@@ -111,24 +126,50 @@ final List<RouteBase> _routes = [
       );
     },
   ),
+  _appRoute(
+    path: AppRoutes.wallpapersPath,
+    name: AppRoutes.wallpapersName,
+    child: const WallpapersPage(),
+  ),
+  GoRoute(
+    path: AppRoutes.wallpaperDetailPath,
+    name: AppRoutes.wallpaperDetailName,
+    pageBuilder: (context, state) {
+      final wallpaper = state.extra as WallpaperEntity;
+      return _buildPage(
+        state: state,
+        child: WallpaperDetailPage(wallpaper: wallpaper),
+      );
+    },
+  ),
 ];
 
 GoRoute _appRoute({
   required String path,
   required String name,
   required Widget child,
+  bool enableSwipeBack = true,
 }) {
   return GoRoute(
     path: path,
     name: name,
-    pageBuilder: (context, state) => _buildPage(state: state, child: child),
+    pageBuilder: (context, state) => _buildPage(
+      state: state,
+      child: child,
+      enableSwipeBack: enableSwipeBack,
+    ),
   );
 }
 
-CustomTransitionPage<void> _buildPage({
+Page<void> _buildPage({
   required GoRouterState state,
   required Widget child,
+  bool enableSwipeBack = true,
 }) {
+  if (enableSwipeBack) {
+    return buildSwipeBackPage<void>(state: state, child: child);
+  }
+
   return CustomTransitionPage<void>(
     key: state.pageKey,
     transitionDuration: AppConstants.motionSlow,

@@ -10,22 +10,35 @@ final getApodUseCaseProvider = Provider<GetApodUseCase>((ref) {
 });
 
 final apodControllerProvider =
-    NotifierProvider.autoDispose<ApodController, ApodState>(
-      ApodController.new,
-    );
+    NotifierProvider.autoDispose<ApodController, ApodState>(ApodController.new);
 
 class ApodController extends Notifier<ApodState> {
   late final GetApodUseCase _getApodUseCase;
+  int _requestVersion = 0;
 
   @override
   ApodState build() {
     _getApodUseCase = ref.watch(getApodUseCaseProvider);
-    Future<void>.microtask(load);
+    ref.onDispose(() {
+      _requestVersion++;
+    });
+    Future<void>.microtask(() async {
+      if (!ref.mounted) {
+        return;
+      }
+
+      await load();
+    });
 
     return const ApodState.loading();
   }
 
-  Future<void> load({DateTime? forDate}) async {
+  Future<void> load({DateTime? forDate, bool forceRefresh = false}) async {
+    if (!ref.mounted) {
+      return;
+    }
+
+    final requestVersion = ++_requestVersion;
     final effectiveDate = forDate ?? state.selectedDate;
 
     state = state.copyWith(
@@ -34,7 +47,13 @@ class ApodController extends Notifier<ApodState> {
       clearError: true,
     );
 
-    final result = await _getApodUseCase(date: effectiveDate);
+    final result = await _getApodUseCase(
+      date: effectiveDate,
+      forceRefresh: forceRefresh,
+    );
+    if (!ref.mounted || requestVersion != _requestVersion) {
+      return;
+    }
 
     state = result.when(
       success: (item) {
@@ -54,7 +73,8 @@ class ApodController extends Notifier<ApodState> {
     );
   }
 
-  Future<void> refresh() => load(forDate: state.selectedDate);
+  Future<void> refresh() =>
+      load(forDate: state.selectedDate, forceRefresh: true);
 
   Future<void> selectDate(DateTime? date) => load(forDate: date);
 }

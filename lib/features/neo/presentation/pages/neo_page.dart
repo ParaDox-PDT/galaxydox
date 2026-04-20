@@ -8,11 +8,14 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/trusted_external_url.dart';
 import '../../../../shared/bookmarks/bookmark_mapper.dart';
+import '../../../../shared/navigation/swipe_back_route.dart';
 import '../../../../shared/widgets/app_chip.dart';
 import '../../../../shared/widgets/bookmark_button.dart';
+import '../../../../shared/widgets/content_sliver_padding.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/page_header.dart';
 import '../../../../shared/widgets/premium_refresh_indicator.dart';
+import '../../../../shared/widgets/premium_scrollbar.dart';
 import '../../../../shared/widgets/section_heading.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
 import '../../../../shared/widgets/state_panel.dart';
@@ -21,125 +24,194 @@ import '../providers/neo_controller.dart';
 import '../widgets/neo_loading_view.dart';
 import 'neo_detail_page.dart';
 
-class NeoPage extends ConsumerWidget {
+final DateFormat _neoRangeDateFormatter = DateFormat.yMMMd();
+final DateFormat _neoCloseApproachDateFormatter = DateFormat.yMMMMd();
+final NumberFormat _neoDistanceFormatter = NumberFormat.compact(
+  locale: 'en_US',
+);
+final NumberFormat _neoDistanceCompactFormatter = NumberFormat.compact(
+  locale: 'en_US',
+  explicitSign: false,
+);
+
+class NeoPage extends ConsumerStatefulWidget {
   const NeoPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NeoPage> createState() => _NeoPageState();
+}
+
+class _NeoPageState extends ConsumerState<NeoPage> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(neoControllerProvider);
     final controller = ref.read(neoControllerProvider.notifier);
+    final hasObjects =
+        state.status == NeoStatus.success && state.objects.isNotEmpty;
 
     return SpaceScaffold(
       bottomSafeArea: true,
       body: PremiumRefreshIndicator(
         onRefresh: controller.refresh,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
-          slivers: [
-            SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxWidth: AppConstants.contentMaxWidth,
+        child: PremiumScrollbar(
+          controller: _scrollController,
+          child: CustomScrollView(
+            controller: _scrollController,
+            cacheExtent: 1400,
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            slivers: [
+              ContentSliverPadding(
+                top: 12,
+                sliver: SliverToBoxAdapter(
+                  child: PageHeader(
+                    title: 'Near-Earth Objects',
+                    subtitle:
+                        '${_neoRangeDateFormatter.format(state.startDate)} - ${_neoRangeDateFormatter.format(state.endDate)}',
+                    actions: [
+                      OutlinedButton.icon(
+                        onPressed: () =>
+                            _pickDateRange(context, controller, state),
+                        icon: const Icon(Icons.date_range_rounded),
+                        label: const Text('Change range'),
+                      ),
+                      FilledButton.icon(
+                        onPressed: controller.refresh,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('Refresh'),
+                      ),
+                    ],
+                  ).animate().fadeIn(duration: AppConstants.motionMedium),
+                ),
+              ),
+              ContentSliverPadding(
+                top: AppConstants.stackGap,
+                sliver: SliverToBoxAdapter(
+                  child: const _IntroPanel()
+                      .animate()
+                      .fadeIn(
+                        delay: const Duration(milliseconds: 70),
+                        duration: AppConstants.motionMedium,
+                      )
+                      .slideY(begin: 0.03, end: 0),
+                ),
+              ),
+              if (hasObjects)
+                ContentSliverPadding(
+                  top: AppConstants.stackGap,
+                  sliver: SliverToBoxAdapter(
+                    child: _OverviewRow(objects: state.objects)
+                        .animate()
+                        .fadeIn(
+                          delay: const Duration(milliseconds: 120),
+                          duration: AppConstants.motionMedium,
+                        )
+                        .slideY(begin: 0.03, end: 0),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppConstants.pagePadding,
-                      12,
-                      AppConstants.pagePadding,
-                      42,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        PageHeader(
-                          title: 'Near-Earth Objects',
-                          subtitle:
-                              '${DateFormat.yMMMd().format(state.startDate)} - ${DateFormat.yMMMd().format(state.endDate)}',
-                          actions: [
-                            OutlinedButton.icon(
-                              onPressed: () =>
-                                  _pickDateRange(context, controller, state),
-                              icon: const Icon(Icons.date_range_rounded),
-                              label: const Text('Change range'),
-                            ),
-                            FilledButton.icon(
-                              onPressed: controller.refresh,
-                              icon: const Icon(Icons.refresh_rounded),
-                              label: const Text('Refresh'),
-                            ),
-                          ],
-                        ).animate().fadeIn(duration: AppConstants.motionMedium),
-                        const SizedBox(height: AppConstants.stackGap),
-                        const _IntroPanel()
-                            .animate()
-                            .fadeIn(
-                              delay: Duration(milliseconds: 70),
-                              duration: AppConstants.motionMedium,
-                            )
-                            .slideY(begin: 0.03, end: 0),
-                        const SizedBox(height: AppConstants.stackGap),
-                        if (state.status == NeoStatus.success &&
-                            state.objects.isNotEmpty)
-                          _OverviewRow(objects: state.objects)
-                              .animate()
-                              .fadeIn(
-                                delay: Duration(milliseconds: 120),
-                                duration: AppConstants.motionMedium,
-                              )
-                              .slideY(begin: 0.03, end: 0),
-                        if (state.status == NeoStatus.success &&
-                            state.objects.isNotEmpty)
-                          const SizedBox(height: AppConstants.stackGap),
-                        if (state.isLoading) const NeoLoadingView(),
-                        if (state.hasError)
-                          StatePanel(
-                            title: 'Unable to load asteroid feed',
-                            message: state.error!.message,
-                            icon: Icons.radar_rounded,
-                            accent: AppColors.warning,
-                            actions: [
-                              StatePanelAction(
-                                label: 'Try again',
-                                icon: Icons.refresh_rounded,
-                                onPressed: controller.refresh,
-                              ),
-                            ],
-                          ),
-                        if (state.isEmpty)
-                          StatePanel(
-                            title: 'No near-earth objects found',
-                            message:
-                                'NASA returned an empty feed for this date window. Try refreshing or choosing another range within the 7-day feed limit.',
-                            icon: Icons.public_off_rounded,
-                            accent: AppColors.secondary,
-                            actions: [
-                              StatePanelAction(
-                                label: 'Retry',
-                                icon: Icons.refresh_rounded,
-                                onPressed: controller.refresh,
-                              ),
-                              StatePanelAction(
-                                label: 'Choose range',
-                                icon: Icons.date_range_rounded,
-                                onPressed: () =>
-                                    _pickDateRange(context, controller, state),
-                                emphasis: StatePanelActionEmphasis.secondary,
-                              ),
-                            ],
-                          ),
-                        if (state.status == NeoStatus.success &&
-                            state.objects.isNotEmpty)
-                          _NeoContent(objects: state.objects),
+                ),
+              if (state.isLoading)
+                const ContentSliverPadding(
+                  top: AppConstants.stackGap,
+                  sliver: SliverToBoxAdapter(child: NeoLoadingView()),
+                ),
+              if (state.hasError)
+                ContentSliverPadding(
+                  top: AppConstants.stackGap,
+                  sliver: SliverToBoxAdapter(
+                    child: StatePanel(
+                      title: 'Unable to load asteroid feed',
+                      message: state.error!.message,
+                      icon: Icons.radar_rounded,
+                      accent: AppColors.warning,
+                      actions: [
+                        StatePanelAction(
+                          label: 'Try again',
+                          icon: Icons.refresh_rounded,
+                          onPressed: controller.refresh,
+                        ),
                       ],
                     ),
                   ),
                 ),
-              ),
-            ),
-          ],
+              if (state.isEmpty)
+                ContentSliverPadding(
+                  top: AppConstants.stackGap,
+                  sliver: SliverToBoxAdapter(
+                    child: StatePanel(
+                      title: 'No near-earth objects found',
+                      message:
+                          'NASA returned an empty feed for this date window. Try refreshing or choosing another range within the 7-day feed limit.',
+                      icon: Icons.public_off_rounded,
+                      accent: AppColors.secondary,
+                      actions: [
+                        StatePanelAction(
+                          label: 'Retry',
+                          icon: Icons.refresh_rounded,
+                          onPressed: controller.refresh,
+                        ),
+                        StatePanelAction(
+                          label: 'Choose range',
+                          icon: Icons.date_range_rounded,
+                          onPressed: () =>
+                              _pickDateRange(context, controller, state),
+                          emphasis: StatePanelActionEmphasis.secondary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              if (hasObjects) ...[
+                const ContentSliverPadding(
+                  top: AppConstants.stackGap,
+                  sliver: SliverToBoxAdapter(
+                    child: SectionHeading(
+                      eyebrow: 'Feed',
+                      title: 'Approach windows worth monitoring',
+                      subtitle:
+                          'Each card emphasizes the data points users care about first, while preserving enough technical depth to remain informative and credible.',
+                    ),
+                  ),
+                ),
+                ContentSliverPadding(
+                  top: 18,
+                  bottom: 42,
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final object = state.objects[index];
+
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: index == state.objects.length - 1 ? 0 : 18,
+                        ),
+                        child: RepaintBoundary(
+                          child: _NeoCard(
+                            key: ValueKey(object.id),
+                            object: object,
+                          ),
+                        ),
+                      );
+                    }, childCount: state.objects.length),
+                  ),
+                ),
+              ] else
+                const SliverToBoxAdapter(child: SizedBox(height: 42)),
+            ],
+          ),
         ),
       ),
     );
@@ -331,40 +403,8 @@ class _OverviewRow extends StatelessWidget {
   }
 }
 
-class _NeoContent extends StatelessWidget {
-  const _NeoContent({required this.objects});
-
-  final List<NearEarthObject> objects;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeading(
-          eyebrow: 'Feed',
-          title: 'Approach windows worth monitoring',
-          subtitle:
-              'Each card emphasizes the data points users care about first, while preserving enough technical depth to remain informative and credible.',
-        ),
-        const SizedBox(height: 18),
-        for (var index = 0; index < objects.length; index++) ...[
-          _NeoCard(object: objects[index])
-              .animate()
-              .fadeIn(
-                delay: Duration(milliseconds: 60 * index),
-                duration: AppConstants.motionMedium,
-              )
-              .slideY(begin: 0.03, end: 0),
-          if (index != objects.length - 1) const SizedBox(height: 18),
-        ],
-      ],
-    );
-  }
-}
-
 class _NeoCard extends StatelessWidget {
-  const _NeoCard({required this.object});
+  const _NeoCard({super.key, required this.object});
 
   final NearEarthObject object;
 
@@ -393,7 +433,7 @@ class _NeoCard extends StatelessWidget {
           onTap: () {
             HapticFeedback.selectionClick();
             Navigator.of(context).push(
-              MaterialPageRoute<void>(
+              SwipeBackPageRoute<void>(
                 builder: (context) => NeoDetailPage(object: object),
               ),
             );
@@ -440,7 +480,9 @@ class _NeoCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          DateFormat.yMMMMd().format(object.closeApproachDate),
+                          _neoCloseApproachDateFormatter.format(
+                            object.closeApproachDate,
+                          ),
                           style: theme.textTheme.bodyLarge,
                         ),
                       ],
@@ -686,11 +728,9 @@ double _toLunarDistances(double kilometers) {
 }
 
 String _formatDistance(double kilometers) {
-  final formatter = NumberFormat.compact(locale: 'en_US');
-  return '${formatter.format(kilometers)} km';
+  return '${_neoDistanceFormatter.format(kilometers)} km';
 }
 
 String _formatDistanceCompact(double kilometers) {
-  final compact = NumberFormat.compact(locale: 'en_US', explicitSign: false);
-  return '${compact.format(kilometers)} km';
+  return '${_neoDistanceCompactFormatter.format(kilometers)} km';
 }

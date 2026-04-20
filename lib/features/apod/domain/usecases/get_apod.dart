@@ -7,7 +7,7 @@ class GetApodUseCase {
 
   final ApodRepository _repository;
 
-  Future<Result<ApodItem?>> call({DateTime? date}) {
-    return _repository.getApod(date: date);
+  Future<Result<ApodItem?>> call({DateTime? date, bool forceRefresh = false}) {
+    return _repository.getApod(date: date, forceRefresh: forceRefresh);
   }
 }

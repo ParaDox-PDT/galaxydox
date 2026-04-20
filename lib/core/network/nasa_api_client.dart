@@ -96,6 +96,19 @@ class NasaApiClient {
     );
   }
 
+  Future<Response<List<dynamic>>> searchMediaManifest({
+    required String assetManifestUrl,
+  }) {
+    final manifestUri = Uri.parse(assetManifestUrl);
+
+    return _mediaDio.get<List<dynamic>>(
+      manifestUri.scheme.toLowerCase() == 'http'
+          ? manifestUri.replace(scheme: 'https').toString()
+          : manifestUri.toString(),
+      options: Options(extra: const {RequestExtras.attachApiKey: false}),
+    );
+  }
+
   (DateTime, DateTime) _resolveDateWindow({
     DateTime? startDate,
     DateTime? endDate,

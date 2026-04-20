@@ -166,38 +166,19 @@ class EpicEarthRemoteDataSourceImpl implements EpicEarthRemoteDataSource {
       );
     }
 
-    throw AppException(
-      type: AppExceptionType.network,
-      message: 'NASA returned status $statusCode while loading $resource.',
+    throw mapNasaStatusException(
+      statusCode: statusCode,
+      resource: resource,
       cause: response,
     );
   }
 
   static AppException _mapDioException(DioException error, String resource) {
-    final statusCode = error.response?.statusCode;
-
-    if (statusCode == 401 || statusCode == 403) {
-      return AppException(
-        type: AppExceptionType.unauthorized,
-        message: 'NASA API key is invalid or unauthorized.',
-        cause: error,
-      );
-    }
-
-    if (error.type == DioExceptionType.connectionTimeout ||
-        error.type == DioExceptionType.sendTimeout ||
-        error.type == DioExceptionType.receiveTimeout) {
-      return AppException(
-        type: AppExceptionType.timeout,
-        message: 'NASA EPIC took too long to respond.',
-        cause: error,
-      );
-    }
-
-    return AppException(
-      type: AppExceptionType.network,
-      message: 'Unable to reach NASA EPIC while loading $resource.',
-      cause: error,
+    return mapNasaDioException(
+      error: error,
+      resource: resource,
+      timeoutMessage: 'NASA EPIC took too long to respond.',
+      networkMessage: 'Unable to reach NASA EPIC while loading $resource.',
     );
   }
 }

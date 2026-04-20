@@ -25,6 +25,10 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final preview = ref.watch(homePreviewProvider);
+    final viewportWidth = MediaQuery.sizeOf(context).width;
+    final horizontalPadding = viewportWidth < 640
+        ? 16.0
+        : AppConstants.pagePadding;
 
     return SpaceScaffold(
       bottomSafeArea: true,
@@ -42,11 +46,9 @@ class HomePage extends ConsumerWidget {
                     maxWidth: AppConstants.contentMaxWidth,
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppConstants.pagePadding,
-                      12,
-                      AppConstants.pagePadding,
-                      42,
+                    padding: const EdgeInsets.fromLTRB(0, 12, 0, 42).copyWith(
+                      left: horizontalPadding,
+                      right: horizontalPadding,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,11 +93,13 @@ class HomePage extends ConsumerWidget {
                         const SizedBox(height: 22),
                         LayoutBuilder(
                           builder: (context, constraints) {
-                            final isWide = constraints.maxWidth >= 980;
-                            final spacing = 20.0;
-                            final width = isWide
-                                ? (constraints.maxWidth - spacing) / 2
-                                : constraints.maxWidth;
+                            final spacing = constraints.maxWidth < 640
+                                ? 16.0
+                                : 20.0;
+                            final columns = constraints.maxWidth >= 940 ? 2 : 1;
+                            final width = columns == 1
+                                ? constraints.maxWidth
+                                : (constraints.maxWidth - spacing) / 2;
 
                             return Wrap(
                               spacing: spacing,
@@ -154,96 +158,113 @@ class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isCompact = MediaQuery.sizeOf(context).width < 430;
 
-    final brand = Row(
-      children: [
-        Container(
-          width: isCompact ? 52 : 58,
-          height: isCompact ? 52 : 58,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.primary, AppColors.tertiary],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 720;
+        final isNarrow = constraints.maxWidth < 420;
+        final iconButtonSize = constraints.maxWidth < 520 ? 52.0 : 56.0;
+
+        final brand = Row(
+          children: [
+            Container(
+              width: isNarrow ? 52 : 58,
+              height: isNarrow ? 52 : 58,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.primary, AppColors.tertiary],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primaryStrong.withValues(alpha: 0.28),
+                    blurRadius: 26,
+                    offset: const Offset(0, 14),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.radiusMedium - 6,
+                  ),
+                  child: Image.asset(
+                    'assets/images/galaxydox.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primaryStrong.withValues(alpha: 0.28),
-                blurRadius: 26,
-                offset: const Offset(0, 14),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppConstants.appName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: isNarrow
+                        ? theme.textTheme.titleMedium
+                        : theme.textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Editorial-grade NASA explorer',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Icon(
-            Icons.rocket_launch_rounded,
-            color: AppColors.backgroundDeep,
-            size: isCompact ? 24 : 28,
-          ),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
+            ),
+          ],
+        );
+
+        final actions = Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            _PanelIconButton(
+              icon: Icons.travel_explore_rounded,
+              tooltip: 'Search',
+              size: iconButtonSize,
+              onPressed: () => context.pushNamed(AppRoutes.searchName),
+            ),
+            _PanelIconButton(
+              icon: Icons.bookmarks_rounded,
+              tooltip: 'Bookmarks',
+              size: iconButtonSize,
+              onPressed: () => context.pushNamed(AppRoutes.bookmarksName),
+            ),
+            _PanelIconButton(
+              icon: Icons.tune_rounded,
+              tooltip: 'Settings',
+              size: iconButtonSize,
+              onPressed: () => context.pushNamed(AppRoutes.settingsName),
+            ),
+          ],
+        );
+
+        if (isCompact) {
+          return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                AppConstants.appName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: isCompact
-                    ? theme.textTheme.titleMedium
-                    : theme.textTheme.titleLarge,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Editorial-grade NASA explorer',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+            children: [brand, const SizedBox(height: 16), actions],
+          );
+        }
 
-    final actions = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _PanelIconButton(
-          icon: Icons.travel_explore_rounded,
-          tooltip: 'Search',
-          onPressed: () => context.pushNamed(AppRoutes.searchName),
-        ),
-        const SizedBox(width: 12),
-        _PanelIconButton(
-          icon: Icons.bookmarks_rounded,
-          tooltip: 'Bookmarks',
-          onPressed: () => context.pushNamed(AppRoutes.bookmarksName),
-        ),
-        const SizedBox(width: 12),
-        _PanelIconButton(
-          icon: Icons.tune_rounded,
-          tooltip: 'Settings',
-          onPressed: () => context.pushNamed(AppRoutes.settingsName),
-        ),
-      ],
-    );
-
-    if (isCompact) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [brand, const SizedBox(height: 16), actions],
-      );
-    }
-
-    return Row(
-      children: [
-        Expanded(child: brand),
-        const SizedBox(width: 12),
-        actions,
-      ],
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: brand),
+            const SizedBox(width: 12),
+            actions,
+          ],
+        );
+      },
     );
   }
 }
@@ -252,18 +273,20 @@ class _PanelIconButton extends StatelessWidget {
   const _PanelIconButton({
     required this.icon,
     required this.onPressed,
+    required this.size,
     this.tooltip,
   });
 
   final IconData icon;
   final VoidCallback onPressed;
+  final double size;
   final String? tooltip;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 56,
-      height: 56,
+      width: size,
+      height: size,
       child: FrostedPanel(
         padding: EdgeInsets.zero,
         radius: AppConstants.radiusSmall,
@@ -273,7 +296,7 @@ class _PanelIconButton extends StatelessWidget {
             child: IconButton(
               onPressed: onPressed,
               padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(width: 56, height: 56),
+              constraints: BoxConstraints.tightFor(width: size, height: size),
               icon: Icon(icon),
             ),
           ),
