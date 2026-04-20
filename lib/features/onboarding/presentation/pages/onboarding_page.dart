@@ -10,6 +10,8 @@ import '../../../../shared/widgets/ambient_space_background.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../providers/onboarding_provider.dart';
 
+const _kOnboardingMaxWidth = 520.0;
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Orbit options (used by step 3 and step 4 + bottom nav)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -129,6 +131,77 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     final selectedOrbit = ref.watch(onboardingNotifierProvider);
     final isLastStep = _currentStep == _totalSteps - 1;
 
+    final isWide = MediaQuery.sizeOf(context).width > 600;
+
+    Widget content = Column(
+      children: [
+        _TopBar(
+          onSkip: _skip,
+          showSkip: !isLastStep,
+        ),
+        Expanded(
+          child: AnimatedSwitcher(
+            duration: AppConstants.motionSlow,
+            transitionBuilder: (child, animation) {
+              final curved = CurvedAnimation(
+                parent: animation,
+                curve: Curves.easeOutCubic,
+              );
+              return FadeTransition(
+                opacity: curved,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.034),
+                    end: Offset.zero,
+                  ).animate(curved),
+                  child: child,
+                ),
+              );
+            },
+            child: [
+              const _BrandIntroStep(key: ValueKey(0)),
+              const _DiscoveryLanesStep(key: ValueKey(1)),
+              _ChooseOrbitStep(
+                key: const ValueKey(2),
+                selectedOrbit: selectedOrbit,
+                onOrbitSelected: (route) => ref
+                    .read(onboardingNotifierProvider.notifier)
+                    .selectOrbit(route),
+              ),
+              _ReadyStep(
+                key: const ValueKey(3),
+                selectedOrbit: selectedOrbit,
+              ),
+            ][_currentStep],
+          ),
+        ),
+        _BottomNav(
+          currentStep: _currentStep,
+          totalSteps: _totalSteps,
+          selectedOrbit: selectedOrbit,
+          isLastStep: isLastStep,
+          onNext: _next,
+          onComplete: () => _complete(),
+          onCompleteToHome: () => _complete(forceHome: true),
+        ),
+      ],
+    );
+
+    if (isWide) {
+      content = Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: _kOnboardingMaxWidth,
+            maxHeight: 780,
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppConstants.radiusLarge),
+            child: content,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
@@ -138,61 +211,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           const DecoratedBox(
             decoration: BoxDecoration(gradient: AppGradients.screenVeil),
           ),
-          SafeArea(
-            child: Column(
-              children: [
-                _TopBar(
-                  onSkip: _skip,
-                  showSkip: !isLastStep,
-                ),
-                Expanded(
-                  child: AnimatedSwitcher(
-                    duration: AppConstants.motionSlow,
-                    transitionBuilder: (child, animation) {
-                      final curved = CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeOutCubic,
-                      );
-                      return FadeTransition(
-                        opacity: curved,
-                        child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, 0.034),
-                            end: Offset.zero,
-                          ).animate(curved),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: [
-                      const _BrandIntroStep(key: ValueKey(0)),
-                      const _DiscoveryLanesStep(key: ValueKey(1)),
-                      _ChooseOrbitStep(
-                        key: const ValueKey(2),
-                        selectedOrbit: selectedOrbit,
-                        onOrbitSelected: (route) => ref
-                            .read(onboardingNotifierProvider.notifier)
-                            .selectOrbit(route),
-                      ),
-                      _ReadyStep(
-                        key: const ValueKey(3),
-                        selectedOrbit: selectedOrbit,
-                      ),
-                    ][_currentStep],
-                  ),
-                ),
-                _BottomNav(
-                  currentStep: _currentStep,
-                  totalSteps: _totalSteps,
-                  selectedOrbit: selectedOrbit,
-                  isLastStep: isLastStep,
-                  onNext: _next,
-                  onComplete: () => _complete(),
-                  onCompleteToHome: () => _complete(forceHome: true),
-                ),
-              ],
-            ),
-          ),
+          SafeArea(child: content),
         ],
       ),
     );
@@ -597,22 +616,28 @@ class _ChooseOrbitStep extends StatelessWidget {
             style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 24),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.7,
-            children: _orbitOptions
-                .map(
-                  (opt) => _OrbitCard(
-                    option: opt,
-                    isSelected: selectedOrbit == opt.routeName,
-                    onTap: () => onOrbitSelected(opt.routeName),
-                  ),
-                )
-                .toList(),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final cols = constraints.maxWidth > 400 ? 3 : 2;
+              final aspectRatio = cols == 3 ? 1.55 : 1.7;
+              return GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: cols,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: aspectRatio,
+                children: _orbitOptions
+                    .map(
+                      (opt) => _OrbitCard(
+                        option: opt,
+                        isSelected: selectedOrbit == opt.routeName,
+                        onTap: () => onOrbitSelected(opt.routeName),
+                      ),
+                    )
+                    .toList(),
+              );
+            },
           ),
           const SizedBox(height: 24),
         ],
