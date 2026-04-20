@@ -61,6 +61,22 @@ final homePreviewProvider = Provider<HomePreviewData>((ref) {
         ],
       ),
       HomeFeaturePreview(
+        routeName: AppRoutes.wallpapersName,
+        kicker: 'Curated gallery',
+        title: 'Wallpapers',
+        description:
+            'Browse a curated collection of stunning space imagery. Download to your device or share your favourite shots.',
+        imageUrl: '',
+        assetImagePath: 'assets/images/wallpapers.png',
+        accentColor: AppColors.secondary,
+        icon: Icons.wallpaper_rounded,
+        ctaLabel: 'Browse wallpapers',
+        metrics: [
+          FeatureMetric(label: 'Source', value: 'Firebase gallery'),
+          FeatureMetric(label: 'Actions', value: 'Download and share'),
+        ],
+      ),
+      HomeFeaturePreview(
         routeName: AppRoutes.epicEarthName,
         kicker: 'Earth archive',
         title: 'EPIC Earth Gallery',
@@ -103,21 +119,6 @@ final homePreviewProvider = Provider<HomePreviewData>((ref) {
         metrics: [
           FeatureMetric(label: 'Mode', value: 'Grid or list'),
           FeatureMetric(label: 'Scope', value: 'Image and video'),
-        ],
-      ),
-      HomeFeaturePreview(
-        routeName: AppRoutes.wallpapersName,
-        kicker: 'Curated gallery',
-        title: 'Wallpapers',
-        description:
-            'Browse a curated collection of stunning space imagery. Download to your device or share your favourite shots.',
-        imageUrl: AppConstants.wallpapersPreviewImage,
-        accentColor: AppColors.secondary,
-        icon: Icons.wallpaper_rounded,
-        ctaLabel: 'Browse wallpapers',
-        metrics: [
-          FeatureMetric(label: 'Source', value: 'Firebase gallery'),
-          FeatureMetric(label: 'Actions', value: 'Download and share'),
         ],
       ),
     ],

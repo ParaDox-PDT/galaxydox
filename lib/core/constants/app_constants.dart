@@ -34,6 +34,4 @@ abstract final class AppConstants {
       'https://images-assets.nasa.gov/image/PIA19379/PIA19379~small.jpg';
   static const searchPreviewImage =
       'https://images-assets.nasa.gov/image/PIA14417/PIA14417~medium.jpg';
-  static const wallpapersPreviewImage =
-      'https://images-assets.nasa.gov/image/GSFC_20171208_Archive_e001861/GSFC_20171208_Archive_e001861~medium.jpg';
 }
