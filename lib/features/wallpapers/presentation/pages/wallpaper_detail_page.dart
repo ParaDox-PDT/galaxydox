@@ -1,13 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../data/wallpaper_download_service.dart';
 import '../../domain/wallpaper_entity.dart';
 
 class WallpaperDetailPage extends StatefulWidget {
@@ -20,10 +20,12 @@ class WallpaperDetailPage extends StatefulWidget {
 }
 
 class _WallpaperDetailPageState extends State<WallpaperDetailPage> {
+  static const _downloadService = WallpaperDownloadService();
+
   late final PhotoViewController _photoController;
   late final PhotoViewScaleStateController _scaleStateController;
   bool _isDownloading = false;
-  double _downloadProgress = 0;
+  double? _downloadProgress;
 
   @override
   void initState() {
@@ -42,51 +44,51 @@ class _WallpaperDetailPageState extends State<WallpaperDetailPage> {
   Future<void> _downloadWallpaper() async {
     if (_isDownloading) return;
 
+    final imageUri = Uri.tryParse(widget.wallpaper.imageUrl.trim());
+    if (imageUri == null || !imageUri.hasScheme) {
+      _showSnackBar(
+        'This wallpaper does not have a valid download link.',
+        icon: Icons.error_rounded,
+        color: AppColors.error,
+      );
+      return;
+    }
+
     setState(() {
       _isDownloading = true;
       _downloadProgress = 0;
     });
 
     try {
-      final dir = await getApplicationDocumentsDirectory();
-      final safeTitle = widget.wallpaper.title
-          .replaceAll(RegExp(r'[^\w\s]'), '')
-          .replaceAll(RegExp(r'\s+'), '_')
-          .toLowerCase();
-      final fileName = 'wallpaper_${safeTitle}_${widget.wallpaper.id}.jpg';
-      final filePath = '${dir.path}/$fileName';
-
-      await Dio().download(
-        widget.wallpaper.imageUrl,
-        filePath,
-        onReceiveProgress: (received, total) {
-          if (total > 0 && mounted) {
-            setState(() => _downloadProgress = received / total);
-          }
+      final result = await _downloadService.download(
+        imageUri: imageUri,
+        fileName: _buildFileName(imageUri),
+        onProgress: (progress) {
+          if (!mounted) return;
+          setState(() => _downloadProgress = progress);
         },
       );
 
-      if (mounted) {
-        HapticFeedback.lightImpact();
-        _showSnackBar(
-          'Saved to your device',
-          icon: Icons.check_circle_rounded,
-          color: AppColors.tertiary,
-        );
-      }
-    } catch (_) {
-      if (mounted) {
-        _showSnackBar(
-          'Download failed. Please try again.',
-          icon: Icons.error_rounded,
-          color: AppColors.error,
-        );
-      }
+      if (!mounted) return;
+
+      HapticFeedback.lightImpact();
+      _showSnackBar(
+        result.message,
+        icon: Icons.check_circle_rounded,
+        color: AppColors.tertiary,
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      final message = error is AppException
+          ? error.message
+          : 'Download failed. Please try again.';
+      _showSnackBar(message, icon: Icons.error_rounded, color: AppColors.error);
     } finally {
       if (mounted) {
         setState(() {
           _isDownloading = false;
-          _downloadProgress = 0;
+          _downloadProgress = null;
         });
       }
     }
@@ -98,32 +100,63 @@ class _WallpaperDetailPageState extends State<WallpaperDetailPage> {
     );
   }
 
+  String _buildFileName(Uri imageUri) {
+    final safeTitle = widget.wallpaper.title
+        .replaceAll(RegExp(r'[^\w\s-]'), '')
+        .replaceAll(RegExp(r'\s+'), '_')
+        .toLowerCase();
+    final extension = _resolveExtension(imageUri);
+    return 'wallpaper_${safeTitle}_${widget.wallpaper.id}$extension';
+  }
+
+  String _resolveExtension(Uri imageUri) {
+    if (imageUri.pathSegments.isEmpty) {
+      return '.jpg';
+    }
+
+    final lastSegment = imageUri.pathSegments.last;
+    final dotIndex = lastSegment.lastIndexOf('.');
+    if (dotIndex == -1 || dotIndex == lastSegment.length - 1) {
+      return '.jpg';
+    }
+
+    final extension = lastSegment.substring(dotIndex).toLowerCase();
+    if (!RegExp(r'^\.[a-z0-9]{2,5}$').hasMatch(extension)) {
+      return '.jpg';
+    }
+
+    return extension;
+  }
+
   void _showSnackBar(
     String message, {
     required IconData icon,
     required Color color,
   }) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(icon, color: color, size: 18),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(color: AppColors.textPrimary),
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(icon, color: color, size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(color: AppColors.textPrimary),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
+          backgroundColor: AppColors.surfaceElevated,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+          ),
         ),
-        backgroundColor: AppColors.surfaceElevated,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
-        ),
-      ),
-    );
+      );
   }
 
   PhotoViewScaleState _scaleStateCycle(PhotoViewScaleState actual) {
@@ -182,7 +215,9 @@ class _WallpaperDetailPageState extends State<WallpaperDetailPage> {
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
-                      value: _downloadProgress > 0 ? _downloadProgress : null,
+                      value: _downloadProgress != null && _downloadProgress! > 0
+                          ? _downloadProgress
+                          : null,
                       strokeWidth: 2.2,
                       color: Colors.white,
                     ),

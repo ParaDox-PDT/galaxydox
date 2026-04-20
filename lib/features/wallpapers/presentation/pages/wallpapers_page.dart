@@ -168,12 +168,10 @@ class _WallpapersGridSliver extends StatelessWidget {
   const _WallpapersGridSliver({
     required this.itemCount,
     required this.itemBuilder,
-    this.gridDelegate,
   });
 
   final int itemCount;
   final Widget Function(BuildContext context, int index) itemBuilder;
-  final SliverGridDelegate? gridDelegate;
 
   @override
   Widget build(BuildContext context) {
@@ -182,18 +180,11 @@ class _WallpapersGridSliver extends StatelessWidget {
         final horizontalPadding = _gridHorizontalPadding(
           constraints.crossAxisExtent,
         );
-        final contentWidth = math
-            .max(0, constraints.crossAxisExtent - (horizontalPadding * 2))
-            .toDouble();
-
-        final resolvedGridDelegate =
-            gridDelegate ??
-            SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: _crossAxisCountForWidth(contentWidth),
-              mainAxisSpacing: AppConstants.cardGap * 0.6,
-              crossAxisSpacing: AppConstants.cardGap * 0.6,
-              childAspectRatio: 0.72,
-            );
+        final contentWidth = math.max(
+          0.0,
+          constraints.crossAxisExtent - (horizontalPadding * 2),
+        );
+        final gridSpec = _wallpaperGridSpecFor(contentWidth);
 
         return SliverPadding(
           padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
@@ -202,7 +193,12 @@ class _WallpapersGridSliver extends StatelessWidget {
               itemBuilder,
               childCount: itemCount,
             ),
-            gridDelegate: resolvedGridDelegate,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: gridSpec.crossAxisCount,
+              mainAxisSpacing: gridSpec.spacing,
+              crossAxisSpacing: gridSpec.spacing,
+              childAspectRatio: gridSpec.childAspectRatio,
+            ),
           ),
         );
       },
@@ -217,60 +213,186 @@ class _WallpaperGridItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        context.pushNamed(
-          AppRoutes.wallpaperDetailName,
-          pathParameters: {'id': wallpaper.id},
-          extra: wallpaper,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 210;
+        final theme = Theme.of(context);
+        final titleStyle =
+            (isCompact
+                    ? theme.textTheme.labelLarge
+                    : theme.textTheme.titleMedium)
+                ?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                );
+        final bodyStyle = theme.textTheme.bodySmall?.copyWith(
+          color: AppColors.textSecondary,
+          height: 1.35,
         );
-      },
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            PremiumNetworkImage(
-              imageUrl: wallpaper.imageUrl,
-              fit: BoxFit.cover,
-            ),
-            Positioned.fill(
-              child: DecoratedBox(
+
+        return Semantics(
+          button: true,
+          label: wallpaper.title,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+              onTap: () {
+                context.pushNamed(
+                  AppRoutes.wallpaperDetailName,
+                  pathParameters: {'id': wallpaper.id},
+                  extra: wallpaper,
+                );
+              },
+              child: Ink(
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.transparent,
-                      AppColors.shadow.withValues(alpha: 0.55),
-                      AppColors.shadow.withValues(alpha: 0.88),
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.radiusMedium,
+                  ),
+                  border: Border.all(color: AppColors.outlineSoft),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.shadow.withValues(alpha: 0.18),
+                      blurRadius: 28,
+                      offset: const Offset(0, 16),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.radiusMedium,
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      PremiumNetworkImage(
+                        imageUrl: wallpaper.imageUrl,
+                        fit: BoxFit.cover,
+                      ),
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                AppColors.backgroundDeep.withValues(
+                                  alpha: 0.08,
+                                ),
+                                Colors.transparent,
+                                AppColors.shadow.withValues(alpha: 0.58),
+                                AppColors.backgroundDeep.withValues(
+                                  alpha: 0.96,
+                                ),
+                              ],
+                              stops: const [0, 0.38, 0.72, 1],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: AppColors.backgroundDeep.withValues(
+                              alpha: 0.56,
+                            ),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(color: AppColors.outlineSoft),
+                          ),
+                          child: const Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Icon(
+                              Icons.open_in_full_rounded,
+                              size: 16,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 12,
+                        right: 12,
+                        bottom: 12,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              wallpaper.title,
+                              maxLines: isCompact ? 2 : 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: titleStyle,
+                            ),
+                            if (!isCompact &&
+                                wallpaper.description.trim().isNotEmpty) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                wallpaper.description,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: bodyStyle,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                     ],
-                    stops: const [0, 0.45, 0.75, 1],
                   ),
                 ),
               ),
             ),
-            Positioned(
-              left: 10,
-              right: 10,
-              bottom: 10,
-              child: Text(
-                wallpaper.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w600,
-                  height: 1.3,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
+}
+
+class _WallpaperGridSpec {
+  const _WallpaperGridSpec({
+    required this.crossAxisCount,
+    required this.childAspectRatio,
+    required this.spacing,
+  });
+
+  final int crossAxisCount;
+  final double childAspectRatio;
+  final double spacing;
+}
+
+_WallpaperGridSpec _wallpaperGridSpecFor(double contentWidth) {
+  if (contentWidth < 420) {
+    return const _WallpaperGridSpec(
+      crossAxisCount: 1,
+      childAspectRatio: 1.12,
+      spacing: 14,
+    );
+  }
+
+  if (contentWidth < 760) {
+    return const _WallpaperGridSpec(
+      crossAxisCount: 2,
+      childAspectRatio: 0.82,
+      spacing: 14,
+    );
+  }
+
+  if (contentWidth < 1120) {
+    return const _WallpaperGridSpec(
+      crossAxisCount: 3,
+      childAspectRatio: 0.78,
+      spacing: 16,
+    );
+  }
+
+  return const _WallpaperGridSpec(
+    crossAxisCount: 4,
+    childAspectRatio: 0.76,
+    spacing: 18,
+  );
 }
 
 class _WallpapersLoadingGrid extends StatelessWidget {
@@ -280,12 +402,6 @@ class _WallpapersLoadingGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return _WallpapersGridSliver(
       itemCount: 6,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: AppConstants.cardGap * 0.6,
-        crossAxisSpacing: AppConstants.cardGap * 0.6,
-        childAspectRatio: 0.72,
-      ),
       itemBuilder: (context, index) {
         return ClipRRect(
               borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
@@ -306,10 +422,4 @@ double _gridHorizontalPadding(double viewportWidth) {
     AppConstants.pagePadding,
     (viewportWidth - AppConstants.contentMaxWidth) / 2,
   );
-}
-
-int _crossAxisCountForWidth(double contentWidth) {
-  if (contentWidth >= 1080) return 4;
-  if (contentWidth >= 720) return 3;
-  return 2;
 }
