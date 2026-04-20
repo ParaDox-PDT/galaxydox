@@ -14,6 +14,7 @@ class PlanetModel extends PlanetEntity {
     required super.thumbnailUrl,
     required super.facts,
     required super.accentColor,
+    required super.forAllDevice,
   });
 
   factory PlanetModel.fromDocument(
@@ -37,6 +38,7 @@ class PlanetModel extends PlanetEntity {
           .where((fact) => fact.isNotEmpty)
           .toList(growable: false),
       accentColor: _parseAccentColor(data['accent_color']),
+      forAllDevice: data['for_all_device'] as bool? ?? true,
     );
   }
 

@@ -12,6 +12,7 @@ class PlanetEntity {
     this.thumbnailUrl = '',
     this.facts = const [],
     this.accentColor = const Color(0xFF9DD8FF),
+    this.forAllDevice = true,
   });
 
   final String id;
@@ -23,4 +24,5 @@ class PlanetEntity {
   final String thumbnailUrl;
   final List<String> facts;
   final Color accentColor;
+  final bool forAllDevice;
 }

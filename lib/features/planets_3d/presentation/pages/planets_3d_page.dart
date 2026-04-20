@@ -419,7 +419,7 @@ class _PlanetsLoadingView extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Loading planets from Firebase...',
+              'Preparing the planets for you...',
               style: Theme.of(
                 context,
               ).textTheme.bodyLarge?.copyWith(color: AppColors.textMuted),
