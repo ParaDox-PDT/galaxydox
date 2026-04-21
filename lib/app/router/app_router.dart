@@ -13,6 +13,7 @@ import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/mars_rover/presentation/pages/mars_rover_page.dart';
 import '../../features/nasa_search/presentation/pages/nasa_search_page.dart';
 import '../../features/neo/presentation/pages/neo_page.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/planets_3d/presentation/pages/planet_detail_page.dart';
 import '../../features/planets_3d/presentation/pages/planets_3d_page.dart';
 import '../../features/wallpapers/domain/wallpaper_entity.dart';
@@ -28,6 +29,10 @@ import 'app_routes.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'rootNavigator',
+);
+
+final rootNavigatorKeyProvider = Provider<GlobalKey<NavigatorState>>(
+  (ref) => _rootNavigatorKey,
 );
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -105,6 +110,11 @@ final List<RouteBase> _routes = [
     child: const BookmarksPage(),
   ),
   _appRoute(
+    path: AppRoutes.notificationsPath,
+    name: AppRoutes.notificationsName,
+    child: const NotificationsPage(),
+  ),
+  _appRoute(
     path: AppRoutes.auroraDemoPath,
     name: AppRoutes.auroraDemoName,
     child: const AuroraDemoPage(),
@@ -149,10 +159,16 @@ final List<RouteBase> _routes = [
     path: AppRoutes.wallpaperDetailPath,
     name: AppRoutes.wallpaperDetailName,
     pageBuilder: (context, state) {
-      final wallpaper = state.extra as WallpaperEntity;
+      final wallpaper = state.extra is WallpaperEntity
+          ? state.extra as WallpaperEntity
+          : null;
+      final id = state.pathParameters['id'] ?? '';
       return _buildPage(
         state: state,
-        child: WallpaperDetailPage(wallpaper: wallpaper),
+        child: WallpaperDetailPage(
+          wallpaperId: id,
+          initialWallpaper: wallpaper,
+        ),
       );
     },
   ),

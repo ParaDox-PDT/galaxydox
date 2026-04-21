@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -9,17 +10,70 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/wallpaper_download_service.dart';
 import '../../domain/wallpaper_entity.dart';
+import '../providers/wallpapers_provider.dart';
 
-class WallpaperDetailPage extends StatefulWidget {
-  const WallpaperDetailPage({required this.wallpaper, super.key});
+class WallpaperDetailPage extends ConsumerWidget {
+  const WallpaperDetailPage({
+    required this.wallpaperId,
+    this.initialWallpaper,
+    super.key,
+  });
+
+  final String wallpaperId;
+  final WallpaperEntity? initialWallpaper;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (initialWallpaper != null) {
+      return _WallpaperDetailContent(wallpaper: initialWallpaper!);
+    }
+
+    final wallpaperAsync = ref.watch(wallpaperByIdProvider(wallpaperId));
+    return wallpaperAsync.when(
+      loading: () => const _WallpaperDetailPlaceholder(
+        child: Center(
+          child: CircularProgressIndicator(
+            strokeWidth: 2.6,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ),
+      error: (error, _) => _WallpaperDetailPlaceholder(
+        child: _WallpaperDetailMessage(
+          title: 'Unable to open wallpaper',
+          message: error is AppException
+              ? error.message
+              : 'This wallpaper could not be loaded right now.',
+        ),
+      ),
+      data: (wallpaper) {
+        if (wallpaper == null) {
+          return const _WallpaperDetailPlaceholder(
+            child: _WallpaperDetailMessage(
+              title: 'Wallpaper not found',
+              message:
+                  'The related wallpaper document was not found in Firebase.',
+            ),
+          );
+        }
+
+        return _WallpaperDetailContent(wallpaper: wallpaper);
+      },
+    );
+  }
+}
+
+class _WallpaperDetailContent extends StatefulWidget {
+  const _WallpaperDetailContent({required this.wallpaper});
 
   final WallpaperEntity wallpaper;
 
   @override
-  State<WallpaperDetailPage> createState() => _WallpaperDetailPageState();
+  State<_WallpaperDetailContent> createState() =>
+      _WallpaperDetailContentState();
 }
 
-class _WallpaperDetailPageState extends State<WallpaperDetailPage> {
+class _WallpaperDetailContentState extends State<_WallpaperDetailContent> {
   static const _downloadService = WallpaperDownloadService();
 
   late final PhotoViewController _photoController;
@@ -271,6 +325,80 @@ class _WallpaperDetailPageState extends State<WallpaperDetailPage> {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _WallpaperDetailPlaceholder extends StatelessWidget {
+  const _WallpaperDetailPlaceholder({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).maybePop(),
+          icon: const Icon(Icons.arrow_back_rounded),
+          style: IconButton.styleFrom(
+            backgroundColor: Colors.black.withValues(alpha: 0.35),
+            foregroundColor: Colors.white,
+          ),
+        ),
+      ),
+      body: child,
+    );
+  }
+}
+
+class _WallpaperDetailMessage extends StatelessWidget {
+  const _WallpaperDetailMessage({required this.title, required this.message});
+
+  final String title;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.all(AppConstants.pagePadding),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.wallpaper_rounded,
+                size: 36,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(height: 18),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -26,6 +26,9 @@ abstract final class AppRoutes {
   static const bookmarksName = 'bookmarks';
   static const bookmarksPath = '/bookmarks';
 
+  static const notificationsName = 'notifications';
+  static const notificationsPath = '/notifications';
+
   static const auroraDemoName = 'aurora-demo';
   static const auroraDemoPath = '/aurora-demo';
 

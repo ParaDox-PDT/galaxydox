@@ -28,12 +28,36 @@ class WallpapersLocalDataSource {
     }
   }
 
+  Future<WallpaperModel?> getById(String id) async {
+    final cached = await getCached();
+    if (cached == null || cached.isEmpty) return null;
+
+    try {
+      return cached.firstWhere((wallpaper) => wallpaper.id == id);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> save(List<WallpaperModel> models) async {
     try {
       final box = await _box;
       await box.put(_cacheKey, models.map((m) => m.toMap()).toList());
     } catch (error) {
       debugPrint('WALLPAPERS CACHE WRITE ERROR: $error');
+    }
+  }
+
+  Future<void> upsert(WallpaperModel model) async {
+    try {
+      final current = (await getCached()) ?? const <WallpaperModel>[];
+      final updated =
+          current.where((wallpaper) => wallpaper.id != model.id).toList()
+            ..insert(0, model);
+
+      await save(updated);
+    } catch (error) {
+      debugPrint('WALLPAPER CACHE UPSERT ERROR: $error');
     }
   }
 }
