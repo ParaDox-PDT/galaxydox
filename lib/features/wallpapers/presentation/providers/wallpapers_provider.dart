@@ -6,8 +6,27 @@ import '../../data/datasources/wallpapers_firestore_data_source.dart';
 import '../../data/datasources/wallpapers_local_data_source.dart';
 import '../../domain/wallpaper_entity.dart';
 
-final wallpapersProvider = AsyncNotifierProvider.autoDispose<
-    WallpapersNotifier, List<WallpaperEntity>>(WallpapersNotifier.new);
+final wallpapersProvider =
+    AsyncNotifierProvider.autoDispose<
+      WallpapersNotifier,
+      List<WallpaperEntity>
+    >(WallpapersNotifier.new);
+
+final wallpaperByIdProvider = FutureProvider.autoDispose
+    .family<WallpaperEntity?, String>((ref, id) async {
+      final local = WallpapersLocalDataSource();
+      final cached = await local.getById(id);
+      if (cached != null) {
+        return cached.toEntity();
+      }
+
+      final remote = ref.watch(wallpapersFirestoreDataSourceProvider);
+      final fresh = await remote.fetchWallpaperById(id);
+      if (fresh != null) {
+        unawaited(local.upsert(fresh));
+      }
+      return fresh?.toEntity();
+    });
 
 class WallpapersNotifier extends AsyncNotifier<List<WallpaperEntity>> {
   late final WallpapersLocalDataSource _local;

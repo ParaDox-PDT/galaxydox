@@ -11,6 +11,7 @@ final wallpapersFirestoreDataSourceProvider =
 
 abstract interface class WallpapersFirestoreDataSource {
   Future<List<WallpaperModel>> fetchWallpapers();
+  Future<WallpaperModel?> fetchWallpaperById(String id);
 }
 
 class WallpapersFirestoreDataSourceImpl
@@ -38,6 +39,17 @@ class WallpapersFirestoreDataSourceImpl
         return bTime.compareTo(aTime);
       });
       return wallpapers;
+    } catch (error, stackTrace) {
+      _throwMappedError(error, stackTrace);
+    }
+  }
+
+  @override
+  Future<WallpaperModel?> fetchWallpaperById(String id) async {
+    try {
+      final document = await _collection.doc(id).get();
+      if (!document.exists) return null;
+      return WallpaperModel.fromDocument(document);
     } catch (error, stackTrace) {
       _throwMappedError(error, stackTrace);
     }

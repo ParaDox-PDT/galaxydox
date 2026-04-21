@@ -13,6 +13,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/page_header.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
 import '../../../../shared/widgets/premium_refresh_indicator.dart';
+import '../../../../shared/widgets/premium_scrollbar.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
 import '../../../../shared/widgets/state_panel.dart';
 import '../../domain/wallpaper_entity.dart';
@@ -39,12 +40,10 @@ class _WallpapersPageState extends ConsumerState<WallpapersPage> {
     final wallpapersAsync = ref.watch(wallpapersProvider);
 
     return SpaceScaffold(
-      body: Scrollbar(
+      body: PremiumScrollbar(
         controller: _scrollController,
-        thumbVisibility: true,
         child: PremiumRefreshIndicator(
-          onRefresh: () =>
-              ref.read(wallpapersProvider.notifier).forceRefresh(),
+          onRefresh: () => ref.read(wallpapersProvider.notifier).forceRefresh(),
           child: CustomScrollView(
             controller: _scrollController,
             physics: const BouncingScrollPhysics(
@@ -294,14 +293,13 @@ class _WallpaperGridItem extends StatelessWidget {
                     children: [
                       Hero(
                         tag: 'wallpaper-hero-${wallpaper.id}',
-                        flightShuttleBuilder: (_, _, _, _, _) =>
-                            ColoredBox(
-                              color: Colors.black,
-                              child: CachedNetworkImage(
-                                imageUrl: wallpaper.imageUrl,
-                                fit: BoxFit.contain,
-                              ),
-                            ),
+                        flightShuttleBuilder: (_, _, _, _, _) => ColoredBox(
+                          color: Colors.black,
+                          child: CachedNetworkImage(
+                            imageUrl: wallpaper.imageUrl,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
                         child: PremiumNetworkImage(
                           imageUrl: wallpaper.imageUrl,
                           fit: BoxFit.cover,

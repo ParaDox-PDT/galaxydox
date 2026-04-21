@@ -35,7 +35,7 @@ class PrivacyNoticePage extends StatelessWidget {
                 Text('Privacy notice', style: theme.textTheme.displayMedium),
                 const SizedBox(height: 12),
                 Text(
-                  'GalaxyDox is designed to minimize collection. The app focuses on reading NASA content, bookmarking favorites locally, and avoiding ads or analytics SDKs.',
+                  'GalaxyDox is designed to minimize collection where possible. The app focuses on reading NASA content, bookmarking favorites locally, and avoiding ads, social login, or profile accounts.',
                   style: theme.textTheme.bodyLarge,
                 ),
                 const SizedBox(height: 24),
@@ -48,13 +48,13 @@ class PrivacyNoticePage extends StatelessWidget {
                 const _PrivacySection(
                   title: 'What leaves the device',
                   body:
-                      'Search terms and NASA content requests are sent directly to NASA-operated APIs and media hosts so the app can load astronomy images, rover photos, asteroid data, and archive search results.',
+                      'Search terms and NASA content requests are sent directly to NASA-operated APIs and media hosts so the app can load astronomy images, rover photos, asteroid data, and archive search results. Firebase is also used for app configuration, analytics, crash reporting, Firestore-hosted content, and optional push notification delivery when you grant permission.',
                 ),
                 const SizedBox(height: 18),
                 const _PrivacySection(
                   title: 'What the app does not include',
                   body:
-                      'GalaxyDox does not ship with ad SDKs, analytics SDKs, push notification services, social login, or location tracking.',
+                      'GalaxyDox does not ship with ad networks, social login, or location tracking. Push notifications remain optional and are requested only after onboarding.',
                 ),
                 const SizedBox(height: 18),
                 const _PrivacySection(

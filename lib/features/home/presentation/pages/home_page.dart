@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../donation/presentation/providers/donation_config_provider.dart';
+import '../../../notifications/presentation/providers/notification_lifecycle_provider.dart';
+import '../../../notifications/presentation/providers/notifications_provider.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/premium_refresh_indicator.dart';
 // import '../../../../shared/widgets/section_heading.dart';
@@ -14,8 +17,24 @@ import '../providers/home_preview_provider.dart';
 // import '../widgets/hero_feature_card.dart';
 import '../widgets/home_feature_card.dart';
 
-class HomePage extends ConsumerWidget {
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
+
+  @override
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref
+          .read(notificationLifecycleControllerProvider)
+          .requestPermissionIfNeeded();
+    });
+  }
 
   Future<void> _refresh(WidgetRef ref) async {
     ref.invalidate(homePreviewProvider);
@@ -23,8 +42,10 @@ class HomePage extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final preview = ref.watch(homePreviewProvider);
+    final donationConfig = ref.watch(donationConfigProvider);
+    final unreadCount = ref.watch(unreadNotificationsCountProvider);
     final viewportWidth = MediaQuery.sizeOf(context).width;
     final horizontalPadding = viewportWidth < 640
         ? 16.0
@@ -53,7 +74,10 @@ class HomePage extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const _TopBar()
+                        _TopBar(
+                              showDonationAction: donationConfig.isEnabled,
+                              unreadNotificationCount: unreadCount,
+                            )
                             .animate()
                             .fadeIn(duration: 420.ms)
                             .slideY(begin: -0.06, end: 0),
@@ -153,7 +177,13 @@ class HomePage extends ConsumerWidget {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar();
+  const _TopBar({
+    required this.showDonationAction,
+    required this.unreadNotificationCount,
+  });
+
+  final bool showDonationAction;
+  final int unreadNotificationCount;
 
   @override
   Widget build(BuildContext context) {
@@ -241,11 +271,31 @@ class _TopBar extends StatelessWidget {
               onPressed: () => context.pushNamed(AppRoutes.bookmarksName),
             ),
             _PanelIconButton(
+              icon: Icons.notifications_none_rounded,
+              tooltip: 'Notifications',
+              size: iconButtonSize,
+              badgeCount: unreadNotificationCount,
+              onPressed: () => context.pushNamed(AppRoutes.notificationsName),
+            ),
+            _PanelIconButton(
               icon: Icons.tune_rounded,
               tooltip: 'Settings',
               size: iconButtonSize,
               onPressed: () => context.pushNamed(AppRoutes.settingsName),
             ),
+            _PanelIconButton(
+              icon: Icons.info_outline_rounded,
+              tooltip: 'About Me',
+              size: iconButtonSize,
+              onPressed: () => context.pushNamed(AppRoutes.aboutName),
+            ),
+            if (showDonationAction)
+              _PanelIconButton(
+                icon: Icons.volunteer_activism_outlined,
+                tooltip: 'Donation',
+                size: iconButtonSize,
+                onPressed: () => context.pushNamed(AppRoutes.donationName),
+              ),
           ],
         );
 
@@ -275,12 +325,14 @@ class _PanelIconButton extends StatelessWidget {
     required this.onPressed,
     required this.size,
     this.tooltip,
+    this.badgeCount = 0,
   });
 
   final IconData icon;
   final VoidCallback onPressed;
   final double size;
   final String? tooltip;
+  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -290,16 +342,52 @@ class _PanelIconButton extends StatelessWidget {
       child: FrostedPanel(
         padding: EdgeInsets.zero,
         radius: AppConstants.radiusSmall,
-        child: Center(
-          child: Tooltip(
-            message: tooltip ?? '',
-            child: IconButton(
-              onPressed: onPressed,
-              padding: EdgeInsets.zero,
-              constraints: BoxConstraints.tightFor(width: size, height: size),
-              icon: Icon(icon),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Center(
+              child: Tooltip(
+                message: tooltip ?? '',
+                child: IconButton(
+                  onPressed: onPressed,
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints.tightFor(
+                    width: size,
+                    height: size,
+                  ),
+                  icon: Icon(icon),
+                ),
+              ),
             ),
-          ),
+            if (badgeCount > 0)
+              Positioned(
+                top: 7,
+                right: 7,
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minWidth: 18,
+                    minHeight: 18,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.error,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: AppColors.backgroundDeep,
+                      width: 1.2,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    badgeCount > 9 ? '9+' : '$badgeCount',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );

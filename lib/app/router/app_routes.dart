@@ -26,11 +26,20 @@ abstract final class AppRoutes {
   static const bookmarksName = 'bookmarks';
   static const bookmarksPath = '/bookmarks';
 
+  static const notificationsName = 'notifications';
+  static const notificationsPath = '/notifications';
+
   static const auroraDemoName = 'aurora-demo';
   static const auroraDemoPath = '/aurora-demo';
 
   static const settingsName = 'settings';
   static const settingsPath = '/settings';
+
+  static const aboutName = 'about';
+  static const aboutPath = '/about';
+
+  static const donationName = 'donation';
+  static const donationPath = '/donation';
 
   static const planets3dName = 'planets-3d';
   static const planets3dPath = '/planets-3d';

@@ -5,12 +5,15 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../features/apod/presentation/pages/apod_page.dart';
+import '../../features/about/presentation/pages/about_me_page.dart';
 import '../../features/demo/presentation/pages/aurora_demo_page.dart';
+import '../../features/donation/presentation/pages/donation_page.dart';
 import '../../features/epic_earth/presentation/pages/epic_earth_gallery_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/mars_rover/presentation/pages/mars_rover_page.dart';
 import '../../features/nasa_search/presentation/pages/nasa_search_page.dart';
 import '../../features/neo/presentation/pages/neo_page.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/planets_3d/presentation/pages/planet_detail_page.dart';
 import '../../features/planets_3d/presentation/pages/planets_3d_page.dart';
 import '../../features/wallpapers/domain/wallpaper_entity.dart';
@@ -28,11 +31,17 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>(
   debugLabel: 'rootNavigator',
 );
 
+final rootNavigatorKeyProvider = Provider<GlobalKey<NavigatorState>>(
+  (ref) => _rootNavigatorKey,
+);
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.splashPath,
-    observers: [FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance)],
+    observers: [
+      FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+    ],
     routes: _routes,
     errorPageBuilder: (context, state) => _buildPage(
       state: state,
@@ -101,6 +110,11 @@ final List<RouteBase> _routes = [
     child: const BookmarksPage(),
   ),
   _appRoute(
+    path: AppRoutes.notificationsPath,
+    name: AppRoutes.notificationsName,
+    child: const NotificationsPage(),
+  ),
+  _appRoute(
     path: AppRoutes.auroraDemoPath,
     name: AppRoutes.auroraDemoName,
     child: const AuroraDemoPage(),
@@ -109,6 +123,16 @@ final List<RouteBase> _routes = [
     path: AppRoutes.settingsPath,
     name: AppRoutes.settingsName,
     child: const SettingsPage(),
+  ),
+  _appRoute(
+    path: AppRoutes.aboutPath,
+    name: AppRoutes.aboutName,
+    child: const AboutMePage(),
+  ),
+  _appRoute(
+    path: AppRoutes.donationPath,
+    name: AppRoutes.donationName,
+    child: const DonationPage(),
   ),
   _appRoute(
     path: AppRoutes.planets3dPath,
@@ -135,10 +159,16 @@ final List<RouteBase> _routes = [
     path: AppRoutes.wallpaperDetailPath,
     name: AppRoutes.wallpaperDetailName,
     pageBuilder: (context, state) {
-      final wallpaper = state.extra as WallpaperEntity;
+      final wallpaper = state.extra is WallpaperEntity
+          ? state.extra as WallpaperEntity
+          : null;
+      final id = state.pathParameters['id'] ?? '';
       return _buildPage(
         state: state,
-        child: WallpaperDetailPage(wallpaper: wallpaper),
+        child: WallpaperDetailPage(
+          wallpaperId: id,
+          initialWallpaper: wallpaper,
+        ),
       );
     },
   ),
