@@ -14,7 +14,6 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../features/onboarding/data/onboarding_local_data_source.dart';
 import '../../../../firebase_options.dart';
 import '../../data/datasources/notifications_local_data_source.dart';
-import 'notification_navigation_service.dart';
 import 'notifications_provider.dart';
 import '../widgets/foreground_notification_toast.dart';
 
@@ -223,12 +222,7 @@ class NotificationLifecycleController {
     }
     _ref.invalidate(notificationsProvider);
 
-    final payload = NotificationNavigationPayload(
-      typeRaw: _readFirstNonEmpty(message.data, const ['type']),
-      routeId: _readFirstNonEmpty(message.data, const ['route_id']),
-    );
-
-    await _routeFromPayload(payload, waitForSplash: waitForSplash);
+    await _routeFromPayload(waitForSplash: waitForSplash);
   }
 
   Future<void> _handleLocalNotificationResponse(
@@ -245,25 +239,13 @@ class NotificationLifecycleController {
       }
       _ref.invalidate(notificationsProvider);
 
-      await _routeFromPayload(
-        NotificationNavigationPayload(
-          typeRaw: decoded['type']?.toString(),
-          routeId: decoded['route_id']?.toString(),
-        ),
-        waitForSplash: false,
-      );
+      await _routeFromPayload(waitForSplash: false);
     } catch (error) {
       debugPrint('LOCAL NOTIFICATION PAYLOAD ERROR: $error');
     }
   }
 
-  Future<void> _routeFromPayload(
-    NotificationNavigationPayload payload, {
-    required bool waitForSplash,
-  }) async {
-    final router = _router;
-    if (router == null) return;
-
+  Future<void> _routeFromPayload({required bool waitForSplash}) async {
     if (waitForSplash) {
       await Future<void>.delayed(
         AppConstants.splashDuration + const Duration(milliseconds: 350),
@@ -271,9 +253,7 @@ class NotificationLifecycleController {
     }
 
     if (!_ref.mounted) return;
-    _ref
-        .read(notificationNavigationServiceProvider)
-        .pushFromPayload(router, payload);
+    _openNotificationsInbox();
   }
 
   bool _isPermissionGranted(AuthorizationStatus status) {
