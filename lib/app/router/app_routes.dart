@@ -35,6 +35,9 @@ abstract final class AppRoutes {
   static const aboutName = 'about';
   static const aboutPath = '/about';
 
+  static const donationName = 'donation';
+  static const donationPath = '/donation';
+
   static const planets3dName = 'planets-3d';
   static const planets3dPath = '/planets-3d';
 

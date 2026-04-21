@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../donation/presentation/providers/donation_config_provider.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/premium_refresh_indicator.dart';
 // import '../../../../shared/widgets/section_heading.dart';
@@ -25,6 +26,7 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final preview = ref.watch(homePreviewProvider);
+    final donationConfig = ref.watch(donationConfigProvider);
     final viewportWidth = MediaQuery.sizeOf(context).width;
     final horizontalPadding = viewportWidth < 640
         ? 16.0
@@ -53,7 +55,7 @@ class HomePage extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const _TopBar()
+                        _TopBar(showDonationAction: donationConfig.isEnabled)
                             .animate()
                             .fadeIn(duration: 420.ms)
                             .slideY(begin: -0.06, end: 0),
@@ -153,7 +155,9 @@ class HomePage extends ConsumerWidget {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar();
+  const _TopBar({required this.showDonationAction});
+
+  final bool showDonationAction;
 
   @override
   Widget build(BuildContext context) {
@@ -252,6 +256,13 @@ class _TopBar extends StatelessWidget {
               size: iconButtonSize,
               onPressed: () => context.pushNamed(AppRoutes.aboutName),
             ),
+            if (showDonationAction)
+              _PanelIconButton(
+                icon: Icons.volunteer_activism_outlined,
+                tooltip: 'Donation',
+                size: iconButtonSize,
+                onPressed: () => context.pushNamed(AppRoutes.donationName),
+              ),
           ],
         );
 

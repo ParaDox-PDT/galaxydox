@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../features/donation/presentation/providers/donation_config_provider.dart';
 import '../../../../features/onboarding/presentation/providers/onboarding_provider.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
@@ -20,12 +21,19 @@ class SplashPage extends ConsumerStatefulWidget {
 }
 
 class _SplashPageState extends ConsumerState<SplashPage> {
-  Timer? _navigationTimer;
-
   @override
   void initState() {
     super.initState();
-    _navigationTimer = Timer(AppConstants.splashDuration, _navigate);
+    unawaited(_bootstrap());
+  }
+
+  Future<void> _bootstrap() async {
+    await Future.wait([
+      Future<void>.delayed(AppConstants.splashDuration),
+      ref.read(donationConfigProvider.notifier).refresh(),
+    ]);
+
+    _navigate();
   }
 
   void _navigate() {
@@ -40,7 +48,6 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
   @override
   void dispose() {
-    _navigationTimer?.cancel();
     super.dispose();
   }
 
