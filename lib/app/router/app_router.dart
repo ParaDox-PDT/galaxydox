@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../features/apod/presentation/pages/apod_page.dart';
+import '../../features/about/presentation/pages/about_me_page.dart';
 import '../../features/demo/presentation/pages/aurora_demo_page.dart';
 import '../../features/epic_earth/presentation/pages/epic_earth_gallery_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
@@ -32,7 +33,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.splashPath,
-    observers: [FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance)],
+    observers: [
+      FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+    ],
     routes: _routes,
     errorPageBuilder: (context, state) => _buildPage(
       state: state,
@@ -109,6 +112,11 @@ final List<RouteBase> _routes = [
     path: AppRoutes.settingsPath,
     name: AppRoutes.settingsName,
     child: const SettingsPage(),
+  ),
+  _appRoute(
+    path: AppRoutes.aboutPath,
+    name: AppRoutes.aboutName,
+    child: const AboutMePage(),
   ),
   _appRoute(
     path: AppRoutes.planets3dPath,

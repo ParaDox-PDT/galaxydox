@@ -32,6 +32,9 @@ abstract final class AppRoutes {
   static const settingsName = 'settings';
   static const settingsPath = '/settings';
 
+  static const aboutName = 'about';
+  static const aboutPath = '/about';
+
   static const planets3dName = 'planets-3d';
   static const planets3dPath = '/planets-3d';
 

@@ -246,6 +246,12 @@ class _TopBar extends StatelessWidget {
               size: iconButtonSize,
               onPressed: () => context.pushNamed(AppRoutes.settingsName),
             ),
+            _PanelIconButton(
+              icon: Icons.info_outline_rounded,
+              tooltip: 'About Me',
+              size: iconButtonSize,
+              onPressed: () => context.pushNamed(AppRoutes.aboutName),
+            ),
           ],
         );
 
