@@ -195,6 +195,14 @@ class _TopBar extends StatelessWidget {
         final isNarrow = constraints.maxWidth < 420;
         final iconButtonSize = constraints.maxWidth < 520 ? 52.0 : 56.0;
 
+        final notificationAction = _PanelIconButton(
+          icon: Icons.notifications_none_rounded,
+          tooltip: 'Notifications',
+          size: iconButtonSize,
+          badgeCount: unreadNotificationCount,
+          onPressed: () => context.pushNamed(AppRoutes.notificationsName),
+        );
+
         final brand = Row(
           children: [
             Container(
@@ -251,6 +259,8 @@ class _TopBar extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(width: 12),
+            notificationAction,
           ],
         );
 
@@ -269,13 +279,6 @@ class _TopBar extends StatelessWidget {
               tooltip: 'Bookmarks',
               size: iconButtonSize,
               onPressed: () => context.pushNamed(AppRoutes.bookmarksName),
-            ),
-            _PanelIconButton(
-              icon: Icons.notifications_none_rounded,
-              tooltip: 'Notifications',
-              size: iconButtonSize,
-              badgeCount: unreadNotificationCount,
-              onPressed: () => context.pushNamed(AppRoutes.notificationsName),
             ),
             _PanelIconButton(
               icon: Icons.tune_rounded,
