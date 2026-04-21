@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/router/app_router.dart';
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -25,15 +28,64 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  bool _didHandleNotificationPermissionFlow = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref
-          .read(notificationLifecycleControllerProvider)
-          .requestPermissionIfNeeded();
+      _handleNotificationPermissionFlow();
     });
+  }
+
+  Future<void> _handleNotificationPermissionFlow() async {
+    if (_didHandleNotificationPermissionFlow || !mounted) return;
+    _didHandleNotificationPermissionFlow = true;
+
+    final controller = ref.read(notificationLifecycleControllerProvider);
+    await controller.initialize(
+      router: ref.read(appRouterProvider),
+      navigatorKey: ref.read(rootNavigatorKeyProvider),
+    );
+
+    if (!controller.shouldSuggestPermissionPrompt() || !mounted) return;
+
+    await Future<void>.delayed(const Duration(milliseconds: 320));
+    if (!mounted) return;
+
+    final shouldRequestPermission =
+        await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) {
+            return AlertDialog(
+              title: const Text('Stay in the loop?'),
+              content: const Text(
+                'Would you like to stay up to date with GalaxyDox news, new wallpapers, and app updates? Turn on notifications so you never miss what is new.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Not now'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: const Text('Turn on notifications'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
+
+    if (!mounted) return;
+
+    if (shouldRequestPermission) {
+      await controller.requestPermissionFromSuggestion();
+      return;
+    }
+
+    await controller.skipPermissionPromptSuggestion();
   }
 
   Future<void> _refresh(WidgetRef ref) async {

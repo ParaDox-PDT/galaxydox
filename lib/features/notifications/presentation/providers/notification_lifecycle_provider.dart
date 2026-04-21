@@ -56,6 +56,7 @@ class NotificationLifecycleController {
 
   StreamSubscription<RemoteMessage>? _onMessageSubscription;
   StreamSubscription<RemoteMessage>? _onMessageOpenedSubscription;
+  StreamSubscription<String>? _onTokenRefreshSubscription;
 
   bool _initialized = false;
   GoRouter? _router;
@@ -89,6 +90,9 @@ class NotificationLifecycleController {
     _onMessageOpenedSubscription = FirebaseMessaging.onMessageOpenedApp.listen(
       (message) => _handleOpenedMessage(message, waitForSplash: false),
     );
+    _onTokenRefreshSubscription = _messaging.onTokenRefresh.listen((_) {
+      unawaited(_restoreTopicSubscriptionIfPossible());
+    });
 
     await _restoreTopicSubscriptionIfPossible();
 
@@ -103,11 +107,30 @@ class NotificationLifecycleController {
 
     final preferences = OnboardingLocalDataSource();
     if (!preferences.hasCompletedOnboarding) return;
+    if (!preferences.hasRequestedNotificationPermission) return;
+    await _restoreTopicSubscriptionIfPossible();
+  }
 
-    if (preferences.hasRequestedNotificationPermission) {
-      await _restoreTopicSubscriptionIfPossible();
-      return;
-    }
+  bool shouldSuggestPermissionPrompt() {
+    if (kIsWeb) return false;
+
+    final preferences = OnboardingLocalDataSource();
+    return preferences.hasCompletedOnboarding &&
+        !preferences.hasRequestedNotificationPermission &&
+        !preferences.hasHandledNotificationPermissionSuggestion;
+  }
+
+  Future<void> skipPermissionPromptSuggestion() async {
+    if (kIsWeb) return;
+    await OnboardingLocalDataSource()
+        .markNotificationPermissionSuggestionHandled();
+  }
+
+  Future<bool> requestPermissionFromSuggestion() async {
+    if (kIsWeb) return false;
+
+    final preferences = OnboardingLocalDataSource();
+    await preferences.markNotificationPermissionSuggestionHandled();
 
     final settings = await _messaging.requestPermission(
       alert: true,
@@ -123,6 +146,8 @@ class NotificationLifecycleController {
     if (granted) {
       _ref.invalidate(notificationsProvider);
     }
+
+    return granted;
   }
 
   void dispose() {
@@ -131,6 +156,9 @@ class NotificationLifecycleController {
     }
     if (_onMessageOpenedSubscription != null) {
       unawaited(_onMessageOpenedSubscription!.cancel());
+    }
+    if (_onTokenRefreshSubscription != null) {
+      unawaited(_onTokenRefreshSubscription!.cancel());
     }
   }
 
@@ -181,8 +209,13 @@ class NotificationLifecycleController {
 
   Future<void> _syncTopicSubscription(bool granted) async {
     try {
+      await _messaging.setAutoInitEnabled(granted);
       if (granted) {
-        await _messaging.getToken();
+        final token = await _waitForFcmToken();
+        if (token == null) {
+          debugPrint('FCM TOKEN UNAVAILABLE: Topic subscription deferred.');
+          return;
+        }
         await _messaging.subscribeToTopic(notificationTopicName);
       } else {
         await _messaging.unsubscribeFromTopic(notificationTopicName);
@@ -190,6 +223,18 @@ class NotificationLifecycleController {
     } catch (error) {
       debugPrint('FCM TOPIC SYNC ERROR: $error');
     }
+  }
+
+  Future<String?> _waitForFcmToken() async {
+    for (var attempt = 0; attempt < 6; attempt++) {
+      final token = await _messaging.getToken();
+      final normalizedToken = token?.trim();
+      if (normalizedToken != null && normalizedToken.isNotEmpty) {
+        return normalizedToken;
+      }
+      await Future<void>.delayed(Duration(milliseconds: 350 * (attempt + 1)));
+    }
+    return null;
   }
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
