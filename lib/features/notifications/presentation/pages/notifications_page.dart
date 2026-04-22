@@ -60,10 +60,13 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
       body: PremiumScrollbar(
         controller: _scrollController,
         child: PremiumRefreshIndicator(
-          onRefresh: () => ref.read(notificationsProvider.notifier).forceRefresh(),
+          onRefresh: () =>
+              ref.read(notificationsProvider.notifier).forceRefresh(),
           child: CustomScrollView(
             controller: _scrollController,
-            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
             slivers: [
               SliverToBoxAdapter(
                 child: Center(
@@ -92,8 +95,9 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                               label: const Text('Mark all read'),
                             ),
                           FilledButton.icon(
-                            onPressed: () =>
-                                ref.read(notificationsProvider.notifier).forceRefresh(),
+                            onPressed: () => ref
+                                .read(notificationsProvider.notifier)
+                                .forceRefresh(),
                             icon: const Icon(Icons.refresh_rounded),
                             label: const Text('Refresh'),
                           ),
@@ -124,8 +128,9 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                             StatePanelAction(
                               label: 'Try again',
                               icon: Icons.refresh_rounded,
-                              onPressed: () =>
-                                  ref.read(notificationsProvider.notifier).forceRefresh(),
+                              onPressed: () => ref
+                                  .read(notificationsProvider.notifier)
+                                  .forceRefresh(),
                             ),
                           ],
                         ),
@@ -230,7 +235,7 @@ class _NotificationsListSliver extends StatelessWidget {
               if (layout.columns == 1) {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 14),
-                  child: _buildAnimatedCard(startIndex),
+                  child: _buildCard(startIndex),
                 );
               }
 
@@ -241,11 +246,11 @@ class _NotificationsListSliver extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: _buildAnimatedCard(startIndex)),
+                    Expanded(child: _buildCard(startIndex)),
                     SizedBox(width: layout.spacing),
                     Expanded(
                       child: nextIndex < notifications.length
-                          ? _buildAnimatedCard(nextIndex)
+                          ? _buildCard(nextIndex)
                           : const SizedBox.shrink(),
                     ),
                   ],
@@ -258,18 +263,12 @@ class _NotificationsListSliver extends StatelessWidget {
     );
   }
 
-  Widget _buildAnimatedCard(int index) {
+  Widget _buildCard(int index) {
     return _NotificationCard(
-          notification: notifications[index],
-          dateFormat: dateFormat,
-          onTap: () => onTap(notifications[index]),
-        )
-        .animate()
-        .fadeIn(
-          delay: Duration(milliseconds: math.min(40 * index, 240)),
-          duration: AppConstants.motionMedium,
-        )
-        .slideY(begin: 0.06, end: 0);
+      notification: notifications[index],
+      dateFormat: dateFormat,
+      onTap: () => onTap(notifications[index]),
+    );
   }
 }
 
@@ -434,9 +433,8 @@ class _NotificationCardState extends State<_NotificationCard> {
                                 if (createdAt != null)
                                   Text(
                                     createdAt,
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: AppColors.textMuted,
-                                    ),
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(color: AppColors.textMuted),
                                   ),
                               ],
                             ),
@@ -508,7 +506,10 @@ class _NotificationCardState extends State<_NotificationCard> {
 }
 
 class _NotificationImage extends StatelessWidget {
-  const _NotificationImage({required this.imageUrl, required this.onLoadFailed});
+  const _NotificationImage({
+    required this.imageUrl,
+    required this.onLoadFailed,
+  });
 
   final String imageUrl;
   final VoidCallback onLoadFailed;
@@ -578,9 +579,10 @@ class _NotificationTypeChip extends StatelessWidget {
       ),
       child: Text(
         type.label,
-        style: Theme.of(
-          context,
-        ).textTheme.labelMedium?.copyWith(color: accent, fontWeight: FontWeight.w700),
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: accent,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
