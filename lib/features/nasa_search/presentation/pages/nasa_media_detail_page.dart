@@ -13,7 +13,6 @@ import '../../../../shared/navigation/swipe_back_route.dart';
 import '../../../../shared/widgets/bookmark_button.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
-import '../../../../shared/widgets/section_heading.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
 import '../../../apod/presentation/widgets/apod_fullscreen_viewer.dart';
 import '../../domain/entities/nasa_media_item.dart';
@@ -96,8 +95,8 @@ class NasaMediaDetailPage extends ConsumerWidget {
                           color: AppColors.textPrimary.withValues(alpha: 0.84),
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      _EditorialPanel(item: item),
+                      // const SizedBox(height: 24),
+                      // _EditorialPanel(item: item),
                     ],
                   ),
                 ),
@@ -450,54 +449,54 @@ class _VideoStatusCard extends StatelessWidget {
   }
 }
 
-class _EditorialPanel extends StatelessWidget {
-  const _EditorialPanel({required this.item});
-
-  final NasaMediaItem item;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeading(
-          eyebrow: 'Context',
-          title: 'Why this result stands out',
-          subtitle:
-              'NASA media search returns a broad archive. This detail view keeps the media immersive while surfacing the identifiers and creators that give the entry provenance.',
-        ),
-        const SizedBox(height: 18),
-        FrostedPanel(
-          padding: const EdgeInsets.all(22),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Collection notes', style: theme.textTheme.titleLarge),
-              const SizedBox(height: 12),
-              Text(
-                'Bookmarks now persist locally, so saved archive results can survive app restarts and start building toward a fuller personal collection.',
-                style: theme.textTheme.bodyLarge,
-              ),
-              if (item.hasKeywords) ...[
-                const SizedBox(height: 20),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: [
-                    for (final keyword in item.keywords.take(8))
-                      AppChip(label: keyword),
-                  ],
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
+// class _EditorialPanel extends StatelessWidget {
+//   const _EditorialPanel({required this.item});
+//
+//   final NasaMediaItem item;
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     final theme = Theme.of(context);
+//
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         SectionHeading(
+//           eyebrow: 'Context',
+//           title: 'Why this result stands out',
+//           subtitle:
+//               'NASA media search returns a broad archive. This detail view keeps the media immersive while surfacing the identifiers and creators that give the entry provenance.',
+//         ),
+//         const SizedBox(height: 18),
+//         FrostedPanel(
+//           padding: const EdgeInsets.all(22),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               Text('Collection notes', style: theme.textTheme.titleLarge),
+//               const SizedBox(height: 12),
+//               Text(
+//                 'Bookmarks now persist locally, so saved archive results can survive app restarts and start building toward a fuller personal collection.',
+//                 style: theme.textTheme.bodyLarge,
+//               ),
+//               if (item.hasKeywords) ...[
+//                 const SizedBox(height: 20),
+//                 Wrap(
+//                   spacing: 10,
+//                   runSpacing: 10,
+//                   children: [
+//                     for (final keyword in item.keywords.take(8))
+//                       AppChip(label: keyword),
+//                   ],
+//                 ),
+//               ],
+//             ],
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+// }
 
 String _typeLabel(NasaMediaType type) {
   return switch (type) {

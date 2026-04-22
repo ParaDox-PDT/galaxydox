@@ -369,7 +369,7 @@ class _NotificationCardState extends State<_NotificationCard> {
               children: [
                 if (_showImage)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(1, 1, 1, 0),
+                    padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
                     child: ClipRRect(
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(AppConstants.radiusMedium - 2),
