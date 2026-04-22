@@ -20,6 +20,7 @@ import '../../../../shared/widgets/space_scaffold.dart';
 import '../../../../shared/widgets/state_panel.dart';
 import '../../domain/entities/apod_item.dart';
 import '../providers/apod_controller.dart';
+import '../utils/apod_video_launcher.dart';
 import '../widgets/apod_loading_view.dart';
 import '../widgets/apod_media_preview.dart';
 
@@ -411,6 +412,20 @@ class _ActionPanel extends ConsumerWidget {
               ),
             ],
           ),
+          if (item.isVideo) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => openApodVideoPlayer(context, item: item),
+                    icon: const Icon(Icons.play_circle_fill_rounded),
+                    label: const Text('Open video'),
+                  ),
+                ),
+              ],
+            ),
+          ],
           if (item.isImage && item.hasHdImage) ...[
             const SizedBox(height: 12),
             Row(

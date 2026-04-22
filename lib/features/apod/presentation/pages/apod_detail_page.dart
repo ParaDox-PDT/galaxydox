@@ -13,6 +13,7 @@ import '../../../../shared/widgets/page_header.dart';
 import '../../../../shared/widgets/section_heading.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
 import '../../domain/entities/apod_item.dart';
+import '../utils/apod_video_launcher.dart';
 import '../widgets/apod_media_preview.dart';
 
 class ApodDetailPage extends StatelessWidget {
@@ -241,6 +242,20 @@ class _ApodActionPanel extends StatelessWidget {
               ),
             ],
           ),
+          if (item.isVideo) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => openApodVideoPlayer(context, item: item),
+                    icon: const Icon(Icons.play_circle_fill_rounded),
+                    label: const Text('Open video'),
+                  ),
+                ),
+              ],
+            ),
+          ],
           if (item.isImage && item.hasHdImage) ...[
             const SizedBox(height: 12),
             Row(
