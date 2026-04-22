@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/navigation/galaxydox_deep_links.dart';
 import '../../features/apod/presentation/pages/apod_page.dart';
 import '../../features/about/presentation/pages/about_me_page.dart';
 import '../../features/demo/presentation/pages/aurora_demo_page.dart';
@@ -79,10 +80,17 @@ final List<RouteBase> _routes = [
     child: const HomePage(),
     enableSwipeBack: false,
   ),
-  _appRoute(
+  GoRoute(
     path: AppRoutes.apodPath,
     name: AppRoutes.apodName,
-    child: const ApodPage(),
+    pageBuilder: (context, state) => _buildPage(
+      state: state,
+      child: ApodPage(
+        initialDate: GalaxyDoxDeepLinks.parseApodDate(
+          state.uri.queryParameters[AppRoutes.apodDateQueryKey],
+        ),
+      ),
+    ),
   ),
   _appRoute(
     path: AppRoutes.marsRoverPath,

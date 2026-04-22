@@ -10,6 +10,7 @@ abstract final class AppRoutes {
 
   static const apodName = 'apod';
   static const apodPath = '/apod';
+  static const apodDateQueryKey = 'date';
 
   static const marsRoverName = 'mars-rover';
   static const marsRoverPath = '/mars-rover';
@@ -52,4 +53,6 @@ abstract final class AppRoutes {
 
   static const wallpaperDetailName = 'wallpaper-detail';
   static const wallpaperDetailPath = '/wallpapers/:id';
+
+  static String wallpaperDetailLocation(String id) => '$wallpapersPath/$id';
 }

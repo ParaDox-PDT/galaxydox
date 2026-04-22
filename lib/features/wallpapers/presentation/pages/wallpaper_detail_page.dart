@@ -11,6 +11,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../data/wallpaper_download_service.dart';
 import '../../domain/wallpaper_entity.dart';
 import '../providers/wallpapers_provider.dart';
+import '../utils/wallpaper_share_text.dart';
 
 class WallpaperDetailPage extends ConsumerWidget {
   const WallpaperDetailPage({
@@ -150,7 +151,7 @@ class _WallpaperDetailContentState extends State<_WallpaperDetailContent> {
 
   Future<void> _shareWallpaper() async {
     await SharePlus.instance.share(
-      ShareParams(text: widget.wallpaper.imageUrl),
+      ShareParams(text: buildWallpaperShareText(widget.wallpaper)),
     );
   }
 
