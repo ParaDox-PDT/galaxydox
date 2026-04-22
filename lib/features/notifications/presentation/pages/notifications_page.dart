@@ -60,13 +60,10 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
       body: PremiumScrollbar(
         controller: _scrollController,
         child: PremiumRefreshIndicator(
-          onRefresh: () =>
-              ref.read(notificationsProvider.notifier).forceRefresh(),
+          onRefresh: () => ref.read(notificationsProvider.notifier).forceRefresh(),
           child: CustomScrollView(
             controller: _scrollController,
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
+            physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
             slivers: [
               SliverToBoxAdapter(
                 child: Center(
@@ -95,9 +92,8 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                               label: const Text('Mark all read'),
                             ),
                           FilledButton.icon(
-                            onPressed: () => ref
-                                .read(notificationsProvider.notifier)
-                                .forceRefresh(),
+                            onPressed: () =>
+                                ref.read(notificationsProvider.notifier).forceRefresh(),
                             icon: const Icon(Icons.refresh_rounded),
                             label: const Text('Refresh'),
                           ),
@@ -128,9 +124,8 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                             StatePanelAction(
                               label: 'Try again',
                               icon: Icons.refresh_rounded,
-                              onPressed: () => ref
-                                  .read(notificationsProvider.notifier)
-                                  .forceRefresh(),
+                              onPressed: () =>
+                                  ref.read(notificationsProvider.notifier).forceRefresh(),
                             ),
                           ],
                         ),
@@ -214,49 +209,67 @@ class _NotificationsListSliver extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: AppConstants.contentMaxWidth,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppConstants.pagePadding,
-            ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final layout = _notificationsLayoutFor(constraints.maxWidth);
-                final itemWidth = layout.itemWidthFor(constraints.maxWidth);
+    return SliverLayoutBuilder(
+      builder: (context, constraints) {
+        final horizontalPadding = _notificationsHorizontalPaddingFor(
+          constraints.crossAxisExtent,
+        );
+        final contentWidth = math.max(
+          0.0,
+          constraints.crossAxisExtent - (horizontalPadding * 2),
+        );
+        final layout = _notificationsLayoutFor(contentWidth);
+        final rowCount = (notifications.length / layout.columns).ceil();
 
-                return Wrap(
-                  spacing: layout.spacing,
-                  runSpacing: 14,
-                  children: [
-                    for (var index = 0; index < notifications.length; index++)
-                      SizedBox(
-                        width: itemWidth,
-                        child:
-                            _NotificationCard(
-                                  notification: notifications[index],
-                                  dateFormat: dateFormat,
-                                  onTap: () => onTap(notifications[index]),
-                                )
-                                .animate()
-                                .fadeIn(
-                                  delay: Duration(milliseconds: 60 * index),
-                                  duration: AppConstants.motionMedium,
-                                )
-                                .slideY(begin: 0.06, end: 0),
-                      ),
-                  ],
+        return SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate((context, rowIndex) {
+              final startIndex = rowIndex * layout.columns;
+
+              if (layout.columns == 1) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: _buildAnimatedCard(startIndex),
                 );
-              },
-            ),
+              }
+
+              final nextIndex = startIndex + 1;
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: _buildAnimatedCard(startIndex)),
+                    SizedBox(width: layout.spacing),
+                    Expanded(
+                      child: nextIndex < notifications.length
+                          ? _buildAnimatedCard(nextIndex)
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+              );
+            }, childCount: rowCount),
           ),
-        ),
-      ),
+        );
+      },
     );
+  }
+
+  Widget _buildAnimatedCard(int index) {
+    return _NotificationCard(
+          notification: notifications[index],
+          dateFormat: dateFormat,
+          onTap: () => onTap(notifications[index]),
+        )
+        .animate()
+        .fadeIn(
+          delay: Duration(milliseconds: math.min(40 * index, 240)),
+          duration: AppConstants.motionMedium,
+        )
+        .slideY(begin: 0.06, end: 0);
   }
 }
 
@@ -265,37 +278,53 @@ class _NotificationsLoadingSliver extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            maxWidth: AppConstants.contentMaxWidth,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppConstants.pagePadding,
-            ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final layout = _notificationsLayoutFor(constraints.maxWidth);
-                final itemWidth = layout.itemWidthFor(constraints.maxWidth);
+    return SliverLayoutBuilder(
+      builder: (context, constraints) {
+        final horizontalPadding = _notificationsHorizontalPaddingFor(
+          constraints.crossAxisExtent,
+        );
+        final contentWidth = math.max(
+          0.0,
+          constraints.crossAxisExtent - (horizontalPadding * 2),
+        );
+        final layout = _notificationsLayoutFor(contentWidth);
+        const itemCount = 4;
+        final rowCount = (itemCount / layout.columns).ceil();
 
-                return Wrap(
-                  spacing: layout.spacing,
-                  runSpacing: 14,
-                  children: List.generate(
-                    4,
-                    (_) => SizedBox(
-                      width: itemWidth,
-                      child: const _NotificationLoadingCard(),
-                    ),
-                  ),
+        return SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate((context, rowIndex) {
+              final startIndex = rowIndex * layout.columns;
+
+              if (layout.columns == 1) {
+                return const Padding(
+                  padding: EdgeInsets.only(bottom: 14),
+                  child: _NotificationLoadingCard(),
                 );
-              },
-            ),
+              }
+
+              final nextIndex = startIndex + 1;
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Expanded(child: _NotificationLoadingCard()),
+                    SizedBox(width: layout.spacing),
+                    Expanded(
+                      child: nextIndex < itemCount
+                          ? const _NotificationLoadingCard()
+                          : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+              );
+            }, childCount: rowCount),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -305,10 +334,14 @@ class _NotificationsLayout {
 
   final int columns;
   final double spacing;
+}
 
-  double itemWidthFor(double width) {
-    return math.max(0, (width - (spacing * (columns - 1))) / columns);
-  }
+double _notificationsHorizontalPaddingFor(double viewportWidth) {
+  final centeredGutter = math.max(
+    0.0,
+    (viewportWidth - AppConstants.contentMaxWidth) / 2,
+  );
+  return centeredGutter + AppConstants.pagePadding;
 }
 
 _NotificationsLayout _notificationsLayoutFor(double width) {
@@ -401,8 +434,9 @@ class _NotificationCardState extends State<_NotificationCard> {
                                 if (createdAt != null)
                                   Text(
                                     createdAt,
-                                    style: theme.textTheme.labelMedium
-                                        ?.copyWith(color: AppColors.textMuted),
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                      color: AppColors.textMuted,
+                                    ),
                                   ),
                               ],
                             ),
@@ -474,10 +508,7 @@ class _NotificationCardState extends State<_NotificationCard> {
 }
 
 class _NotificationImage extends StatelessWidget {
-  const _NotificationImage({
-    required this.imageUrl,
-    required this.onLoadFailed,
-  });
+  const _NotificationImage({required this.imageUrl, required this.onLoadFailed});
 
   final String imageUrl;
   final VoidCallback onLoadFailed;
@@ -547,10 +578,9 @@ class _NotificationTypeChip extends StatelessWidget {
       ),
       child: Text(
         type.label,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: accent,
-          fontWeight: FontWeight.w700,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.labelMedium?.copyWith(color: accent, fontWeight: FontWeight.w700),
       ),
     );
   }
