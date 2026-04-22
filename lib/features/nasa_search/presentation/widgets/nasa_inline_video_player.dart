@@ -20,6 +20,7 @@ class NasaInlineVideoPlayer extends StatefulWidget {
     this.fullscreenIcon = Icons.fullscreen_rounded,
     this.useSafeAreaInsets = false,
     this.controlsHideDelay = const Duration(seconds: 3),
+    this.controlsBelowVideo = false,
   });
 
   final String playbackUrl;
@@ -32,6 +33,7 @@ class NasaInlineVideoPlayer extends StatefulWidget {
   final IconData fullscreenIcon;
   final bool useSafeAreaInsets;
   final Duration controlsHideDelay;
+  final bool controlsBelowVideo;
 
   @override
   State<NasaInlineVideoPlayer> createState() => _NasaInlineVideoPlayerState();
@@ -79,39 +81,41 @@ class _NasaInlineVideoPlayerState extends State<NasaInlineVideoPlayer> {
     return ValueListenableBuilder<VideoPlayerValue>(
       valueListenable: controller,
       builder: (context, value, child) {
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: value.isInitialized ? _handleSurfaceTap : null,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              FutureBuilder<void>(
-                future: _initializeFuture,
-                builder: (context, snapshot) {
-                  final effectiveError =
-                      _initializationError ??
-                      snapshot.error ??
-                      (value.hasError ? value.errorDescription : null);
+        return FutureBuilder<void>(
+          future: _initializeFuture,
+          builder: (context, snapshot) {
+            final effectiveError =
+                _initializationError ??
+                snapshot.error ??
+                (value.hasError ? value.errorDescription : null);
 
-                  if (snapshot.connectionState != ConnectionState.done &&
-                      !value.isInitialized &&
-                      effectiveError == null) {
-                    return _buildLoadingState();
-                  }
+            if (snapshot.connectionState != ConnectionState.done &&
+                !value.isInitialized &&
+                effectiveError == null) {
+              return _buildLoadingState();
+            }
 
-                  if (effectiveError != null) {
-                    return _buildErrorState(effectiveError.toString());
-                  }
+            if (effectiveError != null) {
+              return _buildErrorState(effectiveError.toString());
+            }
 
-                  if (!value.isInitialized) {
-                    return _buildLoadingState();
-                  }
+            if (!value.isInitialized) {
+              return _buildLoadingState();
+            }
 
-                  return _buildVideoLayer(value);
-                },
+            if (widget.controlsBelowVideo) {
+              return _buildExpandedControlsLayout(value);
+            }
+
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _handleSurfaceTap,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [_buildOverlayVideoLayer(value)],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -297,7 +301,7 @@ class _NasaInlineVideoPlayerState extends State<NasaInlineVideoPlayer> {
     return value.position >= value.duration;
   }
 
-  Widget _buildVideoLayer(VideoPlayerValue value) {
+  Widget _buildOverlayVideoLayer(VideoPlayerValue value) {
     final controller = _controller!;
     final topPadding = widget.useSafeAreaInsets
         ? MediaQuery.paddingOf(context).top + 14
@@ -503,12 +507,199 @@ class _NasaInlineVideoPlayerState extends State<NasaInlineVideoPlayer> {
     );
   }
 
+  Widget _buildExpandedControlsLayout(VideoPlayerValue value) {
+    final isFinished = _isPlaybackFinished(value);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: AspectRatio(
+            aspectRatio: 16 / 9,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _togglePlayback,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _buildVideoSurface(value),
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.16),
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.2),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (!value.isPlaying || isFinished)
+                    Center(
+                      child: _PlaybackButton(
+                        icon: isFinished
+                            ? Icons.replay_rounded
+                            : Icons.play_arrow_rounded,
+                        onPressed: _togglePlayback,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        _buildControlsPanel(value, alwaysVisible: true),
+      ],
+    );
+  }
+
+  Widget _buildVideoSurface(VideoPlayerValue value) {
+    final controller = _controller!;
+
+    return Positioned.fill(
+      child: FittedBox(
+        fit: widget.videoFit,
+        clipBehavior: Clip.hardEdge,
+        child: SizedBox(
+          width: value.size.width,
+          height: value.size.height,
+          child: VideoPlayer(controller),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildControlsPanel(
+    VideoPlayerValue value, {
+    required bool alwaysVisible,
+  }) {
+    final controller = _controller!;
+
+    return IgnorePointer(
+      ignoring: !alwaysVisible && !_controlsVisible,
+      child: AnimatedOpacity(
+        opacity: alwaysVisible || _controlsVisible ? 1 : 0,
+        duration: const Duration(milliseconds: 180),
+        child: FrostedPanel(
+          radius: 24,
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+          backgroundColor: AppColors.surfaceElevated.withValues(alpha: 0.5),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: VideoProgressIndicator(
+                  controller,
+                  allowScrubbing: true,
+                  colors: VideoProgressColors(
+                    playedColor: AppColors.secondary,
+                    bufferedColor: AppColors.textPrimary.withValues(
+                      alpha: 0.26,
+                    ),
+                    backgroundColor: AppColors.textPrimary.withValues(
+                      alpha: 0.14,
+                    ),
+                  ),
+                  padding: EdgeInsets.zero,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: _togglePlayback,
+                    icon: Icon(
+                      value.isPlaying
+                          ? Icons.pause_circle_filled_rounded
+                          : Icons.play_circle_fill_rounded,
+                      color: AppColors.textPrimary,
+                      size: 30,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      '${_formatDuration(value.position)} / ${_formatDuration(value.duration)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: AppColors.textPrimary.withValues(alpha: 0.92),
+                      ),
+                    ),
+                  ),
+                  if (value.isBuffering)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 6),
+                      child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  IconButton(
+                    onPressed: _toggleMute,
+                    icon: Icon(
+                      _muted
+                          ? Icons.volume_off_rounded
+                          : Icons.volume_up_rounded,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _restartPlayback,
+                    icon: const Icon(
+                      Icons.replay_rounded,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  if (widget.onRotatePressed != null)
+                    IconButton(
+                      onPressed: widget.onRotatePressed,
+                      icon: const Icon(
+                        Icons.screen_rotation_alt_rounded,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  if (widget.onFullscreenPressed != null)
+                    IconButton(
+                      onPressed: widget.onFullscreenPressed,
+                      icon: Icon(
+                        widget.fullscreenIcon,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildLoadingState() {
+    if (widget.controlsBelowVideo) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: AspectRatio(
+          aspectRatio: 16 / 9,
+          child: const Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
     return const Center(child: CircularProgressIndicator());
   }
 
   Widget _buildErrorState(String? errorDescription) {
-    return Center(
+    final content = Center(
       child: FrostedPanel(
         radius: 24,
         padding: const EdgeInsets.all(20),
@@ -541,6 +732,15 @@ class _NasaInlineVideoPlayerState extends State<NasaInlineVideoPlayer> {
         ),
       ),
     );
+
+    if (widget.controlsBelowVideo) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: AspectRatio(aspectRatio: 16 / 9, child: content),
+      );
+    }
+
+    return content;
   }
 
   void _disposeController() {

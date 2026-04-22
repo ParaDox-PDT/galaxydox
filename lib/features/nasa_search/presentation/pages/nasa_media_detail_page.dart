@@ -174,55 +174,65 @@ class _VideoPreview extends ConsumerWidget {
       nasaVideoPlaybackUrlProvider(manifestUrl),
     );
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppConstants.radiusXLarge),
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
-        child: playbackUrlAsync.when(
-          data: (playbackUrl) {
-            if (playbackUrl == null || playbackUrl.isEmpty) {
-              return _VideoStatusCard(
-                posterUrl: item.previewUrl,
-                eyebrow: 'NASA video entry',
-                title:
-                    'We found the record, but no playable stream was available.',
-              );
-            }
-
-            // On web, video_player does not reliably initialize.
-            // Show a card that opens the video directly in the browser.
-            if (kIsWeb) {
-              return _WebVideoCard(
-                posterUrl: item.previewUrl,
-                playbackUrl: playbackUrl,
-                title: item.title,
-              );
-            }
-
-            return NasaInlineVideoPlayer(
-              playbackUrl: playbackUrl,
+    return playbackUrlAsync.when(
+      data: (playbackUrl) {
+        if (playbackUrl == null || playbackUrl.isEmpty) {
+          return _buildFramedStatus(
+            _VideoStatusCard(
               posterUrl: item.previewUrl,
-              onFullscreenPressed: () =>
-                  _openLargePlayer(context, playbackUrl: playbackUrl),
-            );
-          },
-          loading: () => _VideoStatusCard(
-            posterUrl: item.previewUrl,
-            eyebrow: 'Preparing playback',
-            title: 'Loading NASA video stream...',
-            showLoader: true,
-          ),
-          error: (error, stackTrace) => _VideoStatusCard(
-            posterUrl: item.previewUrl,
-            eyebrow: 'Playback unavailable',
-            title: 'The video could not be prepared inside the app yet.',
-            actionLabel: 'Try again',
-            onActionPressed: () {
-              ref.invalidate(nasaVideoPlaybackUrlProvider(manifestUrl));
-            },
-          ),
+              eyebrow: 'NASA video entry',
+              title:
+                  'We found the record, but no playable stream was available.',
+            ),
+          );
+        }
+
+        // On web, video_player does not reliably initialize.
+        // Show a card that opens the video directly in the browser.
+        if (kIsWeb) {
+          return _buildFramedStatus(
+            _WebVideoCard(
+              posterUrl: item.previewUrl,
+              playbackUrl: playbackUrl,
+              title: item.title,
+            ),
+          );
+        }
+
+        return NasaInlineVideoPlayer(
+          playbackUrl: playbackUrl,
+          posterUrl: item.previewUrl,
+          controlsBelowVideo: true,
+          onFullscreenPressed: () =>
+              _openLargePlayer(context, playbackUrl: playbackUrl),
+        );
+      },
+      loading: () => _buildFramedStatus(
+        _VideoStatusCard(
+          posterUrl: item.previewUrl,
+          eyebrow: 'Preparing playback',
+          title: 'Loading NASA video stream...',
+          showLoader: true,
         ),
       ),
+      error: (error, stackTrace) => _buildFramedStatus(
+        _VideoStatusCard(
+          posterUrl: item.previewUrl,
+          eyebrow: 'Playback unavailable',
+          title: 'The video could not be prepared inside the app yet.',
+          actionLabel: 'Try again',
+          onActionPressed: () {
+            ref.invalidate(nasaVideoPlaybackUrlProvider(manifestUrl));
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFramedStatus(Widget child) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppConstants.radiusXLarge),
+      child: AspectRatio(aspectRatio: 16 / 9, child: child),
     );
   }
 
