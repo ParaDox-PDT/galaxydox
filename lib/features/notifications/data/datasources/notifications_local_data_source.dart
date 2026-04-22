@@ -29,7 +29,9 @@ class NotificationsLocalDataSource {
     }
   }
 
-  Future<void> save(List<AppNotificationModel> models) async {
+  Future<List<AppNotificationModel>> save(
+    List<AppNotificationModel> models,
+  ) async {
     try {
       final box = await _box;
       final existing = await getCached() ?? const <AppNotificationModel>[];
@@ -46,8 +48,10 @@ class NotificationsLocalDataSource {
         _cacheKey,
         merged.map((notification) => notification.toMap()).toList(),
       );
+      return merged;
     } catch (error) {
       debugPrint('NOTIFICATIONS CACHE WRITE ERROR: $error');
+      return models..sort(_sortByCreatedAt);
     }
   }
 
