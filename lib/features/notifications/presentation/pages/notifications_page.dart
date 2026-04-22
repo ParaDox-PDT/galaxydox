@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,7 +42,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _dateFormat = DateFormat('dd MMM yyyy • HH:mm');
+    _dateFormat = DateFormat('dd MMM yyyy - HH:mm');
   }
 
   @override
@@ -82,7 +84,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                       child: PageHeader(
                         title: 'Notifications',
                         subtitle:
-                            'Stay up to date with the latest wallpapers, announcements, and app updates — all in one place.',
+                            'Stay up to date with the latest wallpapers, announcements, and app updates - all in one place.',
                         actions: [
                           if (unreadCount > 0)
                             OutlinedButton.icon(
@@ -106,14 +108,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                 ),
               ),
               notificationsAsync.when(
-                loading: () => const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: AppConstants.pagePadding,
-                    ),
-                    child: _NotificationsLoadingList(),
-                  ),
-                ),
+                loading: () => const _NotificationsLoadingSliver(),
                 error: (error, _) => SliverToBoxAdapter(
                   child: Center(
                     child: ConstrainedBox(
@@ -158,7 +153,7 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                             child: StatePanel(
                               title: 'No notifications yet',
                               message:
-                                  'No new notifications right now. Check back later — updates about new wallpapers and features will appear here.',
+                                  'No new notifications right now. Check back later - updates about new wallpapers and features will appear here.',
                               icon: Icons.notifications_none_rounded,
                               accent: AppColors.secondary,
                               actions: [
@@ -177,39 +172,10 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
                     );
                   }
 
-                  return SliverList.builder(
-                    itemCount: notifications.length,
-                    itemBuilder: (context, index) {
-                      final notification = notifications[index];
-                      return Center(
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: AppConstants.contentMaxWidth,
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.fromLTRB(
-                              AppConstants.pagePadding,
-                              index == 0 ? 0 : 12,
-                              AppConstants.pagePadding,
-                              0,
-                            ),
-                            child:
-                                _NotificationCard(
-                                      notification: notification,
-                                      dateFormat: _dateFormat,
-                                      onTap: () =>
-                                          _openNotification(notification),
-                                    )
-                                    .animate()
-                                    .fadeIn(
-                                      delay: Duration(milliseconds: 60 * index),
-                                      duration: AppConstants.motionMedium,
-                                    )
-                                    .slideY(begin: 0.06, end: 0),
-                          ),
-                        ),
-                      );
-                    },
+                  return _NotificationsListSliver(
+                    notifications: notifications,
+                    dateFormat: _dateFormat,
+                    onTap: _openNotification,
                   );
                 },
               ),
@@ -233,6 +199,124 @@ class _NotificationsPageState extends ConsumerState<NotificationsPage> {
     if (error is AppException) return error.message;
     return 'Something went wrong. Please try again.';
   }
+}
+
+class _NotificationsListSliver extends StatelessWidget {
+  const _NotificationsListSliver({
+    required this.notifications,
+    required this.dateFormat,
+    required this.onTap,
+  });
+
+  final List<AppNotificationEntity> notifications;
+  final DateFormat dateFormat;
+  final ValueChanged<AppNotificationEntity> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: AppConstants.contentMaxWidth,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppConstants.pagePadding,
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final layout = _notificationsLayoutFor(constraints.maxWidth);
+                final itemWidth = layout.itemWidthFor(constraints.maxWidth);
+
+                return Wrap(
+                  spacing: layout.spacing,
+                  runSpacing: 14,
+                  children: [
+                    for (var index = 0; index < notifications.length; index++)
+                      SizedBox(
+                        width: itemWidth,
+                        child:
+                            _NotificationCard(
+                                  notification: notifications[index],
+                                  dateFormat: dateFormat,
+                                  onTap: () => onTap(notifications[index]),
+                                )
+                                .animate()
+                                .fadeIn(
+                                  delay: Duration(milliseconds: 60 * index),
+                                  duration: AppConstants.motionMedium,
+                                )
+                                .slideY(begin: 0.06, end: 0),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NotificationsLoadingSliver extends StatelessWidget {
+  const _NotificationsLoadingSliver();
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: AppConstants.contentMaxWidth,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppConstants.pagePadding,
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final layout = _notificationsLayoutFor(constraints.maxWidth);
+                final itemWidth = layout.itemWidthFor(constraints.maxWidth);
+
+                return Wrap(
+                  spacing: layout.spacing,
+                  runSpacing: 14,
+                  children: List.generate(
+                    4,
+                    (_) => SizedBox(
+                      width: itemWidth,
+                      child: const _NotificationLoadingCard(),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NotificationsLayout {
+  const _NotificationsLayout({required this.columns, required this.spacing});
+
+  final int columns;
+  final double spacing;
+
+  double itemWidthFor(double width) {
+    return math.max(0, (width - (spacing * (columns - 1))) / columns);
+  }
+}
+
+_NotificationsLayout _notificationsLayoutFor(double width) {
+  if (width >= 920) {
+    return const _NotificationsLayout(columns: 2, spacing: 18);
+  }
+
+  return const _NotificationsLayout(columns: 1, spacing: 12);
 }
 
 class _NotificationCard extends StatefulWidget {
@@ -472,35 +556,22 @@ class _NotificationTypeChip extends StatelessWidget {
   }
 }
 
-class _NotificationsLoadingList extends StatelessWidget {
-  const _NotificationsLoadingList();
+class _NotificationLoadingCard extends StatelessWidget {
+  const _NotificationLoadingCard();
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: List.generate(
-        4,
-        (index) => Padding(
-          padding: EdgeInsets.only(bottom: index == 3 ? 0 : 12),
-          child:
-              ClipRRect(
-                    borderRadius: BorderRadius.circular(
-                      AppConstants.radiusMedium,
-                    ),
-                    child: const ColoredBox(
-                      color: AppColors.surfaceElevated,
-                      child: SizedBox(height: 180, width: double.infinity),
-                    ),
-                  )
-                  .animate(
-                    onPlay: (controller) => controller.repeat(reverse: true),
-                  )
-                  .shimmer(
-                    duration: const Duration(milliseconds: 1200),
-                    color: AppColors.surfaceStrong,
-                  ),
-        ),
-      ),
-    );
+    return ClipRRect(
+          borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
+          child: const ColoredBox(
+            color: AppColors.surfaceElevated,
+            child: SizedBox(height: 180, width: double.infinity),
+          ),
+        )
+        .animate(onPlay: (controller) => controller.repeat(reverse: true))
+        .shimmer(
+          duration: const Duration(milliseconds: 1200),
+          color: AppColors.surfaceStrong,
+        );
   }
 }
