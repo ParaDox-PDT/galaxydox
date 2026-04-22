@@ -28,7 +28,11 @@ class NasaApiClient {
   }) {
     return _apiDio.get<Map<String, dynamic>>(
       NasaEndpoints.apod,
-      queryParameters: {if (date != null) 'date': _formatDate(date), 'hd': hd},
+      queryParameters: {
+        if (date != null) 'date': _formatDate(date),
+        'hd': hd,
+        'thumbs': true,
+      },
     );
   }
 

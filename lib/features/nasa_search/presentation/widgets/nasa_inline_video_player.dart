@@ -20,6 +20,7 @@ class NasaInlineVideoPlayer extends StatefulWidget {
     this.fullscreenIcon = Icons.fullscreen_rounded,
     this.useSafeAreaInsets = false,
     this.controlsHideDelay = const Duration(seconds: 3),
+    this.controlsBelowVideo = false,
   });
 
   final String playbackUrl;
@@ -32,6 +33,7 @@ class NasaInlineVideoPlayer extends StatefulWidget {
   final IconData fullscreenIcon;
   final bool useSafeAreaInsets;
   final Duration controlsHideDelay;
+  final bool controlsBelowVideo;
 
   @override
   State<NasaInlineVideoPlayer> createState() => _NasaInlineVideoPlayerState();
@@ -42,10 +44,14 @@ class _NasaInlineVideoPlayerState extends State<NasaInlineVideoPlayer> {
   Future<void>? _initializeFuture;
   Object? _initializationError;
   Timer? _controlsHideTimer;
+  Timer? _seekFeedbackTimer;
   bool _controlsVisible = true;
   bool _muted = false;
   bool _wasPlaying = false;
   bool _wasFinished = false;
+  bool _isScrubbing = false;
+  Duration? _scrubPreviewPosition;
+  int _seekFeedbackDirection = 0;
 
   @override
   void initState() {
@@ -65,6 +71,7 @@ class _NasaInlineVideoPlayerState extends State<NasaInlineVideoPlayer> {
   @override
   void dispose() {
     _controlsHideTimer?.cancel();
+    _seekFeedbackTimer?.cancel();
     _disposeController();
     super.dispose();
   }
@@ -79,39 +86,41 @@ class _NasaInlineVideoPlayerState extends State<NasaInlineVideoPlayer> {
     return ValueListenableBuilder<VideoPlayerValue>(
       valueListenable: controller,
       builder: (context, value, child) {
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: value.isInitialized ? _handleSurfaceTap : null,
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              FutureBuilder<void>(
-                future: _initializeFuture,
-                builder: (context, snapshot) {
-                  final effectiveError =
-                      _initializationError ??
-                      snapshot.error ??
-                      (value.hasError ? value.errorDescription : null);
+        return FutureBuilder<void>(
+          future: _initializeFuture,
+          builder: (context, snapshot) {
+            final effectiveError =
+                _initializationError ??
+                snapshot.error ??
+                (value.hasError ? value.errorDescription : null);
 
-                  if (snapshot.connectionState != ConnectionState.done &&
-                      !value.isInitialized &&
-                      effectiveError == null) {
-                    return _buildLoadingState();
-                  }
+            if (snapshot.connectionState != ConnectionState.done &&
+                !value.isInitialized &&
+                effectiveError == null) {
+              return _buildLoadingState();
+            }
 
-                  if (effectiveError != null) {
-                    return _buildErrorState(effectiveError.toString());
-                  }
+            if (effectiveError != null) {
+              return _buildErrorState(effectiveError.toString());
+            }
 
-                  if (!value.isInitialized) {
-                    return _buildLoadingState();
-                  }
+            if (!value.isInitialized) {
+              return _buildLoadingState();
+            }
 
-                  return _buildVideoLayer(value);
-                },
+            if (widget.controlsBelowVideo) {
+              return _buildExpandedControlsLayout(value);
+            }
+
+            return GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _handleSurfaceTap,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [_buildOverlayVideoLayer(value)],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -297,7 +306,7 @@ class _NasaInlineVideoPlayerState extends State<NasaInlineVideoPlayer> {
     return value.position >= value.duration;
   }
 
-  Widget _buildVideoLayer(VideoPlayerValue value) {
+  Widget _buildOverlayVideoLayer(VideoPlayerValue value) {
     final controller = _controller!;
     final topPadding = widget.useSafeAreaInsets
         ? MediaQuery.paddingOf(context).top + 14
@@ -388,6 +397,19 @@ class _NasaInlineVideoPlayerState extends State<NasaInlineVideoPlayer> {
               onPressed: _togglePlayback,
             ),
           ),
+        Positioned.fill(
+          child: _SeekGestureOverlay(
+            onSeekBackward: () => _seekRelative(const Duration(seconds: -10)),
+            onSeekForward: () => _seekRelative(const Duration(seconds: 10)),
+          ),
+        ),
+        if (_seekFeedbackDirection != 0)
+          Center(
+            child: _SeekFeedbackBadge(
+              seconds: 10,
+              forward: _seekFeedbackDirection > 0,
+            ),
+          ),
         Positioned(
           left: 16,
           right: 16,
@@ -406,23 +428,7 @@ class _NasaInlineVideoPlayerState extends State<NasaInlineVideoPlayer> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
-                      child: VideoProgressIndicator(
-                        controller,
-                        allowScrubbing: true,
-                        colors: VideoProgressColors(
-                          playedColor: AppColors.secondary,
-                          bufferedColor: AppColors.textPrimary.withValues(
-                            alpha: 0.26,
-                          ),
-                          backgroundColor: AppColors.textPrimary.withValues(
-                            alpha: 0.14,
-                          ),
-                        ),
-                        padding: EdgeInsets.zero,
-                      ),
-                    ),
+                    _buildSeekSlider(value),
                     const SizedBox(height: 10),
                     Row(
                       children: [
@@ -503,12 +509,196 @@ class _NasaInlineVideoPlayerState extends State<NasaInlineVideoPlayer> {
     );
   }
 
+  Widget _buildExpandedControlsLayout(VideoPlayerValue value) {
+    final isFinished = _isPlaybackFinished(value);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: AspectRatio(
+            aspectRatio: 16 / 9,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _togglePlayback,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _buildVideoSurface(value),
+                  Positioned.fill(
+                    child: _SeekGestureOverlay(
+                      onSeekBackward: () =>
+                          _seekRelative(const Duration(seconds: -10)),
+                      onSeekForward: () =>
+                          _seekRelative(const Duration(seconds: 10)),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.16),
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.2),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (!value.isPlaying || isFinished)
+                    Center(
+                      child: _PlaybackButton(
+                        icon: isFinished
+                            ? Icons.replay_rounded
+                            : Icons.play_arrow_rounded,
+                        onPressed: _togglePlayback,
+                      ),
+                    ),
+                  if (_seekFeedbackDirection != 0)
+                    Center(
+                      child: _SeekFeedbackBadge(
+                        seconds: 10,
+                        forward: _seekFeedbackDirection > 0,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        _buildControlsPanel(value, alwaysVisible: true),
+      ],
+    );
+  }
+
+  Widget _buildVideoSurface(VideoPlayerValue value) {
+    final controller = _controller!;
+
+    return Positioned.fill(
+      child: FittedBox(
+        fit: widget.videoFit,
+        clipBehavior: Clip.hardEdge,
+        child: SizedBox(
+          width: value.size.width,
+          height: value.size.height,
+          child: VideoPlayer(controller),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildControlsPanel(
+    VideoPlayerValue value, {
+    required bool alwaysVisible,
+  }) {
+    return IgnorePointer(
+      ignoring: !alwaysVisible && !_controlsVisible,
+      child: AnimatedOpacity(
+        opacity: alwaysVisible || _controlsVisible ? 1 : 0,
+        duration: const Duration(milliseconds: 180),
+        child: FrostedPanel(
+          radius: 24,
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+          backgroundColor: AppColors.surfaceElevated.withValues(alpha: 0.5),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildSeekSlider(value),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: _togglePlayback,
+                    icon: Icon(
+                      value.isPlaying
+                          ? Icons.pause_circle_filled_rounded
+                          : Icons.play_circle_fill_rounded,
+                      color: AppColors.textPrimary,
+                      size: 30,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      '${_formatDuration(value.position)} / ${_formatDuration(value.duration)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: AppColors.textPrimary.withValues(alpha: 0.92),
+                      ),
+                    ),
+                  ),
+                  if (value.isBuffering)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 6),
+                      child: SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  IconButton(
+                    onPressed: _toggleMute,
+                    icon: Icon(
+                      _muted
+                          ? Icons.volume_off_rounded
+                          : Icons.volume_up_rounded,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _restartPlayback,
+                    icon: const Icon(
+                      Icons.replay_rounded,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  if (widget.onRotatePressed != null)
+                    IconButton(
+                      onPressed: widget.onRotatePressed,
+                      icon: const Icon(
+                        Icons.screen_rotation_alt_rounded,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  if (widget.onFullscreenPressed != null)
+                    IconButton(
+                      onPressed: widget.onFullscreenPressed,
+                      icon: Icon(
+                        widget.fullscreenIcon,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildLoadingState() {
+    if (widget.controlsBelowVideo) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: AspectRatio(
+          aspectRatio: 16 / 9,
+          child: const Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
     return const Center(child: CircularProgressIndicator());
   }
 
   Widget _buildErrorState(String? errorDescription) {
-    return Center(
+    final content = Center(
       child: FrostedPanel(
         radius: 24,
         padding: const EdgeInsets.all(20),
@@ -541,6 +731,15 @@ class _NasaInlineVideoPlayerState extends State<NasaInlineVideoPlayer> {
         ),
       ),
     );
+
+    if (widget.controlsBelowVideo) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: AspectRatio(aspectRatio: 16 / 9, child: content),
+      );
+    }
+
+    return content;
   }
 
   void _disposeController() {
@@ -565,6 +764,133 @@ class _NasaInlineVideoPlayerState extends State<NasaInlineVideoPlayer> {
     }
 
     return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildSeekSlider(VideoPlayerValue value) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: SliderTheme(
+        data: SliderTheme.of(context).copyWith(
+          trackHeight: 6,
+          activeTrackColor: AppColors.secondary,
+          inactiveTrackColor: AppColors.textPrimary.withValues(alpha: 0.14),
+          secondaryActiveTrackColor: AppColors.textPrimary.withValues(
+            alpha: 0.26,
+          ),
+          thumbColor: AppColors.textPrimary,
+          overlayColor: AppColors.secondary.withValues(alpha: 0.18),
+          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+          overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+        ),
+        child: Slider(
+          value: _resolveSliderValue(value),
+          secondaryTrackValue: _resolveBufferedSliderValue(value),
+          min: 0,
+          max: _resolveSliderMax(value),
+          onChangeStart: (_) => _handleScrubStart(value),
+          onChanged: _handleScrubChanged,
+          onChangeEnd: _handleScrubEnd,
+        ),
+      ),
+    );
+  }
+
+  double _resolveSliderMax(VideoPlayerValue value) {
+    final totalMilliseconds = value.duration.inMilliseconds;
+    return totalMilliseconds <= 0 ? 1 : totalMilliseconds.toDouble();
+  }
+
+  double _resolveSliderValue(VideoPlayerValue value) {
+    final position =
+        (_isScrubbing ? _scrubPreviewPosition : value.position) ??
+        Duration.zero;
+    return position.inMilliseconds
+        .clamp(0, _resolveSliderMax(value).toInt())
+        .toDouble();
+  }
+
+  double? _resolveBufferedSliderValue(VideoPlayerValue value) {
+    if (value.buffered.isEmpty) {
+      return null;
+    }
+
+    final buffered = value.buffered.last.end.inMilliseconds.toDouble();
+    return buffered.clamp(0, _resolveSliderMax(value));
+  }
+
+  void _handleScrubStart(VideoPlayerValue value) {
+    _controlsHideTimer?.cancel();
+    setState(() {
+      _isScrubbing = true;
+      _scrubPreviewPosition = value.position;
+    });
+  }
+
+  void _handleScrubChanged(double rawValue) {
+    setState(() {
+      _isScrubbing = true;
+      _scrubPreviewPosition = Duration(milliseconds: rawValue.round());
+    });
+  }
+
+  Future<void> _handleScrubEnd(double rawValue) async {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) {
+      return;
+    }
+
+    final target = Duration(milliseconds: rawValue.round());
+    await controller.seekTo(target);
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isScrubbing = false;
+      _scrubPreviewPosition = null;
+    });
+
+    _showControls(autoHide: controller.value.isPlaying);
+  }
+
+  Future<void> _seekRelative(Duration offset) async {
+    final controller = _controller;
+    if (controller == null || !controller.value.isInitialized) {
+      return;
+    }
+
+    final duration = controller.value.duration;
+    final currentPosition = _isScrubbing
+        ? (_scrubPreviewPosition ?? controller.value.position)
+        : controller.value.position;
+    final nextPosition = Duration(
+      milliseconds: (currentPosition.inMilliseconds + offset.inMilliseconds)
+          .clamp(0, duration.inMilliseconds),
+    );
+
+    await controller.seekTo(nextPosition);
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _isScrubbing = false;
+      _scrubPreviewPosition = null;
+      _seekFeedbackDirection = offset.isNegative ? -1 : 1;
+    });
+
+    _seekFeedbackTimer?.cancel();
+    _seekFeedbackTimer = Timer(const Duration(milliseconds: 900), () {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _seekFeedbackDirection = 0;
+      });
+    });
+
+    _showControls(autoHide: controller.value.isPlaying);
   }
 }
 
@@ -613,6 +939,77 @@ class _ControlChipButton extends StatelessWidget {
         child: IconButton(
           onPressed: onPressed,
           icon: Icon(icon, color: AppColors.textPrimary),
+        ),
+      ),
+    );
+  }
+}
+
+class _SeekGestureOverlay extends StatelessWidget {
+  const _SeekGestureOverlay({
+    required this.onSeekBackward,
+    required this.onSeekForward,
+  });
+
+  final VoidCallback onSeekBackward;
+  final VoidCallback onSeekForward;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onDoubleTap: onSeekBackward,
+          ),
+        ),
+        Expanded(
+          child: GestureDetector(
+            behavior: HitTestBehavior.translucent,
+            onDoubleTap: onSeekForward,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SeekFeedbackBadge extends StatelessWidget {
+  const _SeekFeedbackBadge({required this.seconds, required this.forward});
+
+  final int seconds;
+  final bool forward;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.34),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: AppColors.textPrimary.withValues(alpha: 0.18),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                forward ? Icons.forward_10_rounded : Icons.replay_10_rounded,
+                color: AppColors.textPrimary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                forward ? '+$seconds sec' : '-$seconds sec',
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(color: AppColors.textPrimary),
+              ),
+            ],
+          ),
         ),
       ),
     );

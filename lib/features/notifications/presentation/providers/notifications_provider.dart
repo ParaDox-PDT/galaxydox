@@ -93,7 +93,7 @@ class NotificationsNotifier extends AsyncNotifier<List<AppNotificationEntity>> {
 
   Future<List<AppNotificationEntity>> _fetchAndSave() async {
     final models = await _remote.fetchNotifications();
-    unawaited(_local.save(models));
-    return models.map((item) => item.toEntity()).toList(growable: false);
+    final merged = await _local.save(models);
+    return merged.map((item) => item.toEntity()).toList(growable: false);
   }
 }

@@ -14,7 +14,6 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../features/onboarding/data/onboarding_local_data_source.dart';
 import '../../../../firebase_options.dart';
 import '../../data/datasources/notifications_local_data_source.dart';
-import 'notification_navigation_service.dart';
 import 'notifications_provider.dart';
 import '../widgets/foreground_notification_toast.dart';
 
@@ -57,6 +56,7 @@ class NotificationLifecycleController {
 
   StreamSubscription<RemoteMessage>? _onMessageSubscription;
   StreamSubscription<RemoteMessage>? _onMessageOpenedSubscription;
+  StreamSubscription<String>? _onTokenRefreshSubscription;
 
   bool _initialized = false;
   GoRouter? _router;
@@ -90,6 +90,9 @@ class NotificationLifecycleController {
     _onMessageOpenedSubscription = FirebaseMessaging.onMessageOpenedApp.listen(
       (message) => _handleOpenedMessage(message, waitForSplash: false),
     );
+    _onTokenRefreshSubscription = _messaging.onTokenRefresh.listen((_) {
+      unawaited(_restoreTopicSubscriptionIfPossible());
+    });
 
     await _restoreTopicSubscriptionIfPossible();
 
@@ -104,11 +107,30 @@ class NotificationLifecycleController {
 
     final preferences = OnboardingLocalDataSource();
     if (!preferences.hasCompletedOnboarding) return;
+    if (!preferences.hasRequestedNotificationPermission) return;
+    await _restoreTopicSubscriptionIfPossible();
+  }
 
-    if (preferences.hasRequestedNotificationPermission) {
-      await _restoreTopicSubscriptionIfPossible();
-      return;
-    }
+  bool shouldSuggestPermissionPrompt() {
+    if (kIsWeb) return false;
+
+    final preferences = OnboardingLocalDataSource();
+    return preferences.hasCompletedOnboarding &&
+        !preferences.hasRequestedNotificationPermission &&
+        !preferences.hasHandledNotificationPermissionSuggestion;
+  }
+
+  Future<void> skipPermissionPromptSuggestion() async {
+    if (kIsWeb) return;
+    await OnboardingLocalDataSource()
+        .markNotificationPermissionSuggestionHandled();
+  }
+
+  Future<bool> requestPermissionFromSuggestion() async {
+    if (kIsWeb) return false;
+
+    final preferences = OnboardingLocalDataSource();
+    await preferences.markNotificationPermissionSuggestionHandled();
 
     final settings = await _messaging.requestPermission(
       alert: true,
@@ -124,6 +146,8 @@ class NotificationLifecycleController {
     if (granted) {
       _ref.invalidate(notificationsProvider);
     }
+
+    return granted;
   }
 
   void dispose() {
@@ -133,11 +157,14 @@ class NotificationLifecycleController {
     if (_onMessageOpenedSubscription != null) {
       unawaited(_onMessageOpenedSubscription!.cancel());
     }
+    if (_onTokenRefreshSubscription != null) {
+      unawaited(_onTokenRefreshSubscription!.cancel());
+    }
   }
 
   Future<void> _initializeLocalNotifications() async {
     const initializationSettings = InitializationSettings(
-      android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      android: AndroidInitializationSettings('@drawable/ic_notification'),
       iOS: DarwinInitializationSettings(
         requestAlertPermission: false,
         requestBadgePermission: false,
@@ -182,8 +209,13 @@ class NotificationLifecycleController {
 
   Future<void> _syncTopicSubscription(bool granted) async {
     try {
+      await _messaging.setAutoInitEnabled(granted);
       if (granted) {
-        await _messaging.getToken();
+        final token = await _waitForFcmToken();
+        if (token == null) {
+          debugPrint('FCM TOKEN UNAVAILABLE: Topic subscription deferred.');
+          return;
+        }
         await _messaging.subscribeToTopic(notificationTopicName);
       } else {
         await _messaging.unsubscribeFromTopic(notificationTopicName);
@@ -191,6 +223,18 @@ class NotificationLifecycleController {
     } catch (error) {
       debugPrint('FCM TOPIC SYNC ERROR: $error');
     }
+  }
+
+  Future<String?> _waitForFcmToken() async {
+    for (var attempt = 0; attempt < 6; attempt++) {
+      final token = await _messaging.getToken();
+      final normalizedToken = token?.trim();
+      if (normalizedToken != null && normalizedToken.isNotEmpty) {
+        return normalizedToken;
+      }
+      await Future<void>.delayed(Duration(milliseconds: 350 * (attempt + 1)));
+    }
+    return null;
   }
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
@@ -223,12 +267,7 @@ class NotificationLifecycleController {
     }
     _ref.invalidate(notificationsProvider);
 
-    final payload = NotificationNavigationPayload(
-      typeRaw: _readFirstNonEmpty(message.data, const ['type']),
-      routeId: _readFirstNonEmpty(message.data, const ['route_id']),
-    );
-
-    await _routeFromPayload(payload, waitForSplash: waitForSplash);
+    await _routeFromPayload(waitForSplash: waitForSplash);
   }
 
   Future<void> _handleLocalNotificationResponse(
@@ -245,25 +284,13 @@ class NotificationLifecycleController {
       }
       _ref.invalidate(notificationsProvider);
 
-      await _routeFromPayload(
-        NotificationNavigationPayload(
-          typeRaw: decoded['type']?.toString(),
-          routeId: decoded['route_id']?.toString(),
-        ),
-        waitForSplash: false,
-      );
+      await _routeFromPayload(waitForSplash: false);
     } catch (error) {
       debugPrint('LOCAL NOTIFICATION PAYLOAD ERROR: $error');
     }
   }
 
-  Future<void> _routeFromPayload(
-    NotificationNavigationPayload payload, {
-    required bool waitForSplash,
-  }) async {
-    final router = _router;
-    if (router == null) return;
-
+  Future<void> _routeFromPayload({required bool waitForSplash}) async {
     if (waitForSplash) {
       await Future<void>.delayed(
         AppConstants.splashDuration + const Duration(milliseconds: 350),
@@ -271,9 +298,7 @@ class NotificationLifecycleController {
     }
 
     if (!_ref.mounted) return;
-    _ref
-        .read(notificationNavigationServiceProvider)
-        .pushFromPayload(router, payload);
+    _openNotificationsInbox();
   }
 
   bool _isPermissionGranted(AuthorizationStatus status) {

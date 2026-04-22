@@ -5,8 +5,10 @@ abstract final class TrustedHostSets {
   static const nasaAndVideoHosts = {
     'nasa.gov',
     'youtube.com',
+    'youtube-nocookie.com',
     'youtu.be',
     'img.youtube.com',
+    'vimeo.com',
   };
 }
 

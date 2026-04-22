@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_gradients.dart';
-import '../../../../core/utils/trusted_external_url.dart';
 import '../../../../shared/navigation/swipe_back_route.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
 import '../../domain/entities/apod_item.dart';
+import '../utils/apod_video_launcher.dart';
 import 'apod_fullscreen_viewer.dart';
 
 class ApodMediaPreview extends StatelessWidget {
@@ -160,153 +160,62 @@ class _ApodVideoPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final videoUri = Uri.tryParse(item.url);
-    final thumbnailUrl = _buildYoutubeThumbnail(videoUri) ?? item.thumbnailUrl;
+    final thumbnailUrl = resolveApodVideoPosterUrl(item);
 
-    return Container(
-      height: 380,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadow.withValues(alpha: 0.26),
-            blurRadius: 34,
-            offset: const Offset(0, 22),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(32),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (thumbnailUrl != null)
-              PremiumNetworkImage(imageUrl: thumbnailUrl, fit: BoxFit.cover)
-            else
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: AppGradients.storySurface(
-                    accent: AppColors.secondary,
-                  ),
-                ),
-              ),
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(gradient: AppGradients.heroOverlay),
-              ),
-            ),
-            Center(
-              child: GestureDetector(
-                onTap: () => _launchVideo(context),
-                child: Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.textPrimary.withValues(alpha: 0.14),
-                    border: Border.all(
-                      color: AppColors.textPrimary.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow_rounded,
-                    size: 42,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              left: 22,
-              right: 22,
-              bottom: 22,
-              child: FrostedPanel(
-                radius: 26,
-                padding: const EdgeInsets.all(20),
-                backgroundColor: AppColors.surfaceElevated.withValues(
-                  alpha: 0.42,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'NASA video entry',
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: AppColors.secondary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'This APOD entry is a video. Launch it in your browser for the full viewing experience.',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textPrimary.withValues(alpha: 0.82),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton.icon(
-                      onPressed: () => _launchVideo(context),
-                      icon: const Icon(Icons.open_in_new_rounded),
-                      label: const Text('Open video'),
-                    ),
-                  ],
-                ),
-              ),
+    return GestureDetector(
+      onTap: () => openApodVideoPlayer(context, item: item),
+      child: Container(
+        height: 380,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.shadow.withValues(alpha: 0.26),
+              blurRadius: 34,
+              offset: const Offset(0, 22),
             ),
           ],
         ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (thumbnailUrl != null)
+                PremiumNetworkImage(imageUrl: thumbnailUrl, fit: BoxFit.cover)
+              else
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: AppGradients.storySurface(
+                      accent: AppColors.secondary,
+                    ),
+                  ),
+                ),
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(gradient: AppGradients.heroOverlay),
+                ),
+              ),
+              Positioned(
+                left: 18,
+                bottom: 22,
+                child: FrostedPanel(
+                  radius: 22,
+                  padding: const EdgeInsets.all(10),
+                  backgroundColor: AppColors.surfaceElevated.withValues(
+                    alpha: 0.48,
+                  ),
+                  child: FilledButton.icon(
+                    onPressed: () => openApodVideoPlayer(context, item: item),
+                    icon: const Icon(Icons.play_circle_fill_rounded, size: 18),
+                    label: const Text('Open video'),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
-  }
-
-  Future<void> _launchVideo(BuildContext context) async {
-    final uri = sanitizeTrustedExternalUri(
-      item.url,
-      allowedHosts: TrustedHostSets.nasaAndVideoHosts,
-    );
-    if (uri == null) {
-      _showLaunchError(context);
-      return;
-    }
-
-    final launched = await launchExternalUri(uri);
-
-    if (!launched && context.mounted) {
-      _showLaunchError(context);
-    }
-  }
-
-  void _showLaunchError(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Unable to open the APOD video right now.')),
-    );
-  }
-
-  String? _buildYoutubeThumbnail(Uri? uri) {
-    if (uri == null) {
-      return null;
-    }
-
-    final host = uri.host.toLowerCase();
-    String? videoId;
-
-    if (host.contains('youtube.com')) {
-      videoId = uri.queryParameters['v'];
-      if (videoId == null && uri.pathSegments.isNotEmpty) {
-        final embedIndex = uri.pathSegments.indexOf('embed');
-        if (embedIndex != -1 && embedIndex + 1 < uri.pathSegments.length) {
-          videoId = uri.pathSegments[embedIndex + 1];
-        }
-      }
-    } else if (host.contains('youtu.be') && uri.pathSegments.isNotEmpty) {
-      videoId = uri.pathSegments.first;
-    }
-
-    if (videoId == null || videoId.isEmpty) {
-      return null;
-    }
-
-    return 'https://img.youtube.com/vi/$videoId/maxresdefault.jpg';
   }
 }
