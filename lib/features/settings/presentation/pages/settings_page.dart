@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -78,55 +79,57 @@ class SettingsPage extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
-                FrostedPanel(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(22),
-                          onTap: () =>
-                              showTranslationLanguageSheet(context, ref),
-                          child: Padding(
-                            padding: const EdgeInsets.all(18),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.translate_rounded),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Translation language',
-                                        style: theme.textTheme.titleMedium,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        translationLanguage.label,
-                                        style: theme.textTheme.bodyLarge,
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        'Articles and other supported app content will be translated into this language when available.',
-                                        style: theme.textTheme.bodyMedium,
-                                      ),
-                                    ],
+                if (!kIsWeb) ...[
+                  const SizedBox(height: 20),
+                  FrostedPanel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(22),
+                            onTap: () =>
+                                showTranslationLanguageSheet(context, ref),
+                            child: Padding(
+                              padding: const EdgeInsets.all(18),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.translate_rounded),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Translation language',
+                                          style: theme.textTheme.titleMedium,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          translationLanguage.label,
+                                          style: theme.textTheme.bodyLarge,
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          'Articles and other supported app content will be translated into this language when available.',
+                                          style: theme.textTheme.bodyMedium,
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-                                const Icon(Icons.chevron_right_rounded),
-                              ],
+                                  const SizedBox(width: 12),
+                                  const Icon(Icons.chevron_right_rounded),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
