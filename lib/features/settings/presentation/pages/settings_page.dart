@@ -1,19 +1,25 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../shared/navigation/swipe_back_route.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
+import '../../../../shared/widgets/page_header.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
+import '../../../../shared/widgets/translation_language_sheet.dart';
+import '../providers/translation_language_settings_controller.dart';
 import 'privacy_notice_page.dart';
 
-class SettingsPage extends StatelessWidget {
+class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final translationLanguage = ref.watch(apodTranslationLanguageProvider);
 
     return SpaceScaffold(
       bottomSafeArea: true,
@@ -25,11 +31,11 @@ class SettingsPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Settings', style: theme.textTheme.displayMedium),
-                const SizedBox(height: 10),
-                Text(
-                  'GalaxyDox keeps privacy and core app actions easy to reach without clutter.',
-                  style: theme.textTheme.bodyLarge,
+                const PageHeader(
+                  title: 'Settings',
+                  subtitle:
+                      'GalaxyDox keeps privacy and core app actions easy to reach without clutter.',
+                  actions: [],
                 ),
                 const SizedBox(height: 20),
                 FrostedPanel(
@@ -73,25 +79,57 @@ class SettingsPage extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          if (Navigator.of(context).canPop()) {
-                            Navigator.of(context).maybePop();
-                            return;
-                          }
-
-                          context.goNamed(AppRoutes.homeName);
-                        },
-                        icon: const Icon(Icons.arrow_back_rounded),
-                        label: const Text('Return to Home'),
-                      ),
+                if (!kIsWeb) ...[
+                  const SizedBox(height: 20),
+                  FrostedPanel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(22),
+                            onTap: () =>
+                                showTranslationLanguageSheet(context, ref),
+                            child: Padding(
+                              padding: const EdgeInsets.all(18),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.translate_rounded),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Translation language',
+                                          style: theme.textTheme.titleMedium,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          translationLanguage.label,
+                                          style: theme.textTheme.bodyLarge,
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          'Articles and other supported app content will be translated into this language when available.',
+                                          style: theme.textTheme.bodyMedium,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Icon(Icons.chevron_right_rounded),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ],
             ),
           ),

@@ -24,6 +24,7 @@ import '../../domain/entities/apod_item.dart';
 import '../providers/apod_controller.dart';
 import '../utils/apod_share_text.dart';
 import '../utils/apod_video_launcher.dart';
+import '../widgets/apod_article_translation.dart';
 import '../widgets/apod_loading_view.dart';
 import '../widgets/apod_media_preview.dart';
 
@@ -40,21 +41,29 @@ class _ApodPageState extends ConsumerState<ApodPage> {
   @override
   void initState() {
     super.initState();
-    unawaited(_loadInitialApod());
+    _scheduleInitialApodLoad();
   }
 
   @override
   void didUpdateWidget(covariant ApodPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!_isSameDate(oldWidget.initialDate, widget.initialDate)) {
-      unawaited(_loadInitialApod());
+      _scheduleInitialApodLoad();
     }
   }
 
-  Future<void> _loadInitialApod() {
-    return ref
-        .read(apodControllerProvider.notifier)
-        .load(forDate: widget.initialDate);
+  void _scheduleInitialApodLoad() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      unawaited(
+        ref
+            .read(apodControllerProvider.notifier)
+            .load(forDate: widget.initialDate),
+      );
+    });
   }
 
   bool _isSameDate(DateTime? left, DateTime? right) {
@@ -283,9 +292,6 @@ class _ApodContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final formattedDate = DateFormat.yMMMMd().format(item.date);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -298,57 +304,36 @@ class _ApodContent extends StatelessWidget {
           builder: (context, constraints) {
             final compact = constraints.maxWidth < 980;
 
-            final main = FrostedPanel(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.mediaType == ApodMediaType.video
-                        ? 'NASA video of the day'
-                        : item.hasHdImage
-                        ? 'HD astronomy image'
-                        : 'Astronomy image',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: item.isVideo
-                          ? AppColors.secondary
-                          : AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(item.title, style: theme.textTheme.headlineLarge),
-                  const SizedBox(height: 10),
-                  Text(formattedDate, style: theme.textTheme.bodyLarge),
-                  const SizedBox(height: 22),
-                  Text(
-                    item.explanation,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: AppColors.textPrimary.withValues(alpha: 0.84),
-                    ),
-                  ),
-                ],
+            return ApodArticleTranslationScope(
+              item: item,
+              child: Builder(
+                builder: (context) {
+                  final main = const ApodArticleMainPanel();
+
+                  final side = Column(
+                    children: [
+                      _MetaPanel(item: item),
+                      const SizedBox(height: 18),
+                      _ActionPanel(item: item),
+                    ],
+                  );
+
+                  if (compact) {
+                    return Column(
+                      children: [main, const SizedBox(height: 18), side],
+                    );
+                  }
+
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 3, child: main),
+                      const SizedBox(width: 20),
+                      Expanded(flex: 2, child: side),
+                    ],
+                  );
+                },
               ),
-            );
-
-            final side = Column(
-              children: [
-                _MetaPanel(item: item),
-                const SizedBox(height: 18),
-                _ActionPanel(item: item),
-              ],
-            );
-
-            if (compact) {
-              return Column(children: [main, const SizedBox(height: 18), side]);
-            }
-
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(flex: 3, child: main),
-                const SizedBox(width: 20),
-                Expanded(flex: 2, child: side),
-              ],
             );
           },
         ),
