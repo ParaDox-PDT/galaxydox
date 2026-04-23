@@ -181,19 +181,8 @@ class _WallpaperGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return _WallpapersGridSliver(
       itemCount: wallpapers.length,
-      itemBuilder: (context, index) {
-        final item = _WallpaperGridItem(wallpaper: wallpapers[index]);
-        // Only stagger-animate the first 12 items to avoid creating hundreds
-        // of simultaneous animation controllers on long lists.
-        if (index >= 12) return item;
-        return item
-            .animate()
-            .fadeIn(
-              delay: Duration(milliseconds: 60 * index),
-              duration: AppConstants.motionMedium,
-            )
-            .slideY(begin: 0.06, end: 0);
-      },
+      itemBuilder: (context, index) =>
+          _WallpaperGridItem(wallpaper: wallpapers[index]),
     );
   }
 }
