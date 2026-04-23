@@ -6,19 +6,22 @@ class PageHeader extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.actions,
+    this.onBackPressed,
   });
 
   final String title;
   final String subtitle;
   final List<Widget> actions;
+  final VoidCallback? onBackPressed;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final canPop = Navigator.of(context).canPop();
-    final backButton = canPop
+    final shouldShowBackButton = onBackPressed != null || canPop;
+    final backButton = shouldShowBackButton
         ? OutlinedButton.icon(
-            onPressed: () => Navigator.of(context).maybePop(),
+            onPressed: onBackPressed ?? () => Navigator.of(context).maybePop(),
             icon: const Icon(Icons.arrow_back_rounded),
             label: const Text('Back'),
           )
