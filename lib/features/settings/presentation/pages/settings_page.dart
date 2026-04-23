@@ -6,6 +6,7 @@ import '../../../../app/router/app_routes.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../shared/navigation/swipe_back_route.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
+import '../../../../shared/widgets/page_header.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
 import '../../../../shared/widgets/translation_language_sheet.dart';
 import '../providers/translation_language_settings_controller.dart';
@@ -29,11 +30,11 @@ class SettingsPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Settings', style: theme.textTheme.displayMedium),
-                const SizedBox(height: 10),
-                Text(
-                  'GalaxyDox keeps privacy and core app actions easy to reach without clutter.',
-                  style: theme.textTheme.bodyLarge,
+                const PageHeader(
+                  title: 'Settings',
+                  subtitle:
+                      'GalaxyDox keeps privacy and core app actions easy to reach without clutter.',
+                  actions: [],
                 ),
                 const SizedBox(height: 20),
                 FrostedPanel(
@@ -125,25 +126,6 @@ class SettingsPage extends ConsumerWidget {
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          if (Navigator.of(context).canPop()) {
-                            Navigator.of(context).maybePop();
-                            return;
-                          }
-
-                          context.goNamed(AppRoutes.homeName);
-                        },
-                        icon: const Icon(Icons.arrow_back_rounded),
-                        label: const Text('Return to Home'),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),

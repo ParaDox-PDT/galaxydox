@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class PageHeader extends StatelessWidget {
@@ -22,7 +23,7 @@ class PageHeader extends StatelessWidget {
     final backButton = shouldShowBackButton
         ? OutlinedButton.icon(
             onPressed: onBackPressed ?? () => Navigator.of(context).maybePop(),
-            icon: const Icon(Icons.arrow_back_rounded),
+            icon: const Icon(CupertinoIcons.back, size: 18),
             label: const Text('Back'),
           )
         : null;
