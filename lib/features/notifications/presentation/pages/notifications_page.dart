@@ -376,6 +376,14 @@ class _NotificationCardState extends State<_NotificationCard> {
   }
 
   @override
+  void didUpdateWidget(_NotificationCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.notification.imageUrl != widget.notification.imageUrl) {
+      _showImage = _isDisplayableImageUrl(widget.notification.imageUrl);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final notification = widget.notification;
