@@ -90,9 +90,7 @@ class PlanetModelCacheService {
     final store = txn.objectStore(_storeName);
     final result = await store.getObject(key);
     await txn.completed;
-    if (result == null) return null;
-    if (result is ByteBuffer) return result.asUint8List();
-    return null;
+    return (result as ByteBuffer?)?.asUint8List();
   }
 
   Future<void> _saveToCache(
@@ -169,10 +167,7 @@ class PlanetModelCacheService {
     return html.Url.createObjectUrl(blob);
   }
 
-  String _buildCacheKey({
-    required String planetId,
-    required Uri modelUri,
-  }) {
+  String _buildCacheKey({required String planetId, required Uri modelUri}) {
     final safePlanetId = _sanitizeToken(planetId);
     final encodedUrl = base64Url
         .encode(utf8.encode(modelUri.toString()))

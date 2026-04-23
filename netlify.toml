@@ -1,0 +1,44 @@
+[build]
+  publish = "build/web"
+
+# .well-known dotfolder Netlify manual deploy'da yo'qoladi.
+# Fayllar well-known/ (noktasiz) papkasida saqlanadi va redirect orqali serve qilinadi.
+[[redirects]]
+  from = "/.well-known/*"
+  to = "/well-known/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/admin"
+  to = "/admin/login"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/admin/*"
+  to = "https://galaxydoxadmin.netlify.app/admin/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/well-known/assetlinks.json"
+  [headers.values]
+    Content-Type = "application/json; charset=utf-8"
+    X-Content-Type-Options = "nosniff"
+    Access-Control-Allow-Origin = "*"
+
+[[headers]]
+  for = "/well-known/apple-app-site-association"
+  [headers.values]
+    Content-Type = "application/json; charset=utf-8"
+    X-Content-Type-Options = "nosniff"
+
+[[headers]]
+  for = "/apple-app-site-association"
+  [headers.values]
+    Content-Type = "application/json; charset=utf-8"
+    X-Content-Type-Options = "nosniff"

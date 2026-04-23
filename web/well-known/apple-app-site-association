@@ -1,0 +1,16 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": [
+          "APPLE_TEAM_ID.com.galaxydox.app"
+        ],
+        "paths": [
+          "/wallpapers/*",
+          "/apod"
+        ]
+      }
+    ]
+  }
+}

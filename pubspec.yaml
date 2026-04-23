@@ -3,13 +3,15 @@ description: "A premium NASA explorer app built with Flutter."
 
 publish_to: 'none'
 
-version: 1.6.2+7
+version: 1.6.3+8
 
 environment:
   sdk: ^3.11.0
 
 dependencies:
   flutter:
+    sdk: flutter
+  flutter_web_plugins:
     sdk: flutter
 
   cupertino_icons: ^1.0.8

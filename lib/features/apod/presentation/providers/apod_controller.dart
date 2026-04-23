@@ -22,13 +22,6 @@ class ApodController extends Notifier<ApodState> {
     ref.onDispose(() {
       _requestVersion++;
     });
-    Future<void>.microtask(() async {
-      if (!ref.mounted) {
-        return;
-      }
-
-      await load();
-    });
 
     return const ApodState.loading();
   }

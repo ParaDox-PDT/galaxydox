@@ -92,10 +92,26 @@ class OnboardingPage extends ConsumerStatefulWidget {
 class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   int _currentStep = 0;
   static const _totalSteps = 4;
+  late final PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   void _next() {
     if (_currentStep < _totalSteps - 1) {
-      setState(() => _currentStep++);
+      _pageController.nextPage(
+        duration: AppConstants.motionSlow,
+        curve: Curves.easeOutCubic,
+      );
     }
   }
 
@@ -130,35 +146,20 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   Widget build(BuildContext context) {
     final selectedOrbit = ref.watch(onboardingNotifierProvider);
     final isLastStep = _currentStep == _totalSteps - 1;
-
     final isWide = MediaQuery.sizeOf(context).width > 600;
 
     Widget content = Column(
       children: [
-        _TopBar(
-          onSkip: _skip,
-          showSkip: !isLastStep,
-        ),
+        _TopBar(onSkip: _skip, showSkip: !isLastStep),
         Expanded(
-          child: AnimatedSwitcher(
-            duration: AppConstants.motionSlow,
-            transitionBuilder: (child, animation) {
-              final curved = CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-              );
-              return FadeTransition(
-                opacity: curved,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0, 0.034),
-                    end: Offset.zero,
-                  ).animate(curved),
-                  child: child,
-                ),
-              );
+          child: PageView(
+            controller: _pageController,
+            allowImplicitScrolling: true,
+            onPageChanged: (index) {
+              if (_currentStep == index) return;
+              setState(() => _currentStep = index);
             },
-            child: [
+            children: [
               const _BrandIntroStep(key: ValueKey(0)),
               const _DiscoveryLanesStep(key: ValueKey(1)),
               _ChooseOrbitStep(
@@ -168,11 +169,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                     .read(onboardingNotifierProvider.notifier)
                     .selectOrbit(route),
               ),
-              _ReadyStep(
-                key: const ValueKey(3),
-                selectedOrbit: selectedOrbit,
-              ),
-            ][_currentStep],
+              _ReadyStep(key: const ValueKey(3), selectedOrbit: selectedOrbit),
+            ],
           ),
         ),
         _BottomNav(
@@ -257,13 +255,16 @@ class _TopBar extends StatelessWidget {
               onPressed: showSkip ? onSkip : null,
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.textMuted,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
               ),
               child: Text(
                 'Skip',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: AppColors.textMuted,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(color: AppColors.textMuted),
               ),
             ),
           ),
@@ -567,10 +568,7 @@ class _LaneCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  description,
-                  style: theme.textTheme.bodyMedium,
-                ),
+                Text(description, style: theme.textTheme.bodyMedium),
               ],
             ),
           ),
@@ -700,10 +698,10 @@ class _OrbitCard extends StatelessWidget {
             Text(
               option.label,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: isSelected
-                        ? AppColors.textPrimary
-                        : AppColors.textSecondary,
-                  ),
+                color: isSelected
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -750,10 +748,12 @@ class _ReadyStep extends StatelessWidget {
                     height: 80,
                     decoration: BoxDecoration(
                       color: opt.accent.withValues(alpha: 0.14),
-                      borderRadius:
-                          BorderRadius.circular(AppConstants.radiusLarge),
-                      border:
-                          Border.all(color: opt.accent.withValues(alpha: 0.3)),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.radiusLarge,
+                      ),
+                      border: Border.all(
+                        color: opt.accent.withValues(alpha: 0.3),
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: opt.accent.withValues(alpha: 0.22),
@@ -780,10 +780,7 @@ class _ReadyStep extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  _headline,
-                  style: theme.textTheme.headlineLarge,
-                ),
+                Text(_headline, style: theme.textTheme.headlineLarge),
                 const SizedBox(height: 14),
                 Text(
                   'Your GalaxyDox mission begins now. '
@@ -821,9 +818,9 @@ class _Tag extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AppColors.textSecondary,
-              fontSize: 12,
-            ),
+          color: AppColors.textSecondary,
+          fontSize: 12,
+        ),
       ),
     );
   }

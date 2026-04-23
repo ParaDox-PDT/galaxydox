@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -20,15 +22,53 @@ import '../../../../shared/widgets/space_scaffold.dart';
 import '../../../../shared/widgets/state_panel.dart';
 import '../../domain/entities/apod_item.dart';
 import '../providers/apod_controller.dart';
+import '../utils/apod_share_text.dart';
 import '../utils/apod_video_launcher.dart';
 import '../widgets/apod_loading_view.dart';
 import '../widgets/apod_media_preview.dart';
 
-class ApodPage extends ConsumerWidget {
-  const ApodPage({super.key});
+class ApodPage extends ConsumerStatefulWidget {
+  const ApodPage({this.initialDate, super.key});
+
+  final DateTime? initialDate;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ApodPage> createState() => _ApodPageState();
+}
+
+class _ApodPageState extends ConsumerState<ApodPage> {
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadInitialApod());
+  }
+
+  @override
+  void didUpdateWidget(covariant ApodPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_isSameDate(oldWidget.initialDate, widget.initialDate)) {
+      unawaited(_loadInitialApod());
+    }
+  }
+
+  Future<void> _loadInitialApod() {
+    return ref
+        .read(apodControllerProvider.notifier)
+        .load(forDate: widget.initialDate);
+  }
+
+  bool _isSameDate(DateTime? left, DateTime? right) {
+    if (left == null || right == null) {
+      return left == right;
+    }
+
+    return left.year == right.year &&
+        left.month == right.month &&
+        left.day == right.day;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(apodControllerProvider);
     final controller = ref.read(apodControllerProvider.notifier);
 
@@ -447,28 +487,7 @@ class _ActionPanel extends ConsumerWidget {
 
   Future<void> _shareApod(BuildContext context, WidgetRef ref) async {
     ref.read(analyticsServiceProvider).logApodShared();
-    final shareUri = sanitizeTrustedExternalUri(
-      item.isImage ? item.preferredImageUrl : item.url,
-      allowedHosts: TrustedHostSets.nasaAndVideoHosts,
-    );
-    final explanation = item.explanation.trim();
-    final shortExplanation = explanation.length > 180
-        ? '${explanation.substring(0, 177)}...'
-        : explanation;
-
-    final buffer = StringBuffer()
-      ..writeln(item.title)
-      ..writeln(DateFormat.yMMMMd().format(item.date))
-      ..writeln()
-      ..writeln(shortExplanation);
-
-    if (shareUri != null) {
-      buffer
-        ..writeln()
-        ..write(shareUri.toString());
-    }
-
-    await SharePlus.instance.share(ShareParams(text: buffer.toString().trim()));
+    await SharePlus.instance.share(ShareParams(text: buildApodShareText(item)));
   }
 
   Future<void> _openHdImage(BuildContext context, WidgetRef ref) async {

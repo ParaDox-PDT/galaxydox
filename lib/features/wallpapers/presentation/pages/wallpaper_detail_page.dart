@@ -8,9 +8,12 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/navigation/fallback_back_navigation.dart';
+import '../../../../app/router/app_routes.dart';
 import '../../data/wallpaper_download_service.dart';
 import '../../domain/wallpaper_entity.dart';
 import '../providers/wallpapers_provider.dart';
+import '../utils/wallpaper_share_text.dart';
 
 class WallpaperDetailPage extends ConsumerWidget {
   const WallpaperDetailPage({
@@ -150,7 +153,7 @@ class _WallpaperDetailContentState extends State<_WallpaperDetailContent> {
 
   Future<void> _shareWallpaper() async {
     await SharePlus.instance.share(
-      ShareParams(text: widget.wallpaper.imageUrl),
+      ShareParams(text: buildWallpaperShareText(widget.wallpaper)),
     );
   }
 
@@ -236,95 +239,104 @@ class _WallpaperDetailContentState extends State<_WallpaperDetailContent> {
     if (verticalVelocity.abs() <= horizontalVelocity.abs()) return;
 
     HapticFeedback.selectionClick();
-    Navigator.of(context).maybePop();
+    popOrGoNamed(context, fallbackRouteName: AppRoutes.wallpapersName);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(Icons.arrow_back_rounded),
-          style: IconButton.styleFrom(
-            backgroundColor: Colors.black.withValues(alpha: 0.35),
-            foregroundColor: Colors.white,
-          ),
-        ),
-        title: Text(
-          widget.wallpaper.title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        actions: [
-          IconButton(
-            onPressed: _isDownloading ? null : _downloadWallpaper,
-            icon: _isDownloading
-                ? SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      value: _downloadProgress != null && _downloadProgress! > 0
-                          ? _downloadProgress
-                          : null,
-                      strokeWidth: 2.2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Icon(Icons.download_rounded),
+    return FallbackBackNavigationScope(
+      fallbackRouteName: AppRoutes.wallpapersName,
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          leading: IconButton(
+            onPressed: () => popOrGoNamed(
+              context,
+              fallbackRouteName: AppRoutes.wallpapersName,
+            ),
+            icon: const Icon(Icons.arrow_back_rounded),
             style: IconButton.styleFrom(
               backgroundColor: Colors.black.withValues(alpha: 0.35),
               foregroundColor: Colors.white,
             ),
           ),
-          const SizedBox(width: 4),
-          IconButton(
-            onPressed: _shareWallpaper,
-            icon: const Icon(Icons.share_rounded),
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.black.withValues(alpha: 0.35),
-              foregroundColor: Colors.white,
-            ),
+          title: Text(
+            widget.wallpaper.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Hero(
-        tag: 'wallpaper-hero-${widget.wallpaper.id}',
-        child: PhotoView(
-          controller: _photoController,
-          scaleStateController: _scaleStateController,
-          imageProvider: CachedNetworkImageProvider(widget.wallpaper.imageUrl),
-          minScale: PhotoViewComputedScale.contained,
-          maxScale: PhotoViewComputedScale.covered * 4,
-          initialScale: PhotoViewComputedScale.contained,
-          enablePanAlways: true,
-          strictScale: true,
-          backgroundDecoration: const BoxDecoration(color: Colors.black),
-          scaleStateCycle: _scaleStateCycle,
-          onScaleEnd: _handleScaleEnd,
-          loadingBuilder: (context, event) {
-            return const Center(
-              child: CircularProgressIndicator(
-                strokeWidth: 2.6,
-                color: AppColors.textPrimary,
+          actions: [
+            IconButton(
+              onPressed: _isDownloading ? null : _downloadWallpaper,
+              icon: _isDownloading
+                  ? SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        value:
+                            _downloadProgress != null && _downloadProgress! > 0
+                            ? _downloadProgress
+                            : null,
+                        strokeWidth: 2.2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.download_rounded),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.black.withValues(alpha: 0.35),
+                foregroundColor: Colors.white,
               ),
-            );
-          },
-          errorBuilder: (context, error, stackTrace) {
-            return const Center(
-              child: Icon(
-                Icons.broken_image_outlined,
-                size: 34,
-                color: AppColors.textMuted,
+            ),
+            const SizedBox(width: 4),
+            IconButton(
+              onPressed: _shareWallpaper,
+              icon: const Icon(Icons.share_rounded),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.black.withValues(alpha: 0.35),
+                foregroundColor: Colors.white,
               ),
-            );
-          },
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
+        body: Hero(
+          tag: 'wallpaper-hero-${widget.wallpaper.id}',
+          child: PhotoView(
+            controller: _photoController,
+            scaleStateController: _scaleStateController,
+            imageProvider: CachedNetworkImageProvider(
+              widget.wallpaper.imageUrl,
+            ),
+            minScale: PhotoViewComputedScale.contained,
+            maxScale: PhotoViewComputedScale.covered * 4,
+            initialScale: PhotoViewComputedScale.contained,
+            enablePanAlways: true,
+            strictScale: true,
+            backgroundDecoration: const BoxDecoration(color: Colors.black),
+            scaleStateCycle: _scaleStateCycle,
+            onScaleEnd: _handleScaleEnd,
+            loadingBuilder: (context, event) {
+              return const Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.6,
+                  color: AppColors.textPrimary,
+                ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return const Center(
+                child: Icon(
+                  Icons.broken_image_outlined,
+                  size: 34,
+                  color: AppColors.textMuted,
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -338,22 +350,28 @@ class _WallpaperDetailPlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(Icons.arrow_back_rounded),
-          style: IconButton.styleFrom(
-            backgroundColor: Colors.black.withValues(alpha: 0.35),
-            foregroundColor: Colors.white,
+    return FallbackBackNavigationScope(
+      fallbackRouteName: AppRoutes.wallpapersName,
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          leading: IconButton(
+            onPressed: () => popOrGoNamed(
+              context,
+              fallbackRouteName: AppRoutes.wallpapersName,
+            ),
+            icon: const Icon(Icons.arrow_back_rounded),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.black.withValues(alpha: 0.35),
+              foregroundColor: Colors.white,
+            ),
           ),
         ),
+        body: child,
       ),
-      body: child,
     );
   }
 }

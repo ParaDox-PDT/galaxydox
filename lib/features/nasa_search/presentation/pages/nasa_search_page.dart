@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -32,7 +30,6 @@ class NasaSearchPage extends ConsumerStatefulWidget {
 class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
   late final TextEditingController _searchController;
   late final ScrollController _scrollController;
-  Timer? _debounce;
 
   @override
   void initState() {
@@ -43,7 +40,6 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
 
   @override
   void dispose() {
-    _debounce?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -74,7 +70,6 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
                     onInfoPressed: () => _showResultsInfoSheet(context),
                     mediaTypeFilter: state.mediaTypeFilter,
                     searchController: _searchController,
-                    onChanged: _onSearchChanged,
                     onSubmit: () => _submitSearch(controller),
                     onExampleSelected: (query) =>
                         _selectExampleQuery(controller, query),
@@ -192,13 +187,6 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
     ];
   }
 
-  void _onSearchChanged(String value) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 550), () {
-      ref.read(nasaSearchControllerProvider.notifier).search(query: value);
-    });
-  }
-
   Future<void> _submitSearch(NasaSearchController controller) async {
     FocusManager.instance.primaryFocus?.unfocus();
     HapticFeedback.selectionClick();
@@ -208,7 +196,6 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
   }
 
   Future<void> _clearSearch(NasaSearchController controller) async {
-    _debounce?.cancel();
     HapticFeedback.selectionClick();
     _searchController.clear();
     await controller.search(query: '');
@@ -218,7 +205,6 @@ class _NasaSearchPageState extends ConsumerState<NasaSearchPage> {
     NasaSearchController controller,
     String query,
   ) async {
-    _debounce?.cancel();
     HapticFeedback.selectionClick();
     _searchController
       ..text = query
@@ -349,7 +335,6 @@ class _TopBar extends StatelessWidget {
     required this.onInfoPressed,
     required this.mediaTypeFilter,
     required this.searchController,
-    required this.onChanged,
     required this.onSubmit,
     required this.onExampleSelected,
     required this.onClear,
@@ -359,7 +344,6 @@ class _TopBar extends StatelessWidget {
   final VoidCallback onInfoPressed;
   final NasaSearchMediaFilter mediaTypeFilter;
   final TextEditingController searchController;
-  final ValueChanged<String> onChanged;
   final VoidCallback onSubmit;
   final ValueChanged<String> onExampleSelected;
   final VoidCallback onClear;
@@ -376,6 +360,8 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -417,10 +403,24 @@ class _TopBar extends StatelessWidget {
                               height: 56,
                               child: TextField(
                                 controller: searchController,
-                                onChanged: onChanged,
                                 onSubmitted: (_) => onSubmit(),
                                 textInputAction: TextInputAction.search,
+                                maxLines: 1,
+                                textAlignVertical: TextAlignVertical.center,
+                                strutStyle: const StrutStyle(
+                                  height: 1.15,
+                                  forceStrutHeight: true,
+                                ),
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: AppColors.textPrimary,
+                                  height: 1.15,
+                                ),
                                 decoration: InputDecoration(
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 16,
+                                  ),
                                   hintText:
                                       'Search nebulae, Apollo, Hubble, Artemis...',
                                   prefixIcon: const Icon(Icons.search_rounded),

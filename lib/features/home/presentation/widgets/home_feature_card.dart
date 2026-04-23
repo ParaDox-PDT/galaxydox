@@ -232,9 +232,8 @@ class HomeFeatureCard extends StatelessWidget {
                                     feature.ctaLabel,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: feature.accentColor,
-                                    ),
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(color: feature.accentColor),
                                   ),
                                 ),
                                 const SizedBox(width: 6),
@@ -256,88 +255,6 @@ class HomeFeatureCard extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-}
-
-class _FeatureMetricSection extends StatelessWidget {
-  const _FeatureMetricSection({
-    required this.accentColor,
-    required this.metrics,
-    required this.isCompact,
-  });
-
-  final Color accentColor;
-  final List<FeatureMetric> metrics;
-  final bool isCompact;
-
-  @override
-  Widget build(BuildContext context) {
-    if (metrics.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    if (isCompact || metrics.length == 1) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (var index = 0; index < metrics.length; index++) ...[
-            _CompactMetric(accentColor: accentColor, metric: metrics[index]),
-            if (index != metrics.length - 1) const SizedBox(height: 10),
-          ],
-        ],
-      );
-    }
-
-    return Row(
-      children: [
-        for (var index = 0; index < metrics.length; index++) ...[
-          Expanded(
-            child: _CompactMetric(
-              accentColor: accentColor,
-              metric: metrics[index],
-            ),
-          ),
-          if (index != metrics.length - 1) const SizedBox(width: 10),
-        ],
-      ],
-    );
-  }
-}
-
-class _CompactMetric extends StatelessWidget {
-  const _CompactMetric({required this.accentColor, required this.metric});
-
-  final Color accentColor;
-  final FeatureMetric metric;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: accentColor.withValues(alpha: 0.16)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            metric.label.toUpperCase(),
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: AppColors.textPrimary.withValues(alpha: 0.58),
-              letterSpacing: 1.1,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(metric.value, style: theme.textTheme.titleSmall),
-        ],
-      ),
     );
   }
 }

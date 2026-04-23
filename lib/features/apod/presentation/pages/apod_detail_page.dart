@@ -13,6 +13,7 @@ import '../../../../shared/widgets/page_header.dart';
 import '../../../../shared/widgets/section_heading.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
 import '../../domain/entities/apod_item.dart';
+import '../utils/apod_share_text.dart';
 import '../utils/apod_video_launcher.dart';
 import '../widgets/apod_media_preview.dart';
 
@@ -276,28 +277,7 @@ class _ApodActionPanel extends StatelessWidget {
   }
 
   Future<void> _shareApod(BuildContext context) async {
-    final shareUri = sanitizeTrustedExternalUri(
-      item.isImage ? item.preferredImageUrl : item.url,
-      allowedHosts: TrustedHostSets.nasaAndVideoHosts,
-    );
-    final explanation = item.explanation.trim();
-    final shortExplanation = explanation.length > 180
-        ? '${explanation.substring(0, 177)}...'
-        : explanation;
-
-    final buffer = StringBuffer()
-      ..writeln(item.title)
-      ..writeln(DateFormat.yMMMMd().format(item.date))
-      ..writeln()
-      ..writeln(shortExplanation);
-
-    if (shareUri != null) {
-      buffer
-        ..writeln()
-        ..write(shareUri.toString());
-    }
-
-    await SharePlus.instance.share(ShareParams(text: buffer.toString().trim()));
+    await SharePlus.instance.share(ShareParams(text: buildApodShareText(item)));
   }
 
   Future<void> _openHdImage(BuildContext context) async {

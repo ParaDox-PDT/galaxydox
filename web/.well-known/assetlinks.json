@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.galaxydox.app",
+      "sha256_cert_fingerprints": [
+        "B5:E8:E3:FB:9E:BF:82:0F:91:28:DD:4C:04:21:CD:76:8C:FA:12:69:04:8B:A1:DE:BF:04:B5:78:EB:4E:9D:86",
+        "65:33:3D:EB:46:09:3F:CB:34:C2:31:E3:C4:C0:61:96:75:DC:34:BA:B2:CF:EB:97:AE:56:EB:22:39:61:C2:42"
+      ]
+    }
+  }
+]

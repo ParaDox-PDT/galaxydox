@@ -522,41 +522,6 @@ class _TopBadge extends StatelessWidget {
   }
 }
 
-class _MetricPill extends StatelessWidget {
-  const _MetricPill({required this.metric});
-
-  final FeatureMetric metric;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.22),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            metric.label.toUpperCase(),
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: AppColors.textPrimary.withValues(alpha: 0.7),
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(metric.value, style: theme.textTheme.titleMedium),
-        ],
-      ),
-    );
-  }
-}
-
 class _MetricRow extends StatelessWidget {
   const _MetricRow({required this.metric});
 

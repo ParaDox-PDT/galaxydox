@@ -3,5 +3,9 @@
 /admin    /admin/login                                  302!
 /admin/*  https://galaxydoxadmin.netlify.app/admin/:splat  200
 
+# .well-known dotfolder Netlify manual deploy'da yo'qoladi.
+# Fayllar well-known/ (noktasiz) papkasida saqlanadi va shu redirect orqali serve qilinadi.
+/.well-known/*  /well-known/:splat  200
+
 # Asosiy Flutter Web loyihasi uchun yo'naltirish
 /* /index.html                                      200
