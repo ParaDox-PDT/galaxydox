@@ -6,6 +6,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/translation/translation_language_options.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
+import '../../../../shared/widgets/translation_language_sheet.dart';
 import '../../domain/entities/apod_item.dart';
 import '../providers/apod_article_translation_controller.dart';
 
@@ -80,21 +81,41 @@ class ApodArticleMainPanel extends ConsumerWidget {
           ),
           if (state.isTranslationActive && targetLanguage != null) ...[
             const SizedBox(height: 10),
-            Row(
-              children: [
-                const Icon(
-                  Icons.translate_rounded,
-                  size: 18,
-                  color: AppColors.tertiary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Translated to ${targetLanguage.label}',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () => showTranslationLanguageSheet(context, ref),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 4,
+                    horizontal: 2,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.translate_rounded,
+                        size: 16,
+                        color: AppColors.tertiary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Translated to ${targetLanguage.label}',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.expand_more_rounded,
+                        size: 16,
+                        color: AppColors.textMuted,
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
           ],
           if (state.isTranslating) ...[

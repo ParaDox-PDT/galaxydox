@@ -155,7 +155,7 @@ class ApodArticleTranslationController
           isTranslating: false,
           clearError: true,
           notice: ApodArticleTranslationNotice.info(
-            'You can change the translation language from Settings.',
+            'Tap the language indicator above to switch languages.',
           ),
         );
       },
