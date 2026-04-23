@@ -3,7 +3,7 @@ description: "A premium NASA explorer app built with Flutter."
 
 publish_to: 'none'
 
-version: 1.6.8+9
+version: 1.6.9+10
 
 environment:
   sdk: ^3.11.0
