@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/trusted_external_url.dart';
 import '../../../../shared/bookmarks/bookmark_mapper.dart';
 import '../../../../shared/widgets/bookmark_button.dart';
@@ -15,6 +15,7 @@ import '../../../../shared/widgets/space_scaffold.dart';
 import '../../domain/entities/apod_item.dart';
 import '../utils/apod_share_text.dart';
 import '../utils/apod_video_launcher.dart';
+import '../widgets/apod_article_translation.dart';
 import '../widgets/apod_media_preview.dart';
 
 class ApodDetailPage extends StatelessWidget {
@@ -65,71 +66,40 @@ class ApodDetailPage extends StatelessWidget {
                         builder: (context, constraints) {
                           final compact = constraints.maxWidth < 980;
 
-                          final main = FrostedPanel(
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item.isVideo
-                                      ? 'NASA video of the day'
-                                      : item.hasHdImage
-                                      ? 'HD astronomy image'
-                                      : 'Astronomy image',
-                                  style: theme.textTheme.labelLarge?.copyWith(
-                                    color: item.isVideo
-                                        ? AppColors.secondary
-                                        : AppColors.primary,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  item.title,
-                                  style: theme.textTheme.headlineLarge,
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  DateFormat.yMMMMd().format(item.date),
-                                  style: theme.textTheme.bodyLarge,
-                                ),
-                                const SizedBox(height: 22),
-                                Text(
-                                  item.explanation,
-                                  style: theme.textTheme.bodyLarge?.copyWith(
-                                    color: AppColors.textPrimary.withValues(
-                                      alpha: 0.84,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                          return ApodArticleTranslationScope(
+                            item: item,
+                            child: Builder(
+                              builder: (context) {
+                                final main = const ApodArticleMainPanel();
+
+                                final side = Column(
+                                  children: [
+                                    _ApodMetadataPanel(item: item),
+                                    const SizedBox(height: 18),
+                                    _ApodActionPanel(item: item),
+                                  ],
+                                );
+
+                                if (compact) {
+                                  return Column(
+                                    children: [
+                                      main,
+                                      const SizedBox(height: 18),
+                                      side,
+                                    ],
+                                  );
+                                }
+
+                                return Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(flex: 3, child: main),
+                                    const SizedBox(width: 20),
+                                    Expanded(flex: 2, child: side),
+                                  ],
+                                );
+                              },
                             ),
-                          );
-
-                          final side = Column(
-                            children: [
-                              _ApodMetadataPanel(item: item),
-                              const SizedBox(height: 18),
-                              _ApodActionPanel(item: item),
-                            ],
-                          );
-
-                          if (compact) {
-                            return Column(
-                              children: [
-                                main,
-                                const SizedBox(height: 18),
-                                side,
-                              ],
-                            );
-                          }
-
-                          return Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(flex: 3, child: main),
-                              const SizedBox(width: 20),
-                              Expanded(flex: 2, child: side),
-                            ],
                           );
                         },
                       ),
@@ -210,13 +180,13 @@ class _ApodMetadataPanel extends StatelessWidget {
   }
 }
 
-class _ApodActionPanel extends StatelessWidget {
+class _ApodActionPanel extends ConsumerWidget {
   const _ApodActionPanel({required this.item});
 
   final ApodItem item;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return FrostedPanel(
       padding: const EdgeInsets.all(22),
       child: Column(
