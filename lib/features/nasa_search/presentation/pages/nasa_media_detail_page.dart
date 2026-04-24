@@ -343,20 +343,21 @@ class _NasaMediaDetailTranslationPanel extends ConsumerWidget {
       state.targetLanguageCode,
     );
     final isEnglish = targetLanguage == null || targetLanguage.isEnglish;
+    final languageLabel = targetLanguage?.label ?? 'Language';
     final status = state.isTranslationActive && targetLanguage != null
-        ? 'Translated to ${targetLanguage.label}'
+        ? 'Translated: ${targetLanguage.label}'
         : isEnglish
-        ? 'Original English'
-        : 'Ready for ${targetLanguage.label}';
+        ? 'Original text'
+        : 'Target: ${targetLanguage.label}';
     final primaryLabel = state.isTranslating
         ? 'Translating...'
         : state.isTranslationActive
-        ? 'View original'
+        ? 'Original'
         : state.hasCurrentTranslation
-        ? 'View translation'
+        ? 'Translation'
         : isEnglish
-        ? 'Choose language'
-        : 'Translate to ${targetLanguage.label}';
+        ? 'Language'
+        : 'Translate';
 
     final primaryAction = state.isTranslating
         ? null
@@ -368,8 +369,8 @@ class _NasaMediaDetailTranslationPanel extends ConsumerWidget {
 
     final icon = state.isTranslating
         ? const SizedBox(
-            width: 18,
-            height: 18,
+            width: 16,
+            height: 16,
             child: CircularProgressIndicator(
               strokeWidth: 2.2,
               color: AppColors.textPrimary,
@@ -379,6 +380,7 @@ class _NasaMediaDetailTranslationPanel extends ConsumerWidget {
             state.isTranslationActive
                 ? Icons.article_outlined
                 : Icons.translate_rounded,
+            size: 18,
           );
 
     final primaryButton = state.isTranslationActive
@@ -387,8 +389,10 @@ class _NasaMediaDetailTranslationPanel extends ConsumerWidget {
             icon: icon,
             label: Text(primaryLabel),
             style: OutlinedButton.styleFrom(
-              minimumSize: const Size(0, 52),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              minimumSize: const Size(0, 40),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              visualDensity: VisualDensity.compact,
             ),
           )
         : FilledButton.icon(
@@ -396,84 +400,96 @@ class _NasaMediaDetailTranslationPanel extends ConsumerWidget {
             icon: icon,
             label: Text(primaryLabel),
             style: FilledButton.styleFrom(
-              minimumSize: const Size(0, 52),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              minimumSize: const Size(0, 40),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              visualDensity: VisualDensity.compact,
             ),
           );
 
     return FrostedPanel(
-      padding: const EdgeInsets.all(16),
-      borderColor: AppColors.tertiary.withValues(alpha: 0.18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      radius: 18,
+      blurSigma: 14,
+      showSheen: false,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      backgroundColor: AppColors.surfaceElevated.withValues(alpha: 0.5),
+      borderColor: AppColors.tertiary.withValues(alpha: 0.12),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 460;
+          final languageButton = TextButton.icon(
+            onPressed: state.isTranslating
+                ? null
+                : () => _chooseLanguageAndTranslate(context, ref, target),
+            icon: const Icon(Icons.tune_rounded, size: 17),
+            label: Text(compact ? 'Lang' : languageLabel),
+            style: TextButton.styleFrom(
+              minimumSize: const Size(0, 38),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              visualDensity: VisualDensity.compact,
+            ),
+          );
+
+          final statusRow = Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
-                  color: AppColors.tertiary.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(13),
+                  color: AppColors.tertiary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                    color: AppColors.tertiary.withValues(alpha: 0.22),
+                    color: AppColors.tertiary.withValues(alpha: 0.2),
                   ),
                 ),
                 child: const Icon(
                   Icons.translate_rounded,
-                  size: 20,
+                  size: 16,
                   color: AppColors.tertiary,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   status,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: AppColors.textPrimary,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 14),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final compact = constraints.maxWidth < 520;
-              final languageButton = TextButton.icon(
-                onPressed: state.isTranslating
-                    ? null
-                    : () => _chooseLanguageAndTranslate(context, ref, target),
-                icon: const Icon(Icons.tune_rounded),
-                label: const Text('Change language'),
-              );
+          );
 
-              if (compact) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                statusRow,
+                const SizedBox(height: 8),
+                Row(
                   children: [
-                    primaryButton,
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: languageButton,
-                    ),
+                    Expanded(child: primaryButton),
+                    const SizedBox(width: 8),
+                    languageButton,
                   ],
-                );
-              }
+                ),
+              ],
+            );
+          }
 
-              return Row(
-                children: [
-                  Expanded(child: primaryButton),
-                  const SizedBox(width: 10),
-                  languageButton,
-                ],
-              );
-            },
-          ),
-        ],
+          return Row(
+            children: [
+              Expanded(child: statusRow),
+              const SizedBox(width: 10),
+              primaryButton,
+              const SizedBox(width: 4),
+              languageButton,
+            ],
+          );
+        },
       ),
     );
   }
