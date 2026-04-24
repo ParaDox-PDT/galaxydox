@@ -62,3 +62,6 @@ Future<void> main() async {
 /// flutter build web --release --dart-define-from-file=.env
 /// dart tool/copy_web_redirects.dart
 /// netlify deploy --prod
+///
+/// BUILDING AUTOMATION
+/// .\deploy_release.bat
