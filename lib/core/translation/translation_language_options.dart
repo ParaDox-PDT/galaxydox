@@ -70,6 +70,110 @@ abstract final class TranslationLanguageOptions {
     ),
     TranslationLanguageOption(code: 'ja', name: 'Japanese', nativeName: '日本語'),
     TranslationLanguageOption(code: 'ko', name: 'Korean', nativeName: '한국어'),
+    TranslationLanguageOption(
+      code: 'zh-tw',
+      name: 'Chinese Traditional',
+      nativeName: '繁體中文',
+    ),
+    TranslationLanguageOption(
+      code: 'id',
+      name: 'Indonesian',
+      nativeName: 'Bahasa Indonesia',
+    ),
+    TranslationLanguageOption(
+      code: 'ms',
+      name: 'Malay',
+      nativeName: 'Bahasa Melayu',
+    ),
+    TranslationLanguageOption(
+      code: 'vi',
+      name: 'Vietnamese',
+      nativeName: 'Tiếng Việt',
+    ),
+    TranslationLanguageOption(code: 'th', name: 'Thai', nativeName: 'ไทย'),
+    TranslationLanguageOption(code: 'fa', name: 'Persian', nativeName: 'فارسی'),
+    TranslationLanguageOption(code: 'ur', name: 'Urdu', nativeName: 'اردو'),
+    TranslationLanguageOption(code: 'bn', name: 'Bengali', nativeName: 'বাংলা'),
+    TranslationLanguageOption(
+      code: 'pa',
+      name: 'Punjabi',
+      nativeName: 'ਪੰਜਾਬੀ',
+    ),
+    TranslationLanguageOption(code: 'ta', name: 'Tamil', nativeName: 'தமிழ்'),
+    TranslationLanguageOption(code: 'te', name: 'Telugu', nativeName: 'తెలుగు'),
+    TranslationLanguageOption(code: 'mr', name: 'Marathi', nativeName: 'मराठी'),
+    TranslationLanguageOption(
+      code: 'gu',
+      name: 'Gujarati',
+      nativeName: 'ગુજરાતી',
+    ),
+    TranslationLanguageOption(code: 'kn', name: 'Kannada', nativeName: 'ಕನ್ನಡ'),
+    TranslationLanguageOption(
+      code: 'uk',
+      name: 'Ukrainian',
+      nativeName: 'Українська',
+    ),
+    TranslationLanguageOption(code: 'pl', name: 'Polish', nativeName: 'Polski'),
+    TranslationLanguageOption(
+      code: 'nl',
+      name: 'Dutch',
+      nativeName: 'Nederlands',
+    ),
+    TranslationLanguageOption(
+      code: 'ro',
+      name: 'Romanian',
+      nativeName: 'Română',
+    ),
+    TranslationLanguageOption(code: 'cs', name: 'Czech', nativeName: 'Čeština'),
+    TranslationLanguageOption(
+      code: 'el',
+      name: 'Greek',
+      nativeName: 'Ελληνικά',
+    ),
+    TranslationLanguageOption(
+      code: 'sv',
+      name: 'Swedish',
+      nativeName: 'Svenska',
+    ),
+    TranslationLanguageOption(
+      code: 'no',
+      name: 'Norwegian',
+      nativeName: 'Norsk',
+    ),
+    TranslationLanguageOption(code: 'da', name: 'Danish', nativeName: 'Dansk'),
+    TranslationLanguageOption(code: 'fi', name: 'Finnish', nativeName: 'Suomi'),
+    TranslationLanguageOption(code: 'he', name: 'Hebrew', nativeName: 'עברית'),
+    TranslationLanguageOption(
+      code: 'sw',
+      name: 'Swahili',
+      nativeName: 'Kiswahili',
+    ),
+    TranslationLanguageOption(code: 'am', name: 'Amharic', nativeName: 'አማርኛ'),
+    TranslationLanguageOption(
+      code: 'hu',
+      name: 'Hungarian',
+      nativeName: 'Magyar',
+    ),
+    TranslationLanguageOption(
+      code: 'sk',
+      name: 'Slovak',
+      nativeName: 'Slovenčina',
+    ),
+    TranslationLanguageOption(
+      code: 'bg',
+      name: 'Bulgarian',
+      nativeName: 'Български',
+    ),
+    TranslationLanguageOption(
+      code: 'sr',
+      name: 'Serbian',
+      nativeName: 'Српски',
+    ),
+    TranslationLanguageOption(
+      code: 'hr',
+      name: 'Croatian',
+      nativeName: 'Hrvatski',
+    ),
   ];
 
   static final Map<String, TranslationLanguageOption> _byCode = {
