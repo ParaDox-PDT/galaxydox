@@ -6,19 +6,22 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/translation/translation_language_options.dart';
 import '../../../../core/utils/trusted_external_url.dart';
-import '../../../../shared/widgets/app_chip.dart';
 import '../../../../shared/bookmarks/bookmark_mapper.dart';
 import '../../../../shared/navigation/swipe_back_route.dart';
+import '../../../../shared/widgets/app_chip.dart';
 import '../../../../shared/widgets/bookmark_button.dart';
 import '../../../../shared/widgets/frosted_panel.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
 import '../../../../shared/widgets/space_scaffold.dart';
+import '../../../../shared/widgets/translation_language_sheet.dart';
 import '../../../apod/presentation/widgets/apod_fullscreen_viewer.dart';
 import '../../domain/entities/nasa_media_item.dart';
-import 'nasa_video_player_page.dart';
 import '../providers/nasa_media_playback_provider.dart';
+import '../providers/nasa_media_translation_controller.dart';
 import '../widgets/nasa_inline_video_player.dart';
+import 'nasa_video_player_page.dart';
 
 class NasaMediaDetailPage extends ConsumerWidget {
   const NasaMediaDetailPage({super.key, required this.item});
@@ -29,6 +32,23 @@ class NasaMediaDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final heroTag = 'nasa-media-detail-${item.nasaId}';
+    final translationTarget = NasaMediaTranslationTarget.fromItem(item);
+    final translationProvider = nasaMediaTranslationControllerProvider(
+      translationTarget,
+    );
+
+    ref.listen<NasaMediaTranslationNotice?>(
+      translationProvider.select((state) => state.notice),
+      (previous, next) {
+        if (next == null || previous?.id == next.id) {
+          return;
+        }
+
+        _showSnackBar(context, next);
+      },
+    );
+
+    final translationState = ref.watch(translationProvider);
 
     return SpaceScaffold(
       bottomSafeArea: true,
@@ -70,7 +90,12 @@ class NasaMediaDetailPage extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      _MediaPreview(item: item, heroTag: heroTag),
+                      _MediaPreview(
+                        item: item,
+                        heroTag: heroTag,
+                        title: translationState.displayedTitle,
+                        description: translationState.displayedDescription,
+                      ),
                       const SizedBox(height: 24),
                       Wrap(
                         spacing: 10,
@@ -87,10 +112,17 @@ class NasaMediaDetailPage extends ConsumerWidget {
                         ],
                       ),
                       const SizedBox(height: 18),
-                      Text(item.title, style: theme.textTheme.headlineLarge),
+                      _NasaMediaDetailTranslationPanel(
+                        target: translationTarget,
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        translationState.displayedTitle,
+                        style: theme.textTheme.headlineLarge,
+                      ),
                       const SizedBox(height: 12),
                       Text(
-                        item.description,
+                        translationState.displayedDescription,
                         style: theme.textTheme.bodyLarge?.copyWith(
                           color: AppColors.textPrimary.withValues(alpha: 0.84),
                         ),
@@ -107,18 +139,58 @@ class NasaMediaDetailPage extends ConsumerWidget {
       ),
     );
   }
+
+  void _showSnackBar(BuildContext context, NasaMediaTranslationNotice notice) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                notice.isError
+                    ? Icons.error_outline_rounded
+                    : Icons.info_outline_rounded,
+                color: notice.isError ? AppColors.error : AppColors.tertiary,
+                size: 18,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  notice.message,
+                  style: const TextStyle(color: AppColors.textPrimary),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: AppColors.surfaceElevated,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+          ),
+        ),
+      );
+  }
 }
 
 class _MediaPreview extends ConsumerWidget {
-  const _MediaPreview({required this.item, required this.heroTag});
+  const _MediaPreview({
+    required this.item,
+    required this.heroTag,
+    required this.title,
+    required this.description,
+  });
 
   final NasaMediaItem item;
   final String heroTag;
+  final String title;
+  final String description;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (item.isVideo) {
-      return _VideoPreview(item: item);
+      return _VideoPreview(item: item, title: title, description: description);
     }
 
     return GestureDetector(
@@ -129,7 +201,7 @@ class _MediaPreview extends ConsumerWidget {
             builder: (context) => ApodFullscreenViewer(
               imageUrl: item.previewUrl,
               heroTag: heroTag,
-              title: item.title,
+              title: title,
               subtitle: 'Tap and pinch to explore the image in detail.',
             ),
           ),
@@ -153,9 +225,15 @@ class _MediaPreview extends ConsumerWidget {
 }
 
 class _VideoPreview extends ConsumerWidget {
-  const _VideoPreview({required this.item});
+  const _VideoPreview({
+    required this.item,
+    required this.title,
+    required this.description,
+  });
 
   final NasaMediaItem item;
+  final String title;
+  final String description;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -240,13 +318,186 @@ class _VideoPreview extends ConsumerWidget {
     Navigator.of(context).push(
       SwipeBackPageRoute<void>(
         builder: (context) => NasaVideoPlayerPage(
-          title: item.title,
-          subtitle: item.description,
+          title: title,
+          subtitle: description,
           playbackUrl: playbackUrl,
           posterUrl: item.previewUrl,
         ),
       ),
     );
+  }
+}
+
+class _NasaMediaDetailTranslationPanel extends ConsumerWidget {
+  const _NasaMediaDetailTranslationPanel({required this.target});
+
+  final NasaMediaTranslationTarget target;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final provider = nasaMediaTranslationControllerProvider(target);
+    final state = ref.watch(provider);
+    final controller = ref.read(provider.notifier);
+    final theme = Theme.of(context);
+    final targetLanguage = TranslationLanguageOptions.fromCode(
+      state.targetLanguageCode,
+    );
+    final isEnglish = targetLanguage == null || targetLanguage.isEnglish;
+    final status = state.isTranslationActive && targetLanguage != null
+        ? 'Translated to ${targetLanguage.label}'
+        : isEnglish
+        ? 'Original English'
+        : 'Ready for ${targetLanguage.label}';
+    final primaryLabel = state.isTranslating
+        ? 'Translating...'
+        : state.isTranslationActive
+        ? 'View original'
+        : state.hasCurrentTranslation
+        ? 'View translation'
+        : isEnglish
+        ? 'Choose language'
+        : 'Translate to ${targetLanguage.label}';
+
+    final primaryAction = state.isTranslating
+        ? null
+        : state.isTranslationActive
+        ? controller.showOriginal
+        : isEnglish
+        ? () => _chooseLanguageAndTranslate(context, ref, target)
+        : controller.translate;
+
+    final icon = state.isTranslating
+        ? const SizedBox(
+            width: 18,
+            height: 18,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.2,
+              color: AppColors.textPrimary,
+            ),
+          )
+        : Icon(
+            state.isTranslationActive
+                ? Icons.article_outlined
+                : Icons.translate_rounded,
+          );
+
+    final primaryButton = state.isTranslationActive
+        ? OutlinedButton.icon(
+            onPressed: primaryAction,
+            icon: icon,
+            label: Text(primaryLabel),
+            style: OutlinedButton.styleFrom(
+              minimumSize: const Size(0, 52),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            ),
+          )
+        : FilledButton.icon(
+            onPressed: primaryAction,
+            icon: icon,
+            label: Text(primaryLabel),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size(0, 52),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            ),
+          );
+
+    return FrostedPanel(
+      padding: const EdgeInsets.all(16),
+      borderColor: AppColors.tertiary.withValues(alpha: 0.18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: AppColors.tertiary.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(13),
+                  border: Border.all(
+                    color: AppColors.tertiary.withValues(alpha: 0.22),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.translate_rounded,
+                  size: 20,
+                  color: AppColors.tertiary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  status,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 520;
+              final languageButton = TextButton.icon(
+                onPressed: state.isTranslating
+                    ? null
+                    : () => _chooseLanguageAndTranslate(context, ref, target),
+                icon: const Icon(Icons.tune_rounded),
+                label: const Text('Change language'),
+              );
+
+              if (compact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    primaryButton,
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: languageButton,
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(child: primaryButton),
+                  const SizedBox(width: 10),
+                  languageButton,
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _chooseLanguageAndTranslate(
+    BuildContext context,
+    WidgetRef ref,
+    NasaMediaTranslationTarget target,
+  ) async {
+    final picked = await showTranslationLanguageSheet(context, ref);
+    if (picked == null || !context.mounted) {
+      return;
+    }
+
+    if (picked.isEnglish) {
+      ref
+          .read(nasaMediaTranslationControllerProvider(target).notifier)
+          .showOriginal();
+      return;
+    }
+
+    await ref
+        .read(nasaMediaTranslationControllerProvider(target).notifier)
+        .translate();
   }
 }
 

@@ -6,7 +6,7 @@ import '../../features/settings/presentation/providers/translation_language_sett
 
 /// Opens the language picker bottom sheet and saves the selection.
 /// Usable from any [ConsumerWidget] that has a [BuildContext] and [WidgetRef].
-Future<void> showTranslationLanguageSheet(
+Future<TranslationLanguageOption?> showTranslationLanguageSheet(
   BuildContext context,
   WidgetRef ref,
 ) async {
@@ -17,9 +17,10 @@ Future<void> showTranslationLanguageSheet(
     backgroundColor: Colors.transparent,
     builder: (context) => TranslationLanguageSheet(selected: selected),
   );
-  if (picked == null) return;
-  if (!context.mounted) return;
+  if (picked == null) return null;
+  if (!context.mounted) return null;
   await ref.read(apodTranslationLanguageProvider.notifier).setLanguage(picked);
+  return picked;
 }
 
 class TranslationLanguageSheet extends StatelessWidget {
