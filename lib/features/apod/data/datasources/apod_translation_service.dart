@@ -1,9 +1,11 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_mlkit_translation/google_mlkit_translation.dart';
+import 'package:translator/translator.dart';
 
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/translation/translation_language_options.dart';
 import '../models/apod_article_translation_model.dart';
 
 final apodTranslationServiceProvider = Provider<ApodTranslationService>((ref) {
@@ -13,17 +15,22 @@ final apodTranslationServiceProvider = Provider<ApodTranslationService>((ref) {
 });
 
 class ApodTranslationService {
-  final OnDeviceTranslatorModelManager _modelManager =
-      OnDeviceTranslatorModelManager();
-  final Map<String, OnDeviceTranslator> _translators = {};
+  ApodTranslationService({
+    GoogleTranslator? translator,
+    Connectivity? connectivity,
+  }) : _translator = translator ?? GoogleTranslator(),
+       _connectivity = connectivity ?? Connectivity();
 
-  bool get isSupported =>
-      !kIsWeb &&
-      (defaultTargetPlatform == TargetPlatform.android ||
-          defaultTargetPlatform == TargetPlatform.iOS);
+  static const Duration _translationTimeout = Duration(seconds: 18);
+
+  final GoogleTranslator _translator;
+  final Connectivity _connectivity;
+  final Map<String, ApodArticleTranslationModel> _apodTranslationCache = {};
+
+  bool get isSupported => true;
 
   bool supportsLanguage(String languageCode) {
-    return BCP47Code.fromRawValue(languageCode.trim().toLowerCase()) != null;
+    return TranslationLanguageOptions.normalizeCode(languageCode) != null;
   }
 
   Future<ApodArticleTranslationModel> translateArticle({
@@ -34,18 +41,11 @@ class ApodTranslationService {
     required String title,
     required String explanation,
   }) async {
-    if (!isSupported) {
-      throw const AppException(
-        type: AppExceptionType.unknown,
-        message: 'On-device translation is available on Android and iOS only.',
-      );
-    }
-
-    final sourceLanguage = BCP47Code.fromRawValue(
-      sourceLanguageCode.trim().toLowerCase(),
+    final sourceLanguage = TranslationLanguageOptions.normalizeCode(
+      sourceLanguageCode,
     );
-    final targetLanguage = BCP47Code.fromRawValue(
-      targetLanguageCode.trim().toLowerCase(),
+    final targetLanguage = TranslationLanguageOptions.normalizeCode(
+      targetLanguageCode,
     );
 
     if (sourceLanguage == null || targetLanguage == null) {
@@ -55,104 +55,139 @@ class ApodTranslationService {
       );
     }
 
-    try {
-      await _ensureModelAvailable(sourceLanguage);
-      await _ensureModelAvailable(targetLanguage);
+    final cacheKey = _cacheKeyFor(
+      apodKey: apodKey,
+      targetLanguageCode: targetLanguage,
+    );
+    final cachedTranslation = _apodTranslationCache[cacheKey];
+    if (cachedTranslation != null &&
+        cachedTranslation.sourceContentHash == sourceContentHash) {
+      return cachedTranslation;
+    }
 
-      final translator = _translatorFor(sourceLanguage, targetLanguage);
-      final translatedTitle = title.trim().isEmpty
-          ? title
-          : await translator.translateText(title);
-      final translatedExplanation = explanation.trim().isEmpty
-          ? explanation
-          : await _translateLargeText(translator, explanation);
-
+    if (sourceLanguage == targetLanguage) {
       return ApodArticleTranslationModel(
         apodKey: apodKey,
-        sourceLanguageCode: sourceLanguageCode,
-        targetLanguageCode: targetLanguageCode,
+        sourceLanguageCode: sourceLanguage,
+        targetLanguageCode: targetLanguage,
+        sourceContentHash: sourceContentHash,
+        title: title,
+        explanation: explanation,
+      );
+    }
+
+    try {
+      final hasConnection = await _hasNetworkConnection();
+      if (!hasConnection) {
+        throw const AppException(
+          type: AppExceptionType.network,
+          message: 'Internet connection is required for translation.',
+        );
+      }
+
+      final translatedTitle = title.trim().isEmpty
+          ? title
+          : await _translateText(
+              text: title,
+              sourceLanguageCode: sourceLanguage,
+              targetLanguageCode: targetLanguage,
+            );
+      final translatedExplanation = explanation.trim().isEmpty
+          ? explanation
+          : await _translateLargeText(
+              text: explanation,
+              sourceLanguageCode: sourceLanguage,
+              targetLanguageCode: targetLanguage,
+            );
+
+      final translation = ApodArticleTranslationModel(
+        apodKey: apodKey,
+        sourceLanguageCode: sourceLanguage,
+        targetLanguageCode: targetLanguage,
         sourceContentHash: sourceContentHash,
         title: translatedTitle,
         explanation: translatedExplanation,
       );
-    } on MissingPluginException {
-      throw const AppException(
-        type: AppExceptionType.unknown,
-        message: 'On-device translation is available on Android and iOS only.',
-      );
-    } on PlatformException catch (error) {
+
+      _apodTranslationCache[cacheKey] = translation;
+      return translation;
+    } on AppException {
+      rethrow;
+    } on TimeoutException catch (error) {
       throw AppException(
-        type: AppExceptionType.unknown,
-        message: 'Failed to translate article.',
+        type: AppExceptionType.timeout,
+        message:
+            'Translation took too long. Check your internet connection and try again.',
         cause: error,
       );
     } catch (error) {
       throw AppException(
-        type: AppExceptionType.unknown,
-        message: 'Failed to translate article.',
+        type: AppExceptionType.network,
+        message:
+            "Couldn't translate this article. Check your internet connection and try again.",
         cause: error,
       );
     }
   }
 
   void dispose() {
-    for (final translator in _translators.values) {
-      translator.close();
-    }
-    _translators.clear();
+    _apodTranslationCache.clear();
   }
 
-  Future<void> _ensureModelAvailable(TranslateLanguage language) async {
-    final code = language.bcpCode;
-    final isDownloaded = await _modelManager.isModelDownloaded(code);
-    if (isDownloaded) {
-      return;
-    }
-
-    final downloaded = await _modelManager.downloadModel(
-      code,
-      isWifiRequired: false,
-    );
-    if (!downloaded) {
-      throw const AppException(
-        type: AppExceptionType.network,
-        message: 'Failed to download the translation model.',
-      );
+  Future<bool> _hasNetworkConnection() async {
+    try {
+      final results = await _connectivity.checkConnectivity();
+      return results.any((result) => result != ConnectivityResult.none);
+    } catch (_) {
+      return true;
     }
   }
 
-  OnDeviceTranslator _translatorFor(
-    TranslateLanguage sourceLanguage,
-    TranslateLanguage targetLanguage,
-  ) {
-    final key = '${sourceLanguage.bcpCode}_${targetLanguage.bcpCode}';
-    return _translators.putIfAbsent(
-      key,
-      () => OnDeviceTranslator(
-        sourceLanguage: sourceLanguage,
-        targetLanguage: targetLanguage,
-      ),
-    );
+  Future<String> _translateText({
+    required String text,
+    required String sourceLanguageCode,
+    required String targetLanguageCode,
+  }) async {
+    if (text.trim().isEmpty || sourceLanguageCode == targetLanguageCode) {
+      return text;
+    }
+
+    final result = await _translator
+        .translate(text, from: sourceLanguageCode, to: targetLanguageCode)
+        .timeout(_translationTimeout);
+
+    return result.text;
   }
 
-  Future<String> _translateLargeText(
-    OnDeviceTranslator translator,
-    String text,
-  ) async {
+  Future<String> _translateLargeText({
+    required String text,
+    required String sourceLanguageCode,
+    required String targetLanguageCode,
+  }) async {
     final chunks = _splitIntoChunks(text);
     if (chunks.length == 1) {
-      return translator.translateText(chunks.single);
+      return _translateText(
+        text: chunks.single,
+        sourceLanguageCode: sourceLanguageCode,
+        targetLanguageCode: targetLanguageCode,
+      );
     }
 
     final buffer = StringBuffer();
     for (final chunk in chunks) {
-      buffer.write(await translator.translateText(chunk));
+      buffer.write(
+        await _translateText(
+          text: chunk,
+          sourceLanguageCode: sourceLanguageCode,
+          targetLanguageCode: targetLanguageCode,
+        ),
+      );
     }
 
     return buffer.toString();
   }
 
-  List<String> _splitIntoChunks(String text, {int maxChunkLength = 3500}) {
+  List<String> _splitIntoChunks(String text, {int maxChunkLength = 1800}) {
     final normalized = text.replaceAll('\r\n', '\n');
     if (normalized.length <= maxChunkLength) {
       return [normalized];
@@ -192,5 +227,12 @@ class ApodTranslationService {
     }
 
     return tentativeEnd;
+  }
+
+  static String _cacheKeyFor({
+    required String apodKey,
+    required String targetLanguageCode,
+  }) {
+    return '${apodKey.trim().toLowerCase()}__${targetLanguageCode.trim().toLowerCase()}';
   }
 }

@@ -90,6 +90,9 @@ class TranslationLanguageSheet extends StatelessWidget {
                       borderRadius: BorderRadius.circular(18),
                     ),
                     title: Text(language.label),
+                    subtitle: language.nativeName == language.label
+                        ? null
+                        : Text(language.nativeName),
                     trailing: isSelected
                         ? const Icon(Icons.check_circle_rounded)
                         : const Icon(Icons.chevron_right_rounded),

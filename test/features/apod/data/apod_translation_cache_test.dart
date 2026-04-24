@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 
-import 'package:galaxydox/core/errors/app_exception.dart';
 import 'package:galaxydox/features/apod/data/datasources/apod_translation_local_data_source.dart';
 import 'package:galaxydox/features/apod/data/datasources/apod_translation_service.dart';
 import 'package:galaxydox/features/apod/data/models/apod_article_translation_model.dart';
@@ -85,35 +84,38 @@ void main() {
   });
 
   group('ApodTranslationRepositoryImpl', () {
-    test('returns cached translation without invoking ML Kit again', () async {
-      final item = _apodItem();
-      final cachedModel = _translationModel(item: item, languageCode: 'es');
-      final localDataSource = _FakeApodTranslationLocalDataSource(
-        cached: cachedModel,
-      );
-      final translationService = _FakeApodTranslationService(
-        response: _translationModel(item: item, languageCode: 'es'),
-      );
-      final repository = ApodTranslationRepositoryImpl(
-        localDataSource: localDataSource,
-        translationService: translationService,
-      );
+    test(
+      'returns cached translation without invoking the translator again',
+      () async {
+        final item = _apodItem();
+        final cachedModel = _translationModel(item: item, languageCode: 'es');
+        final localDataSource = _FakeApodTranslationLocalDataSource(
+          cached: cachedModel,
+        );
+        final translationService = _FakeApodTranslationService(
+          response: _translationModel(item: item, languageCode: 'es'),
+        );
+        final repository = ApodTranslationRepositoryImpl(
+          localDataSource: localDataSource,
+          translationService: translationService,
+        );
 
-      final result = await repository.translateArticle(
-        item: item,
-        targetLanguageCode: 'es',
-      );
+        final result = await repository.translateArticle(
+          item: item,
+          targetLanguageCode: 'es',
+        );
 
-      expect(translationService.callCount, 0);
-      expect(localDataSource.cachedWrites, isEmpty);
-      expect(
-        result.when(
-          success: (translation) => translation.title,
-          failure: (_) => null,
-        ),
-        cachedModel.title,
-      );
-    });
+        expect(translationService.callCount, 0);
+        expect(localDataSource.cachedWrites, isEmpty);
+        expect(
+          result.when(
+            success: (translation) => translation.title,
+            failure: (_) => null,
+          ),
+          cachedModel.title,
+        );
+      },
+    );
 
     test('translates and caches when no cached translation exists', () async {
       final item = _apodItem();
@@ -208,10 +210,9 @@ class _FakeApodTranslationLocalDataSource
 }
 
 class _FakeApodTranslationService extends ApodTranslationService {
-  _FakeApodTranslationService({this.response, this.exception});
+  _FakeApodTranslationService({this.response});
 
   final ApodArticleTranslationModel? response;
-  final AppException? exception;
   int callCount = 0;
 
   @override
@@ -230,11 +231,6 @@ class _FakeApodTranslationService extends ApodTranslationService {
     required String explanation,
   }) async {
     callCount++;
-    final exception = this.exception;
-    if (exception != null) {
-      throw exception;
-    }
-
     return response!;
   }
 
