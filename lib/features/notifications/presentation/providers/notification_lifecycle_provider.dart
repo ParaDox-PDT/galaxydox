@@ -144,7 +144,7 @@ class NotificationLifecycleController {
     await _syncTopicSubscription(granted);
 
     if (granted) {
-      _ref.invalidate(notificationsProvider);
+      unawaited(_ref.read(notificationsProvider.notifier).syncSilently());
     }
 
     return granted;
@@ -238,7 +238,7 @@ class NotificationLifecycleController {
   }
 
   Future<void> _handleForegroundMessage(RemoteMessage message) async {
-    _ref.invalidate(notificationsProvider);
+    unawaited(_ref.read(notificationsProvider.notifier).syncSilently());
 
     final title =
         message.notification?.title ??
@@ -265,7 +265,7 @@ class NotificationLifecycleController {
     if (notificationId != null && notificationId.isNotEmpty) {
       await NotificationsLocalDataSource().markAsRead(notificationId);
     }
-    _ref.invalidate(notificationsProvider);
+    unawaited(_ref.read(notificationsProvider.notifier).syncSilently());
 
     await _routeFromPayload(waitForSplash: waitForSplash);
   }
@@ -282,7 +282,7 @@ class NotificationLifecycleController {
       if (notificationId != null && notificationId.isNotEmpty) {
         await NotificationsLocalDataSource().markAsRead(notificationId);
       }
-      _ref.invalidate(notificationsProvider);
+      unawaited(_ref.read(notificationsProvider.notifier).syncSilently());
 
       await _routeFromPayload(waitForSplash: false);
     } catch (error) {

@@ -76,7 +76,8 @@ class ApodTranslationRepositoryImpl implements ApodTranslationRepository {
       return Failure(
         AppException(
           type: AppExceptionType.unknown,
-          message: 'Failed to translate article.',
+          message:
+              "Couldn't translate this article. Check your internet connection and try again.",
           cause: error,
         ),
       );

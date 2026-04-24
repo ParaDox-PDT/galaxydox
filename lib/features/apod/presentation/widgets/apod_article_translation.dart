@@ -133,7 +133,7 @@ class ApodArticleMainPanel extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Translating article...',
+                    'Translating...',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -206,6 +206,8 @@ class ApodTranslationActionButton extends ConsumerWidget {
     final targetLanguage = TranslationLanguageOptions.fromCode(
       state.targetLanguageCode,
     );
+    final hasCurrentTranslation =
+        state.translatedContent?.targetLanguageCode == state.targetLanguageCode;
 
     if (!state.isTranslationSupported) {
       return const SizedBox.shrink();
@@ -220,7 +222,9 @@ class ApodTranslationActionButton extends ConsumerWidget {
     final label = state.isTranslating
         ? 'Translating...'
         : state.isTranslationActive
-        ? 'Show original'
+        ? 'View original'
+        : hasCurrentTranslation
+        ? 'View translation'
         : 'Translate';
 
     final icon = state.isTranslating
@@ -253,7 +257,7 @@ class ApodTranslationActionButton extends ConsumerWidget {
     final helperText = targetLanguage == null
         ? 'Translation language unavailable.'
         : targetLanguage.isEnglish
-        ? 'Translation is currently set to English.'
+        ? 'Viewing the original English article.'
         : 'Translation language: ${targetLanguage.label}';
 
     return Column(

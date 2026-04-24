@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/translation/translation_language_options.dart';
 import '../../../../shared/bookmarks/bookmark_mapper.dart';
 import '../../../../shared/widgets/bookmark_button.dart';
 import '../../../../shared/widgets/premium_network_image.dart';
 import '../../domain/entities/nasa_media_item.dart';
+import '../providers/nasa_media_translation_controller.dart';
 
 final DateFormat _nasaMediaDateFormatter = DateFormat.yMMMd();
 
@@ -27,15 +30,37 @@ class NasaMediaResultCard extends StatelessWidget {
   }
 }
 
-class _ListCard extends StatelessWidget {
+class _ListCard extends ConsumerWidget {
   const _ListCard({required this.item, required this.onTap});
 
   final NasaMediaItem item;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final translationTarget = NasaMediaTranslationTarget.fromItem(item);
+    final translationProvider = nasaMediaTranslationControllerProvider(
+      translationTarget,
+    );
+    ref.listen<NasaMediaTranslationNotice?>(
+      translationProvider.select((state) => state.notice),
+      (previous, next) {
+        if (next == null || previous?.id == next.id) {
+          return;
+        }
+
+        _showSnackBar(context, next);
+      },
+    );
+    final translationState = ref.watch(translationProvider);
+    final targetLanguage = TranslationLanguageOptions.fromCode(
+      translationState.targetLanguageCode,
+    );
+    final subtitle =
+        translationState.isTranslationActive && targetLanguage != null
+        ? 'Translated to ${targetLanguage.label} | ${_buildSubtitle(item)}'
+        : _buildSubtitle(item);
 
     return Container(
       decoration: BoxDecoration(
@@ -109,25 +134,28 @@ class _ListCard extends StatelessWidget {
                                 unsavedLabel: 'Bookmark',
                                 variant: BookmarkButtonVariant.icon,
                               ),
+                              _SmallTranslationButton(
+                                target: translationTarget,
+                              ),
                             ],
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            item.title,
+                            translationState.displayedTitle,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.titleLarge,
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            _buildSubtitle(item),
+                            subtitle,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodyMedium,
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            item.description,
+                            translationState.displayedDescription,
                             maxLines: compact ? 3 : 4,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodyMedium?.copyWith(
@@ -163,6 +191,39 @@ class _ListCard extends StatelessWidget {
       ),
     );
   }
+
+  void _showSnackBar(BuildContext context, NasaMediaTranslationNotice notice) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(
+                notice.isError
+                    ? Icons.error_outline_rounded
+                    : Icons.info_outline_rounded,
+                color: notice.isError ? AppColors.error : AppColors.tertiary,
+                size: 18,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  notice.message,
+                  style: const TextStyle(color: AppColors.textPrimary),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: AppColors.surfaceElevated,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      );
+  }
 }
 
 class _OpenDetailsRow extends StatelessWidget {
@@ -187,6 +248,67 @@ class _OpenDetailsRow extends StatelessWidget {
         const SizedBox(width: 8),
         const Icon(Icons.arrow_outward_rounded, color: AppColors.secondary),
       ],
+    );
+  }
+}
+
+class _SmallTranslationButton extends ConsumerWidget {
+  const _SmallTranslationButton({required this.target});
+
+  final NasaMediaTranslationTarget target;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final provider = nasaMediaTranslationControllerProvider(target);
+    final state = ref.watch(provider);
+    final controller = ref.read(provider.notifier);
+    final targetLanguage = TranslationLanguageOptions.fromCode(
+      state.targetLanguageCode,
+    );
+
+    final label = state.isTranslating
+        ? 'Translating'
+        : state.isTranslationActive
+        ? 'Original'
+        : state.hasCurrentTranslation
+        ? 'View'
+        : 'Translate';
+    final tooltip = state.isTranslationActive
+        ? 'View original NASA text'
+        : targetLanguage == null || targetLanguage.isEnglish
+        ? 'Choose another translation language in Settings'
+        : 'Translate to ${targetLanguage.label}';
+
+    return Tooltip(
+      message: tooltip,
+      child: OutlinedButton.icon(
+        onPressed: state.isTranslating
+            ? null
+            : state.isTranslationActive
+            ? controller.showOriginal
+            : controller.translate,
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(0, 38),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          foregroundColor: AppColors.tertiary,
+          side: BorderSide(color: AppColors.tertiary.withValues(alpha: 0.34)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(999),
+          ),
+        ),
+        icon: state.isTranslating
+            ? const SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.textPrimary,
+                ),
+              )
+            : const Icon(Icons.translate_rounded, size: 16),
+        label: Text(label),
+      ),
     );
   }
 }

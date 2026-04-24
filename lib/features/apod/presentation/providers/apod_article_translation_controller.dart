@@ -98,7 +98,7 @@ class ApodArticleTranslationController
     if (!state.isTranslationSupported) {
       state = state.copyWith(
         notice: ApodArticleTranslationNotice.error(
-          'On-device translation is available on Android and iOS only.',
+          'Translation is temporarily unavailable.',
         ),
         clearError: true,
       );
@@ -111,7 +111,7 @@ class ApodArticleTranslationController
     if (targetLanguage.isEnglish) {
       state = state.copyWith(
         notice: ApodArticleTranslationNotice.info(
-          'Set a different translation language in Settings to translate this article.',
+          'Choose a language other than English to translate this article.',
         ),
         clearError: true,
       );
@@ -119,9 +119,19 @@ class ApodArticleTranslationController
     }
 
     final currentTranslation = state.translatedContent;
-    if (state.isTranslationActive &&
-        currentTranslation != null &&
+    if (currentTranslation != null &&
         currentTranslation.targetLanguageCode == _targetLanguageCode) {
+      if (state.isTranslationActive) {
+        return;
+      }
+
+      state = state.copyWith(
+        isTranslationActive: true,
+        clearError: true,
+        notice: ApodArticleTranslationNotice.info(
+          'Translated to ${targetLanguage.label}.',
+        ),
+      );
       return;
     }
 
@@ -149,13 +159,17 @@ class ApodArticleTranslationController
 
     state = result.when(
       success: (translation) {
+        final translatedLanguage = TranslationLanguageOptions.fromCode(
+          translation.targetLanguageCode,
+        );
+
         return state.copyWith(
           translatedContent: translation,
           isTranslationActive: true,
           isTranslating: false,
           clearError: true,
           notice: ApodArticleTranslationNotice.info(
-            'Tap the language indicator above to switch languages.',
+            'Translated to ${translatedLanguage?.label ?? 'selected language'}.',
           ),
         );
       },
@@ -166,7 +180,7 @@ class ApodArticleTranslationController
           error: exception,
           notice: ApodArticleTranslationNotice.error(
             exception.message.isEmpty
-                ? 'Failed to translate article.'
+                ? "Couldn't translate this article. Check your internet connection and try again."
                 : exception.message,
           ),
         );

@@ -1,21 +1,21 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:translator/translator.dart';
 
-import '../../../../core/errors/app_exception.dart';
-import '../../../../core/translation/translation_language_options.dart';
-import '../models/apod_article_translation_model.dart';
+import '../errors/app_exception.dart';
+import 'translation_language_options.dart';
 
-final apodTranslationServiceProvider = Provider<ApodTranslationService>((ref) {
-  final service = ApodTranslationService();
+final textTranslationServiceProvider = Provider<TextTranslationService>((ref) {
+  final service = TextTranslationService();
   ref.onDispose(service.dispose);
   return service;
 });
 
-class ApodTranslationService {
-  ApodTranslationService({
+class TextTranslationService {
+  TextTranslationService({
     GoogleTranslator? translator,
     Connectivity? connectivity,
   }) : _translator = translator ?? GoogleTranslator(),
@@ -25,22 +25,21 @@ class ApodTranslationService {
 
   final GoogleTranslator _translator;
   final Connectivity _connectivity;
-  final Map<String, ApodArticleTranslationModel> _apodTranslationCache = {};
-
-  bool get isSupported => true;
+  final Map<String, String> _textCache = {};
 
   bool supportsLanguage(String languageCode) {
     return TranslationLanguageOptions.normalizeCode(languageCode) != null;
   }
 
-  Future<ApodArticleTranslationModel> translateArticle({
-    required String apodKey,
-    required String sourceLanguageCode,
+  Future<String> translateText({
+    required String text,
     required String targetLanguageCode,
-    required String sourceContentHash,
-    required String title,
-    required String explanation,
+    String sourceLanguageCode = 'en',
   }) async {
+    if (text.trim().isEmpty) {
+      return text;
+    }
+
     final sourceLanguage = TranslationLanguageOptions.normalizeCode(
       sourceLanguageCode,
     );
@@ -55,25 +54,18 @@ class ApodTranslationService {
       );
     }
 
-    final cacheKey = _cacheKeyFor(
-      apodKey: apodKey,
-      targetLanguageCode: targetLanguage,
-    );
-    final cachedTranslation = _apodTranslationCache[cacheKey];
-    if (cachedTranslation != null &&
-        cachedTranslation.sourceContentHash == sourceContentHash) {
-      return cachedTranslation;
+    if (sourceLanguage == targetLanguage) {
+      return text;
     }
 
-    if (sourceLanguage == targetLanguage) {
-      return ApodArticleTranslationModel(
-        apodKey: apodKey,
-        sourceLanguageCode: sourceLanguage,
-        targetLanguageCode: targetLanguage,
-        sourceContentHash: sourceContentHash,
-        title: title,
-        explanation: explanation,
-      );
+    final cacheKey = _cacheKeyFor(
+      text: text,
+      sourceLanguageCode: sourceLanguage,
+      targetLanguageCode: targetLanguage,
+    );
+    final cached = _textCache[cacheKey];
+    if (cached != null) {
+      return cached;
     }
 
     try {
@@ -85,32 +77,14 @@ class ApodTranslationService {
         );
       }
 
-      final translatedTitle = title.trim().isEmpty
-          ? title
-          : await _translateText(
-              text: title,
-              sourceLanguageCode: sourceLanguage,
-              targetLanguageCode: targetLanguage,
-            );
-      final translatedExplanation = explanation.trim().isEmpty
-          ? explanation
-          : await _translateLargeText(
-              text: explanation,
-              sourceLanguageCode: sourceLanguage,
-              targetLanguageCode: targetLanguage,
-            );
-
-      final translation = ApodArticleTranslationModel(
-        apodKey: apodKey,
+      final translated = await _translateLargeText(
+        text: text,
         sourceLanguageCode: sourceLanguage,
         targetLanguageCode: targetLanguage,
-        sourceContentHash: sourceContentHash,
-        title: translatedTitle,
-        explanation: translatedExplanation,
       );
 
-      _apodTranslationCache[cacheKey] = translation;
-      return translation;
+      _textCache[cacheKey] = translated;
+      return translated;
     } on AppException {
       rethrow;
     } on TimeoutException catch (error) {
@@ -124,14 +98,14 @@ class ApodTranslationService {
       throw AppException(
         type: AppExceptionType.network,
         message:
-            "Couldn't translate this article. Check your internet connection and try again.",
+            "Couldn't translate this text. Check your internet connection and try again.",
         cause: error,
       );
     }
   }
 
   void dispose() {
-    _apodTranslationCache.clear();
+    _textCache.clear();
   }
 
   Future<bool> _hasNetworkConnection() async {
@@ -143,22 +117,6 @@ class ApodTranslationService {
     }
   }
 
-  Future<String> _translateText({
-    required String text,
-    required String sourceLanguageCode,
-    required String targetLanguageCode,
-  }) async {
-    if (text.trim().isEmpty || sourceLanguageCode == targetLanguageCode) {
-      return text;
-    }
-
-    final result = await _translator
-        .translate(text, from: sourceLanguageCode, to: targetLanguageCode)
-        .timeout(_translationTimeout);
-
-    return result.text;
-  }
-
   Future<String> _translateLargeText({
     required String text,
     required String sourceLanguageCode,
@@ -166,7 +124,7 @@ class ApodTranslationService {
   }) async {
     final chunks = _splitIntoChunks(text);
     if (chunks.length == 1) {
-      return _translateText(
+      return _translateChunk(
         text: chunks.single,
         sourceLanguageCode: sourceLanguageCode,
         targetLanguageCode: targetLanguageCode,
@@ -176,7 +134,7 @@ class ApodTranslationService {
     final buffer = StringBuffer();
     for (final chunk in chunks) {
       buffer.write(
-        await _translateText(
+        await _translateChunk(
           text: chunk,
           sourceLanguageCode: sourceLanguageCode,
           targetLanguageCode: targetLanguageCode,
@@ -185,6 +143,18 @@ class ApodTranslationService {
     }
 
     return buffer.toString();
+  }
+
+  Future<String> _translateChunk({
+    required String text,
+    required String sourceLanguageCode,
+    required String targetLanguageCode,
+  }) async {
+    final result = await _translator
+        .translate(text, from: sourceLanguageCode, to: targetLanguageCode)
+        .timeout(_translationTimeout);
+
+    return result.text;
   }
 
   List<String> _splitIntoChunks(String text, {int maxChunkLength = 1800}) {
@@ -230,9 +200,23 @@ class ApodTranslationService {
   }
 
   static String _cacheKeyFor({
-    required String apodKey,
+    required String text,
+    required String sourceLanguageCode,
     required String targetLanguageCode,
   }) {
-    return '${apodKey.trim().toLowerCase()}__${targetLanguageCode.trim().toLowerCase()}';
+    return '$sourceLanguageCode:$targetLanguageCode:${_stableHashFor(text)}';
+  }
+
+  static String _stableHashFor(String value) {
+    const offsetBasis = 0x811c9dc5;
+    const prime = 0x01000193;
+    var hash = offsetBasis;
+
+    for (final byte in utf8.encode(value)) {
+      hash ^= byte;
+      hash = (hash * prime) & 0xffffffff;
+    }
+
+    return hash.toRadixString(16).padLeft(8, '0');
   }
 }
