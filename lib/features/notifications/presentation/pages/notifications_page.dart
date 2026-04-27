@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -264,10 +266,12 @@ class _NotificationsListSliver extends StatelessWidget {
   }
 
   Widget _buildCard(int index) {
+    final notification = notifications[index];
     return _NotificationCard(
-      notification: notifications[index],
+      key: ValueKey(notification.id),
+      notification: notification,
       dateFormat: dateFormat,
-      onTap: () => onTap(notifications[index]),
+      onTap: () => onTap(notification),
     );
   }
 }
@@ -353,6 +357,7 @@ _NotificationsLayout _notificationsLayoutFor(double width) {
 
 class _NotificationCard extends StatefulWidget {
   const _NotificationCard({
+    super.key,
     required this.notification,
     required this.dateFormat,
     required this.onTap,
@@ -383,6 +388,8 @@ class _NotificationCardState extends State<_NotificationCard> {
     }
   }
 
+  static final _unreadBorderColor = AppColors.primary.withValues(alpha: 0.35);
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -390,6 +397,8 @@ class _NotificationCardState extends State<_NotificationCard> {
     final createdAt = notification.createdAt == null
         ? null
         : widget.dateFormat.format(notification.createdAt!.toLocal());
+    final borderColor =
+        notification.isRead ? AppColors.outlineSoft : _unreadBorderColor;
 
     return Semantics(
       button: true,
@@ -401,9 +410,8 @@ class _NotificationCardState extends State<_NotificationCard> {
           borderRadius: BorderRadius.circular(AppConstants.radiusMedium),
           child: FrostedPanel(
             padding: EdgeInsets.zero,
-            borderColor: notification.isRead
-                ? AppColors.outlineSoft
-                : AppColors.primary.withValues(alpha: 0.35),
+            blurSigma: 0,
+            borderColor: borderColor,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -524,24 +532,32 @@ class _NotificationImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Image.network(
-      imageUrl,
+    if (kIsWeb) {
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+          if (wasSynchronouslyLoaded || frame != null) return child;
+          return const ColoredBox(color: AppColors.surfaceStrong);
+        },
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
+          return const ColoredBox(color: AppColors.surfaceStrong);
+        },
+        errorBuilder: (context, error, stackTrace) {
+          WidgetsBinding.instance.addPostFrameCallback((_) => onLoadFailed());
+          return const SizedBox.shrink();
+        },
+      );
+    }
+
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
       fit: BoxFit.cover,
-      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-        if (wasSynchronouslyLoaded || frame != null) {
-          return child;
-        }
-
-        return const ColoredBox(color: AppColors.surfaceStrong);
-      },
-      loadingBuilder: (context, child, progress) {
-        if (progress == null) {
-          return child;
-        }
-
-        return const ColoredBox(color: AppColors.surfaceStrong);
-      },
-      errorBuilder: (context, error, stackTrace) {
+      fadeInDuration: const Duration(milliseconds: 200),
+      placeholder: (context, url) =>
+          const ColoredBox(color: AppColors.surfaceStrong),
+      errorWidget: (context, url, error) {
         WidgetsBinding.instance.addPostFrameCallback((_) => onLoadFailed());
         return const SizedBox.shrink();
       },
@@ -568,22 +584,33 @@ class _NotificationTypeChip extends StatelessWidget {
 
   final AppNotificationType type;
 
+  static final _secondaryFill = AppColors.secondary.withValues(alpha: 0.12);
+  static final _secondaryBorder = AppColors.secondary.withValues(alpha: 0.24);
+  static final _primaryFill = AppColors.primary.withValues(alpha: 0.12);
+  static final _primaryBorder = AppColors.primary.withValues(alpha: 0.24);
+
   @override
   Widget build(BuildContext context) {
     final Color accent;
+    final Color fill;
+    final Color border;
     switch (type) {
       case AppNotificationType.newWallpaper:
         accent = AppColors.secondary;
+        fill = _secondaryFill;
+        border = _secondaryBorder;
       case AppNotificationType.unknown:
         accent = AppColors.primary;
+        fill = _primaryFill;
+        border = _primaryBorder;
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.12),
+        color: fill,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: accent.withValues(alpha: 0.24)),
+        border: Border.all(color: border),
       ),
       child: Text(
         type.label,
