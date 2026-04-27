@@ -11,45 +11,71 @@ class HomeFeatureCard extends StatelessWidget {
 
   final HomeFeaturePreview feature;
 
+  static final _shadowDecoration = BoxDecoration(
+    borderRadius: BorderRadius.circular(30),
+    boxShadow: const [
+      BoxShadow(
+        color: Color(0x3D020611),
+        blurRadius: 34,
+        offset: Offset(0, 22),
+      ),
+    ],
+  );
+
+  static final _borderRadius = BorderRadius.circular(30);
+
+  static const _kickerDecoration = BoxDecoration(
+    color: Color(0x38000000),
+    borderRadius: BorderRadius.all(Radius.circular(999)),
+    border: Border.fromBorderSide(BorderSide(color: Color(0x14FFFFFF))),
+  );
+
+  static const _descriptionColor = Color(0xC2F6F8FD);
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    final accentGlow = BoxDecoration(
+      gradient: AppGradients.ambientGlow(
+        alignment: const Alignment(0.85, -0.85),
+        color: feature.accentColor,
+        radius: 1,
+        alpha: 0.22,
+      ),
+    );
+    final surfaceGradient = AppGradients.storySurface(accent: feature.accentColor);
+    final accentBorder = Border.all(color: feature.accentColor.withValues(alpha: 0.18));
+    final iconDec = BoxDecoration(
+      color: feature.accentColor.withValues(alpha: 0.18),
+      borderRadius: BorderRadius.circular(13),
+      border: Border.all(color: feature.accentColor.withValues(alpha: 0.26)),
+    );
+    final ctaOverlayDec = BoxDecoration(
+      color: feature.accentColor.withValues(alpha: 0.14),
+      borderRadius: const BorderRadius.all(Radius.circular(999)),
+      border: Border.all(color: feature.accentColor.withValues(alpha: 0.22)),
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final isCompact = width < 420;
         final isMedium = width < 720;
-        final imageAspectRatio = isCompact
-            ? 1.6
-            : isMedium
-            ? 1.9
-            : 2.2;
+        final imageAspectRatio = isCompact ? 1.6 : isMedium ? 1.9 : 2.2;
+
         return Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.shadow.withValues(alpha: 0.24),
-                blurRadius: 34,
-                offset: const Offset(0, 22),
-              ),
-            ],
-          ),
+          decoration: _shadowDecoration,
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: _borderRadius,
             child: Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: () => context.pushNamed(feature.routeName),
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    gradient: AppGradients.storySurface(
-                      accent: feature.accentColor,
-                    ),
-                    border: Border.all(
-                      color: feature.accentColor.withValues(alpha: 0.18),
-                    ),
+                    gradient: surfaceGradient,
+                    border: accentBorder,
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -72,16 +98,7 @@ class HomeFeatureCard extends StatelessWidget {
                                 fit: BoxFit.cover,
                               ),
                             Positioned.fill(
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  gradient: AppGradients.ambientGlow(
-                                    alignment: const Alignment(0.85, -0.85),
-                                    color: feature.accentColor,
-                                    radius: 1,
-                                    alpha: 0.22,
-                                  ),
-                                ),
-                              ),
+                              child: DecoratedBox(decoration: accentGlow),
                             ),
                             const Positioned.fill(
                               child: DecoratedBox(
@@ -96,17 +113,7 @@ class HomeFeatureCard extends StatelessWidget {
                               child: Container(
                                 width: 40,
                                 height: 40,
-                                decoration: BoxDecoration(
-                                  color: feature.accentColor.withValues(
-                                    alpha: 0.18,
-                                  ),
-                                  borderRadius: BorderRadius.circular(13),
-                                  border: Border.all(
-                                    color: feature.accentColor.withValues(
-                                      alpha: 0.26,
-                                    ),
-                                  ),
-                                ),
+                                decoration: iconDec,
                                 child: Icon(
                                   feature.icon,
                                   color: feature.accentColor,
@@ -118,33 +125,22 @@ class HomeFeatureCard extends StatelessWidget {
                               top: 16,
                               right: 16,
                               child: ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                  maxWidth: 180,
-                                ),
+                                constraints: const BoxConstraints(maxWidth: 180),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 12,
                                     vertical: 8,
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.22),
-                                    borderRadius: BorderRadius.circular(999),
-                                    border: Border.all(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.08,
-                                      ),
-                                    ),
-                                  ),
+                                  decoration: _kickerDecoration,
                                   child: Text(
                                     feature.kicker.toUpperCase(),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     textAlign: TextAlign.center,
-                                    style: theme.textTheme.labelMedium
-                                        ?.copyWith(
-                                          color: AppColors.textPrimary,
-                                          letterSpacing: 1.3,
-                                        ),
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                      color: AppColors.textPrimary,
+                                      letterSpacing: 1.3,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -160,25 +156,14 @@ class HomeFeatureCard extends StatelessWidget {
                                       horizontal: 12,
                                       vertical: 8,
                                     ),
-                                    decoration: BoxDecoration(
-                                      color: feature.accentColor.withValues(
-                                        alpha: 0.14,
-                                      ),
-                                      borderRadius: BorderRadius.circular(999),
-                                      border: Border.all(
-                                        color: feature.accentColor.withValues(
-                                          alpha: 0.22,
-                                        ),
-                                      ),
-                                    ),
+                                    decoration: ctaOverlayDec,
                                     child: Text(
                                       feature.ctaLabel,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: theme.textTheme.labelLarge
-                                          ?.copyWith(
-                                            color: feature.accentColor,
-                                          ),
+                                      style: theme.textTheme.labelLarge?.copyWith(
+                                        color: feature.accentColor,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -212,9 +197,7 @@ class HomeFeatureCard extends StatelessWidget {
                               maxLines: isCompact ? 2 : 3,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: AppColors.textPrimary.withValues(
-                                  alpha: 0.76,
-                                ),
+                                color: _descriptionColor,
                               ),
                             ),
                             // Temporarily hidden per current home screen layout request.
@@ -232,8 +215,9 @@ class HomeFeatureCard extends StatelessWidget {
                                     feature.ctaLabel,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.labelMedium
-                                        ?.copyWith(color: feature.accentColor),
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                      color: feature.accentColor,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 6),

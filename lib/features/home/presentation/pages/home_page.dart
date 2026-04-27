@@ -188,19 +188,19 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 )
                                   SizedBox(
                                     width: width,
-                                    child:
-                                        HomeFeatureCard(
-                                              feature: preview.sections[index],
-                                            )
-                                            .animate()
-                                            .fadeIn(
-                                              delay: Duration(
-                                                milliseconds:
-                                                    400 + (index * 90),
-                                              ),
-                                              duration: 520.ms,
-                                            )
-                                            .slideY(begin: 0.06, end: 0),
+                                    child: RepaintBoundary(
+                                      child: HomeFeatureCard(
+                                            feature: preview.sections[index],
+                                          )
+                                          .animate()
+                                          .fadeIn(
+                                            delay: Duration(
+                                              milliseconds: 400 + (index * 90),
+                                            ),
+                                            duration: 520.ms,
+                                          )
+                                          .slideY(begin: 0.06, end: 0),
+                                    ),
                                   ),
                               ],
                             );
@@ -389,60 +389,68 @@ class _PanelIconButton extends StatelessWidget {
   final String? tooltip;
   final int badgeCount;
 
+  static final _buttonDecoration = BoxDecoration(
+    color: AppColors.surfaceElevated,
+    borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+    border: Border.all(color: AppColors.outlineSoft),
+  );
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: size,
       height: size,
-      child: FrostedPanel(
-        padding: EdgeInsets.zero,
-        radius: AppConstants.radiusSmall,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Center(
-              child: Tooltip(
-                message: tooltip ?? '',
-                child: IconButton(
-                  onPressed: onPressed,
-                  padding: EdgeInsets.zero,
-                  constraints: BoxConstraints.tightFor(
-                    width: size,
-                    height: size,
-                  ),
-                  icon: Icon(icon),
-                ),
-              ),
-            ),
-            if (badgeCount > 0)
-              Positioned(
-                top: 7,
-                right: 7,
-                child: Container(
-                  constraints: const BoxConstraints(
-                    minWidth: 18,
-                    minHeight: 18,
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 5),
-                  decoration: BoxDecoration(
-                    color: AppColors.error,
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                      color: AppColors.backgroundDeep,
-                      width: 1.2,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppConstants.radiusSmall),
+        child: DecoratedBox(
+          decoration: _buttonDecoration,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Center(
+                child: Tooltip(
+                  message: tooltip ?? '',
+                  child: IconButton(
+                    onPressed: onPressed,
+                    padding: EdgeInsets.zero,
+                    constraints: BoxConstraints.tightFor(
+                      width: size,
+                      height: size,
                     ),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    badgeCount > 9 ? '9+' : '$badgeCount',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    icon: Icon(icon),
                   ),
                 ),
               ),
-          ],
+              if (badgeCount > 0)
+                Positioned(
+                  top: 7,
+                  right: 7,
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      minWidth: 18,
+                      minHeight: 18,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 5),
+                    decoration: BoxDecoration(
+                      color: AppColors.error,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: AppColors.backgroundDeep,
+                        width: 1.2,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      badgeCount > 9 ? '9+' : '$badgeCount',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
