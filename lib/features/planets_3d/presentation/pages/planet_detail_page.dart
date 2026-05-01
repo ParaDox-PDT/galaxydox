@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
@@ -18,8 +19,84 @@ import '../../../../shared/widgets/state_panel.dart';
 import '../../data/models/resolved_planet_model.dart';
 import '../../domain/planet_entity.dart';
 import '../providers/planets_providers.dart';
+import '../widgets/planet_model_viewer.dart';
 
 const _fallbackPlanetThumbnailAsset = 'assets/images/planets.png';
+const _planetModelInitialCameraOrbit = '0deg 75deg 105%';
+const _planetModelCameraTarget = 'auto auto auto';
+const _planetModelMinCameraOrbit = 'auto auto 45%';
+const _planetModelMaxCameraOrbit = 'auto auto 220%';
+const _planetModelFieldOfView = '34deg';
+const _planetModelMinFieldOfView = '16deg';
+const _planetModelMaxFieldOfView = '48deg';
+const _planetModelInterpolationDecay = 140;
+
+String _buildPlanetModelInteractionScript() {
+  return '''
+    (() => {
+      const modelViewer = document.querySelector('model-viewer');
+
+      if (!modelViewer || modelViewer.dataset.galaxyDoxRotationGuard) {
+        return;
+      }
+
+      modelViewer.dataset.galaxyDoxRotationGuard = 'true';
+      let userHasTakenControl = false;
+
+      const disableIntroRotation = () => {
+        modelViewer.autoRotate = false;
+        modelViewer.autoRotateDelay = 2147483647;
+        modelViewer.rotationPerSecond = '0deg';
+        modelViewer.removeAttribute('auto-rotate');
+        modelViewer.setAttribute('auto-rotate-delay', '2147483647');
+        modelViewer.setAttribute('rotation-per-second', '0deg');
+      };
+
+      const stopIntroRotation = () => {
+        userHasTakenControl = true;
+        disableIntroRotation();
+        window.requestAnimationFrame(disableIntroRotation);
+        window.setTimeout(disableIntroRotation, 50);
+        window.setTimeout(disableIntroRotation, 300);
+      };
+
+      const stopWhenUserMovesCamera = (event) => {
+        if (event.detail && event.detail.source === 'user-interaction') {
+          stopIntroRotation();
+        }
+      };
+
+      ['pointerdown', 'touchstart', 'mousedown', 'wheel', 'keydown'].forEach(
+        (eventName) => {
+          modelViewer.addEventListener(eventName, stopIntroRotation, {
+            capture: true,
+            passive: true
+          });
+        }
+      );
+
+      modelViewer.addEventListener('user-interaction', stopIntroRotation, {
+        capture: true
+      });
+      modelViewer.addEventListener('camera-change', stopWhenUserMovesCamera, {
+        capture: true
+      });
+      modelViewer.addEventListener('load', () => {
+        if (userHasTakenControl) {
+          stopIntroRotation();
+        }
+      });
+
+      if (window.customElements && window.customElements.whenDefined) {
+        window.customElements.whenDefined('model-viewer').then(() => {
+          if (userHasTakenControl) {
+            stopIntroRotation();
+          }
+        });
+      }
+    })();
+  ''';
+}
 
 class PlanetDetailPage extends ConsumerWidget {
   const PlanetDetailPage({super.key, required this.planetId});
@@ -114,16 +191,19 @@ class _PlanetDetailContentState extends ConsumerState<_PlanetDetailContent> {
   double _modelLoadProgress = 0;
   bool _isPreparingModel = false;
   bool _isModelViewerLoading = false;
+  bool _hasUserControlledModel = false;
 
   @override
   void initState() {
     super.initState();
     _prepareModel();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(analyticsServiceProvider).logPlanetViewed(
-        planetId: widget.planet.id,
-        planetName: widget.planet.title,
-      );
+      ref
+          .read(analyticsServiceProvider)
+          .logPlanetViewed(
+            planetId: widget.planet.id,
+            planetName: widget.planet.title,
+          );
     });
   }
 
@@ -148,6 +228,7 @@ class _PlanetDetailContentState extends ConsumerState<_PlanetDetailContent> {
       _modelLoadProgress = 0;
       _isPreparingModel = true;
       _isModelViewerLoading = false;
+      _hasUserControlledModel = false;
     });
 
     try {
@@ -205,85 +286,120 @@ class _PlanetDetailContentState extends ConsumerState<_PlanetDetailContent> {
 
     return SpaceScaffold(
       topSafeArea: false,
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
-        slivers: [
-          SliverAppBar(
-            backgroundColor: Colors.transparent,
-            surfaceTintColor: Colors.transparent,
-            leading: Padding(
-              padding: const EdgeInsets.only(left: 12),
-              child: Center(
-                child: OutlinedButton.icon(
-                  onPressed: () => Navigator.of(context).maybePop(),
-                  icon: const Icon(Icons.arrow_back_rounded),
-                  label: const Text('Back'),
+      body: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (_isModelScrollInteraction(notification)) {
+            _stopModelIntroRotation();
+          }
+          return false;
+        },
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.transparent,
+              surfaceTintColor: Colors.transparent,
+              leading: Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Center(
+                  child: OutlinedButton.icon(
+                    onPressed: () => Navigator.of(context).maybePop(),
+                    icon: const Icon(Icons.arrow_back_rounded),
+                    label: const Text('Back'),
+                  ),
                 ),
               ),
-            ),
-            leadingWidth: 123,
-            title: Text(planet.title),
-            centerTitle: false,
-            pinned: true,
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: Center(
-                  child: IconButton(
-                    onPressed: () => _showStorageInfoSheet(context),
-                    tooltip: 'How model loading works',
-                    icon: const Icon(Icons.info_outline_rounded),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.black.withValues(alpha: 0.22),
-                      foregroundColor: Colors.white,
+              leadingWidth: 123,
+              title: Text(planet.title),
+              centerTitle: false,
+              pinned: true,
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: Center(
+                    child: IconButton(
+                      onPressed: () => _showStorageInfoSheet(context),
+                      tooltip: 'How model loading works',
+                      icon: const Icon(Icons.info_outline_rounded),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.black.withValues(alpha: 0.22),
+                        foregroundColor: Colors.white,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-            flexibleSpace: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppColors.backgroundDeep.withValues(alpha: 0.42),
-                    AppColors.backgroundDeep.withValues(alpha: 0.0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: AppConstants.contentMaxWidth,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppConstants.pagePadding,
-                    16,
-                    AppConstants.pagePadding,
-                    42,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildModelViewer(context),
-                      const SizedBox(height: 24),
-                      _buildInfoSection(context, theme, planet),
+              ],
+              flexibleSpace: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      AppColors.backgroundDeep.withValues(alpha: 0.42),
+                      AppColors.backgroundDeep.withValues(alpha: 0.0),
                     ],
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+            SliverToBoxAdapter(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: AppConstants.contentMaxWidth,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppConstants.pagePadding,
+                      16,
+                      AppConstants.pagePadding,
+                      42,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildModelViewer(context),
+                        const SizedBox(height: 24),
+                        _buildInfoSection(context, theme, planet),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  bool _isModelScrollInteraction(ScrollNotification notification) {
+    if (notification.depth != 0 || notification.metrics.axis != Axis.vertical) {
+      return false;
+    }
+
+    if (notification is UserScrollNotification) {
+      return notification.direction != ScrollDirection.idle;
+    }
+
+    if (notification is ScrollUpdateNotification) {
+      final scrollDelta = notification.scrollDelta;
+      return scrollDelta != null && scrollDelta.abs() > 0;
+    }
+
+    return notification is ScrollStartNotification;
+  }
+
+  void _stopModelIntroRotation() {
+    if (!mounted || _hasUserControlledModel) {
+      return;
+    }
+
+    setState(() {
+      _hasUserControlledModel = true;
+    });
   }
 
   void _handleModelViewerMessage(dynamic message) {
@@ -341,6 +457,8 @@ class _PlanetDetailContentState extends ConsumerState<_PlanetDetailContent> {
 
   String _buildModelViewerBridgeScript() {
     return '''
+      ${_buildPlanetModelInteractionScript()}
+
       const modelViewer = document.querySelector('model-viewer');
       const loadingChannel = window.$_modelViewerChannelName;
 
@@ -417,21 +535,32 @@ class _PlanetDetailContentState extends ConsumerState<_PlanetDetailContent> {
               Stack(
                 fit: StackFit.expand,
                 children: [
-                  ModelViewer(
+                  PlanetModelViewer(
+                    key: ValueKey(
+                      '${_resolvedModel!.viewerSrc}_${_hasUserControlledModel ? 'manual' : 'intro'}',
+                    ),
                     backgroundColor: Colors.transparent,
                     src: _resolvedModel!.viewerSrc,
                     alt: '3D model of ${planet.title}',
-                    autoRotate: true,
-                    autoRotateDelay: 0,
-                    rotationPerSecond: '18deg',
+                    autoRotate: !_hasUserControlledModel,
+                    autoRotateDelay: _hasUserControlledModel ? 2147483647 : 0,
+                    rotationPerSecond: _hasUserControlledModel
+                        ? '0deg'
+                        : '18deg',
                     cameraControls: true,
                     disableZoom: false,
-                    disableTap: false,
+                    disableTap: true,
                     disablePan: true,
-                    minCameraOrbit: 'auto auto 1%',
-                    maxCameraOrbit: 'auto auto 1000%',
-                    minFieldOfView: '1deg',
-                    maxFieldOfView: '180deg',
+                    touchAction: TouchAction.none,
+                    interactionPrompt: InteractionPrompt.none,
+                    cameraOrbit: _planetModelInitialCameraOrbit,
+                    cameraTarget: _planetModelCameraTarget,
+                    minCameraOrbit: _planetModelMinCameraOrbit,
+                    maxCameraOrbit: _planetModelMaxCameraOrbit,
+                    fieldOfView: _planetModelFieldOfView,
+                    minFieldOfView: _planetModelMinFieldOfView,
+                    maxFieldOfView: _planetModelMaxFieldOfView,
+                    interpolationDecay: _planetModelInterpolationDecay,
                     exposure: 0.8,
                     innerModelViewerHtml:
                         '<div class="mv-hidden-progress" slot="progress-bar"></div>',
@@ -440,9 +569,10 @@ class _PlanetDetailContentState extends ConsumerState<_PlanetDetailContent> {
                         display: none;
                       }
                     ''',
-                    relatedJs: kIsWeb ? '' : _buildModelViewerBridgeScript(),
-                    javascriptChannels:
-                        kIsWeb ? {} : _buildModelViewerChannels(),
+                    relatedJs: _buildModelViewerBridgeScript(),
+                    javascriptChannels: kIsWeb
+                        ? {}
+                        : _buildModelViewerChannels(),
                     debugLogging: false,
                   ),
                   if (_isModelViewerLoading)
@@ -1251,7 +1381,7 @@ class _FullScreenModelPage extends StatelessWidget {
               ),
             ),
           ),
-          ModelViewer(
+          PlanetModelViewer(
             backgroundColor: Colors.transparent,
             src: modelUrl,
             alt: '3D model of ${planet.title}',
@@ -1260,13 +1390,20 @@ class _FullScreenModelPage extends StatelessWidget {
             rotationPerSecond: '10deg',
             cameraControls: true,
             disableZoom: false,
-            disableTap: false,
-            disablePan: false,
-            minCameraOrbit: 'auto auto 1%',
-            maxCameraOrbit: 'auto auto 1000%',
-            minFieldOfView: '1deg',
-            maxFieldOfView: '180deg',
+            disableTap: true,
+            disablePan: true,
+            touchAction: TouchAction.none,
+            interactionPrompt: InteractionPrompt.none,
+            cameraOrbit: _planetModelInitialCameraOrbit,
+            cameraTarget: _planetModelCameraTarget,
+            minCameraOrbit: _planetModelMinCameraOrbit,
+            maxCameraOrbit: _planetModelMaxCameraOrbit,
+            fieldOfView: _planetModelFieldOfView,
+            minFieldOfView: _planetModelMinFieldOfView,
+            maxFieldOfView: _planetModelMaxFieldOfView,
+            interpolationDecay: _planetModelInterpolationDecay,
             exposure: 1.0,
+            relatedJs: _buildPlanetModelInteractionScript(),
             debugLogging: false,
           ),
           Positioned(
