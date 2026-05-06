@@ -9,10 +9,7 @@ class AnalyticsService {
   FirebaseAnalyticsObserver get observer =>
       FirebaseAnalyticsObserver(analytics: _analytics);
 
-  Future<void> _log(
-    String name, [
-    Map<String, Object>? parameters,
-  ]) async {
+  Future<void> _log(String name, [Map<String, Object>? parameters]) async {
     if (kDebugMode) {
       final params = parameters != null && parameters.isNotEmpty
           ? ' ${parameters.entries.map((e) => '${e.key}=${e.value}').join(', ')}'
@@ -27,14 +24,14 @@ class AnalyticsService {
   Future<void> logPlanetViewed({
     required String planetId,
     required String planetName,
-  }) => _log('planet_viewed', {'planet_id': planetId, 'planet_name': planetName});
+  }) =>
+      _log('planet_viewed', {'planet_id': planetId, 'planet_name': planetName});
 
   // --- APOD ---
 
-  Future<void> logApodDateChanged(DateTime date) => _log(
-    'apod_date_changed',
-    {'selected_date': date.toIso8601String().substring(0, 10)},
-  );
+  Future<void> logApodDateChanged(DateTime date) => _log('apod_date_changed', {
+    'selected_date': date.toIso8601String().substring(0, 10),
+  });
 
   Future<void> logApodShared() => _log('apod_shared');
 
@@ -45,8 +42,7 @@ class AnalyticsService {
   Future<void> logSearchPerformed(String query) {
     final trimmed = query.trim();
     if (trimmed.isEmpty) return Future.value();
-    if (kDebugMode) debugPrint('[Analytics] search term=$trimmed');
-    return _analytics.logSearch(searchTerm: trimmed);
+    return _log('nasa_search_performed');
   }
 
   // --- Mars Rover ---
