@@ -11,14 +11,9 @@ If you are looking for the full policy text, open the page below:
 - GalaxyDox does not require account creation
 - bookmarks are stored locally on-device
 - the app loads content from NASA-operated APIs and media hosts
-- the current app build does not include ads SDKs or analytics SDKs
+- the app does not include ads SDKs or social login
+- Firebase is used for analytics, crash reporting, remote configuration, public app content, and optional push notifications
 
 ## Full document
 
-Use this URL for GitHub Pages once publishing is enabled:
-
-- `https://YOUR_USERNAME.github.io/galaxydox/`
-
-Direct policy file:
-
-- `https://YOUR_USERNAME.github.io/galaxydox/privacy-policy`
+Use the production privacy URL configured in the store consoles. If this repo's `docs/` folder is published with GitHub Pages, map that published URL to the same store listing privacy URL.

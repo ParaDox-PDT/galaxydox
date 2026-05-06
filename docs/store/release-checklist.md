@@ -5,6 +5,8 @@
 - Keep `android/key.properties`, keystores, API keys, and signing assets out of git.
 - Publish a real privacy policy URL and support URL.
 - Review `.gitignore` before each release branch cut.
+- Re-run a secret scan against both the working tree and git history.
+- Run `dart tool/check_repo_safety.dart` before pushing release changes.
 - Keep GitHub Actions green for `flutter analyze` and `flutter test`.
 - Review dependency updates weekly.
 
@@ -13,6 +15,8 @@
 - Build signed `appbundle` with `NASA_API_KEY`, `PRIVACY_POLICY_URL`, and `SUPPORT_URL`.
 - Upload `build/app/outputs/native-debug-symbols/release/native-debug-symbols.zip`.
 - Review Play Data safety answers.
+- Verify Firebase Analytics, Crashlytics, Messaging, Remote Config, and Firestore disclosures.
+- Verify Firebase API key restrictions, Firestore rules, and any public admin URLs before announcing the repo.
 - Verify store listing title, short description, and full description against metadata policy.
 - Upload screenshots, feature graphic, and privacy policy URL in Play Console.
 

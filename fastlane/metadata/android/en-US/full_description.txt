@@ -13,7 +13,7 @@ Why GalaxyDox stands out:
 - Calm layouts for dense NASA mission data
 - Fast search across NASA image archives
 - Local bookmarks saved on your device
-- No ads, no sign-in, and no analytics SDKs in the current build
+- No ads or sign-in, with local bookmarks saved on your device
 
 GalaxyDox is designed for astronomy fans, NASA followers, students, educators, and anyone who wants a premium way to explore space images, mission stories, Mars rover photography, APOD highlights, asteroid flyby data, and NASA archive media from one place.
 

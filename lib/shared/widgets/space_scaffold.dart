@@ -28,7 +28,7 @@ class SpaceScaffold extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          const AmbientSpaceBackground(),
+          const RepaintBoundary(child: AmbientSpaceBackground()),
           const DecoratedBox(
             decoration: BoxDecoration(gradient: AppGradients.screenVeil),
           ),

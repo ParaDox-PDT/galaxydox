@@ -8,6 +8,36 @@ import '../../core/theme/app_gradients.dart';
 class AmbientSpaceBackground extends StatelessWidget {
   const AmbientSpaceBackground({super.key});
 
+  static final _glow1 = BoxDecoration(
+    gradient: AppGradients.ambientGlow(
+      alignment: const Alignment(-0.95, -0.82),
+      color: AppColors.primaryStrong,
+      radius: 0.95,
+      alpha: 0.26,
+    ),
+  );
+
+  static final _glow2 = BoxDecoration(
+    gradient: AppGradients.ambientGlow(
+      alignment: const Alignment(1.05, -0.2),
+      color: AppColors.secondary,
+      radius: 0.72,
+      alpha: 0.18,
+    ),
+  );
+
+  static final _glow3 = BoxDecoration(
+    gradient: AppGradients.ambientGlow(
+      alignment: const Alignment(0.15, 1.08),
+      color: AppColors.tertiary,
+      radius: 0.84,
+      alpha: 0.18,
+    ),
+  );
+
+  static final _orbital = _OrbitalPainter();
+  static final _stars = _StarFieldPainter();
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -16,44 +46,11 @@ class AmbientSpaceBackground extends StatelessWidget {
         const DecoratedBox(
           decoration: BoxDecoration(gradient: AppGradients.spaceBackdrop),
         ),
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: AppGradients.ambientGlow(
-                alignment: const Alignment(-0.95, -0.82),
-                color: AppColors.primaryStrong,
-                radius: 0.95,
-                alpha: 0.26,
-              ),
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: AppGradients.ambientGlow(
-                alignment: const Alignment(1.05, -0.2),
-                color: AppColors.secondary,
-                radius: 0.72,
-                alpha: 0.18,
-              ),
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: AppGradients.ambientGlow(
-                alignment: const Alignment(0.15, 1.08),
-                color: AppColors.tertiary,
-                radius: 0.84,
-                alpha: 0.18,
-              ),
-            ),
-          ),
-        ),
-        IgnorePointer(child: CustomPaint(painter: _OrbitalPainter())),
-        IgnorePointer(child: CustomPaint(painter: _StarFieldPainter())),
+        Positioned.fill(child: DecoratedBox(decoration: _glow1)),
+        Positioned.fill(child: DecoratedBox(decoration: _glow2)),
+        Positioned.fill(child: DecoratedBox(decoration: _glow3)),
+        IgnorePointer(child: CustomPaint(painter: _orbital)),
+        IgnorePointer(child: CustomPaint(painter: _stars)),
       ],
     );
   }

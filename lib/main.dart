@@ -54,7 +54,6 @@ Future<void> main() async {
 /// BUILD COMMANDS
 /// flutter run --dart-define-from-file=.env
 ///
-/// flutter build appbundle --release --dart-define-from-file=.env
 ///
 /// flutter build apk --release --split-per-abi --dart-define-from-file=.env
 ///
@@ -62,3 +61,6 @@ Future<void> main() async {
 /// flutter build web --release --dart-define-from-file=.env
 /// dart tool/copy_web_redirects.dart
 /// netlify deploy --prod
+///
+/// BUILDING AUTOMATION
+/// .\deploy_release.bat
